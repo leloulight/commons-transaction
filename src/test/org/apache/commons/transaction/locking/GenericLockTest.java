@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.1 2004/11/18 23:27:22 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:22 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.2 2004/12/14 12:12:47 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/12/14 12:12:47 $
  *
  * ====================================================================
  *
@@ -31,11 +31,12 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.transaction.util.LoggerFacade;
 import org.apache.commons.transaction.util.PrintWriterLogger;
+import org.apache.commons.transaction.util.RendezvousBarrier;
 
 /**
  * Tests for generic locks. 
  *
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class GenericLockTest extends TestCase {
 
@@ -45,6 +46,10 @@ public class GenericLockTest extends TestCase {
     protected static final int READ_LOCK = 1;
     protected static final int WRITE_LOCK = 2;
     
+    protected static final long TIMEOUT = Long.MAX_VALUE;
+    
+    private static int deadlockCnt = 0;
+
     public static Test suite() {
         TestSuite suite = new TestSuite(GenericLockTest.class);
         return suite;
@@ -137,4 +142,67 @@ public class GenericLockTest extends TestCase {
         canRead1 = acquireNoWait(lock, owner1, READ_LOCK);
         assertTrue(canRead1);
     }
+
+    public void testDeadlock() throws Throwable {
+        final String owner1 = "owner1";
+        final String owner2 = "owner2";
+        final String owner3 = "owner3";
+
+        final String res1 = "res1";
+        final String res2 = "res2";
+
+        // a read / write lock
+        final ReadWriteLockManager manager = new ReadWriteLockManager(sLogger, TIMEOUT);
+
+        for (int i = 0; i < 25; i++) {
+
+            final RendezvousBarrier deadlockBarrier1 = new RendezvousBarrier("deadlock1" + i,
+                    TIMEOUT, sLogger);
+
+            Thread deadlock = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        // first both threads get a lock, this one on res2
+                        manager.writeLock(owner2, res2);
+                        synchronized (deadlockBarrier1) {
+                            deadlockBarrier1.meet();
+                            deadlockBarrier1.reset();
+                        }
+                        // if I am first, the other thread will be dead, i.e.
+                        // exactly one
+                        manager.writeLock(owner2, res1);
+                    } catch (LockException le) {
+                        assertEquals(le.getCode(), LockException.CODE_DEADLOCK_VICTIM);
+                        deadlockCnt++;
+                    } catch (InterruptedException ie) {
+                    } finally {
+                        manager.releaseAll(owner2);
+                    }
+                }
+            }, "Deadlock Thread");
+
+            deadlock.start();
+
+            try {
+                // first both threads get a lock, this one on res2
+                manager.readLock(owner1, res1);
+                synchronized (deadlockBarrier1) {
+                    deadlockBarrier1.meet();
+                    deadlockBarrier1.reset();
+                }
+                //          if I am first, the other thread will be dead, i.e. exactly
+                // one
+                manager.readLock(owner1, res2);
+            } catch (LockException le) {
+                assertEquals(le.getCode(), LockException.CODE_DEADLOCK_VICTIM);
+                deadlockCnt++;
+            } finally {
+                manager.releaseAll(owner1);
+            }
+
+            assertEquals(deadlockCnt, 1);
+            deadlockCnt = 0;
+        }
+    }
+
 }

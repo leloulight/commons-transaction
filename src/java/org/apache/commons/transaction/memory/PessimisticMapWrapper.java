@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/PessimisticMapWrapper.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:18 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/PessimisticMapWrapper.java,v 1.2 2004/12/14 12:12:46 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/12/14 12:12:46 $
  *
  * ====================================================================
  *
@@ -24,15 +24,10 @@
 package org.apache.commons.transaction.memory;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.transaction.locking.GenericLock;
-import org.apache.commons.transaction.locking.GenericLockManager;
-import org.apache.commons.transaction.locking.LockManager;
-import org.apache.commons.transaction.locking.MultiLevelLock;
+import org.apache.commons.transaction.locking.ReadWriteLockManager;
 import org.apache.commons.transaction.util.LoggerFacade;
 
 /**
@@ -49,7 +44,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <br>
  * <em>Note:</em> This wrapper guarantees isolation level <code>SERIALIZABLE</code>.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see TransactionalMapWrapper
  * @see OptimisticMapWrapper
  */
@@ -58,10 +53,10 @@ public class PessimisticMapWrapper extends TransactionalMapWrapper {
     protected static final int READ = 1;
     protected static final int WRITE = 2;
 
-    protected static final String GLOBAL_LOCK_NAME = "GLOBAL";
+    protected static final Object GLOBAL_LOCK = "GLOBAL";
 
-    protected LockManager lockManager;
-    protected MultiLevelLock globalLock;
+    protected ReadWriteLockManager lockManager;
+//    protected MultiLevelLock globalLock;
     protected long readTimeOut = 60000; /* FIXME: pass in ctor */
 
     /**
@@ -84,8 +79,8 @@ public class PessimisticMapWrapper extends TransactionalMapWrapper {
      */
     public PessimisticMapWrapper(Map wrapped, MapFactory mapFactory, SetFactory setFactory, LoggerFacade logger) {
         super(wrapped, mapFactory, setFactory);
-        lockManager = new GenericLockManager(WRITE, logger);
-        globalLock = new GenericLock(GLOBAL_LOCK_NAME, WRITE, logger);
+        lockManager = new ReadWriteLockManager(logger, readTimeOut);
+//        globalLock = new GenericLock(GLOBAL_LOCK_NAME, WRITE, logger);
     }
 
     public void startTransaction() {
@@ -98,17 +93,17 @@ public class PessimisticMapWrapper extends TransactionalMapWrapper {
     }
 
     public Collection values() {
-        assureGlobalLock(READ);
+        assureGlobalReadLock();
         return super.values();
     }
 
     public Set entrySet() {
-        assureGlobalLock(READ);
+        assureGlobalReadLock();
         return super.entrySet();
     }
 
     public Set keySet() {
-        assureGlobalLock(READ);
+        assureGlobalReadLock();
         return super.keySet();
     }
 
@@ -129,84 +124,67 @@ public class PessimisticMapWrapper extends TransactionalMapWrapper {
     protected void assureWriteLock(Object key) {
         LockingTxContext txContext = (LockingTxContext) getActiveTx();
         if (txContext != null) {
-            txContext.lock(lockManager.atomicGetOrCreateLock(key), WRITE);
-            txContext.lock(globalLock, READ); // XXX fake intention lock (prohibits global WRITE)
+            lockManager.writeLock(txContext, key);
+            // XXX fake intention lock (prohibits global WRITE)
+            lockManager.readLock(txContext, GLOBAL_LOCK); 
         }
     }
     
-    protected void assureGlobalLock(int level) {
+    protected void assureGlobalReadLock() {
         LockingTxContext txContext = (LockingTxContext) getActiveTx();
         if (txContext != null) {
-            txContext.lock(globalLock, level); // XXX fake intention lock (prohibits global WRITE)
+            // XXX fake intention lock (prohibits global WRITE)
+            lockManager.readLock(txContext, GLOBAL_LOCK); 
         }
     }
     
     public class LockingTxContext extends TxContext {
-        protected Set locks;
-
-        protected LockingTxContext() {
-            super();
-            locks = new HashSet();
-        }
 
         protected Set keys() {
-            lock(globalLock, READ);
+            lockManager.readLock(this, GLOBAL_LOCK); 
             return super.keys();
         }
 
         protected Object get(Object key) {
-            lock(lockManager.atomicGetOrCreateLock(key), READ);
-            lock(globalLock, READ); // XXX fake intention lock (prohibits global WRITE)
+            lockManager.readLock(this, key);
+            // XXX fake intention lock (prohibits global WRITE)
+            lockManager.readLock(this, GLOBAL_LOCK);
             return super.get(key);
         }
 
         protected void put(Object key, Object value) {
-            lock(lockManager.atomicGetOrCreateLock(key), WRITE);
-            lock(globalLock, READ); // XXX fake intention lock (prohibits global WRITE)
+            lockManager.writeLock(this, key);
+            // XXX fake intention lock (prohibits global WRITE)
+            lockManager.readLock(this, GLOBAL_LOCK);
             super.put(key, value);
         }
 
         protected void remove(Object key) {
-            lock(lockManager.atomicGetOrCreateLock(key), WRITE);
-            lock(globalLock, READ); // XXX fake intention lock (prohibits global WRITE)
+            lockManager.writeLock(this, key);
+            // XXX fake intention lock (prohibits global WRITE)
+            lockManager.readLock(this, GLOBAL_LOCK);
             super.remove(key);
         }
 
         protected int size() {
             // XXX this is bad luck, we need a global read lock just for the size :( :( :(
-            lock(globalLock, READ);
+            lockManager.readLock(this, GLOBAL_LOCK);
             return super.size();
         }
 
         protected void clear() {
-            lock(globalLock, WRITE);
+            lockManager.writeLock(this, GLOBAL_LOCK);
             super.clear();
         }
 
         protected void dispose() {
             super.dispose();
-            for (Iterator it = locks.iterator(); it.hasNext();) {
-                MultiLevelLock lock = (MultiLevelLock) it.next();
-                lock.release(this);
-            }
+            lockManager.releaseAll(this);
         }
 
         protected void finalize() throws Throwable {
             dispose();
             super.finalize();
-        }
-
-        protected void lock(MultiLevelLock lock, int level) throws LockException {
-            boolean acquired = false;
-            try {
-                acquired = lock.acquire(this, level, true, true, readTimeOut);
-            } catch (InterruptedException e) {
-                throw new LockException("Interrupted", LockException.CODE_INTERRUPTED, GLOBAL_LOCK_NAME);
-            }
-            if (!acquired) {
-                throw new LockException("Timed out", LockException.CODE_TIMED_OUT, GLOBAL_LOCK_NAME);
-            }
-            locks.add(lock);
         }
     }
 

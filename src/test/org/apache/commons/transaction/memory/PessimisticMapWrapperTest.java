@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/memory/PessimisticMapWrapperTest.java,v 1.1 2004/11/18 23:27:19 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:19 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/memory/PessimisticMapWrapperTest.java,v 1.2 2004/12/14 12:12:47 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/12/14 12:12:47 $
  *
  * ====================================================================
  *
@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.*;
 
+import org.apache.commons.transaction.locking.LockException;
 import org.apache.commons.transaction.util.Jdk14Logger;
 import org.apache.commons.transaction.util.LoggerFacade;
 import org.apache.commons.transaction.util.RendezvousBarrier;
@@ -36,12 +37,16 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
 /**
  * Tests for map wrapper. 
  *
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class PessimisticMapWrapperTest extends MapWrapperTest {
 
     private static final Logger logger = Logger.getLogger(PessimisticMapWrapperTest.class.getName());
     private static final LoggerFacade sLogger = new Jdk14Logger(logger);
+
+    protected static final long TIMEOUT = Long.MAX_VALUE;
+
+    private static int deadlockCnt = 0;
 
     public static Test suite() {
         TestSuite suite = new TestSuite(PessimisticMapWrapperTest.class);
@@ -113,6 +118,85 @@ public class PessimisticMapWrapperTest extends MapWrapperTest {
         synchronized (txMap1) {
             txMap1.commitTransaction();
             report("value3", (String) txMap1.get("key1"));
+        }
+    }
+
+    public void testConflict() throws Throwable {
+        logger.info("Checking concurrent transaction features");
+
+        final Map map1 = new HashMap();
+
+        final PessimisticMapWrapper txMap1 = (PessimisticMapWrapper) getNewWrapper(map1);
+
+        final RendezvousBarrier restart = new RendezvousBarrier("restart",
+                TIMEOUT, sLogger);
+
+        for (int i = 0; i < 25; i++) {
+
+            final RendezvousBarrier deadlockBarrier1 = new RendezvousBarrier("deadlock" + i,
+                    TIMEOUT, sLogger);
+
+            Thread thread1 = new Thread(new Runnable() {
+                public void run() {
+                    txMap1.startTransaction();
+                    try {
+                        // first both threads get a lock, this one on res2
+                        txMap1.put("key2", "value2");
+                        synchronized (deadlockBarrier1) {
+                            deadlockBarrier1.meet();
+                            deadlockBarrier1.reset();
+                        }
+                        // if I am first, the other thread will be dead, i.e.
+                        // exactly one
+                        txMap1.put("key1", "value2");
+                        txMap1.commitTransaction();
+                    } catch (LockException le) {
+                        assertEquals(le.getCode(), LockException.CODE_DEADLOCK_VICTIM);
+                        deadlockCnt++;
+                        txMap1.rollbackTransaction();
+                    } catch (InterruptedException ie) {
+                    } finally {
+                        try {
+                        synchronized (restart) {
+                            restart.meet();
+                            restart.reset();
+                        }
+                        } catch (InterruptedException ie) {}
+
+                    }
+                }
+            }, "Thread1");
+
+            thread1.start();
+
+            txMap1.startTransaction();
+            try {
+                // first both threads get a lock, this one on res2
+                txMap1.get("key1");
+                synchronized (deadlockBarrier1) {
+                    deadlockBarrier1.meet();
+                    deadlockBarrier1.reset();
+                }
+                //          if I am first, the other thread will be dead, i.e. exactly
+                // one
+                txMap1.get("key2");
+                txMap1.commitTransaction();
+            } catch (LockException le) {
+                assertEquals(le.getCode(), LockException.CODE_DEADLOCK_VICTIM);
+                deadlockCnt++;
+                txMap1.rollbackTransaction();
+            } finally {
+                try {
+                synchronized (restart) {
+                    restart.meet();
+                    restart.reset();
+                }
+                } catch (InterruptedException ie) {}
+
+            }
+
+            assertEquals(deadlockCnt, 1);
+            deadlockCnt = 0;
         }
     }
 

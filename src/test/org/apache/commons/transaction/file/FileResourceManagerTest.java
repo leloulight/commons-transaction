@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/file/FileResourceManagerTest.java,v 1.1 2004/11/18 23:27:17 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:17 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/file/FileResourceManagerTest.java,v 1.2 2004/12/14 12:12:46 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/12/14 12:12:46 $
  *
  * ====================================================================
  *
@@ -23,23 +23,31 @@
 
 package org.apache.commons.transaction.file;
 
-import junit.framework.*;
-
-import java.io.*;
-import java.util.*;
-import java.util.logging.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.util.logging.Logger;
 
 import javax.transaction.Status;
 
-import org.apache.commons.transaction.util.*;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
 import org.apache.commons.transaction.util.FileHelper;
 import org.apache.commons.transaction.util.Jdk14Logger;
 import org.apache.commons.transaction.util.LoggerFacade;
+import org.apache.commons.transaction.util.RendezvousBarrier;
 
 /**
  * Tests for FileResourceManager. 
  *
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class FileResourceManagerTest extends TestCase {
 
@@ -78,6 +86,10 @@ public class FileResourceManagerTest extends TestCase {
     private static final String[] STATUS_COMMITTED_CONTEXT_DELETE_FILES = new String[] {
     };
     private static final String[] STATUS_COMMITTED_CONTEXT_RESULT_FILES = new String[] { "Hubert6", "Hubert" };
+
+    protected static final long TIMEOUT = Long.MAX_VALUE;
+
+    private static int deadlockCnt = 0;
 
     private static void initCommittedRecovery() throws Throwable {
         String txId = "COMMITTED";
@@ -613,6 +625,98 @@ public class FileResourceManagerTest extends TestCase {
         // tx rolled forward created "/olli/Hubert100", so it should be here as well
         checkExactlyContains(STORE + "/olli", new String[] { "Hubert", "Hubert100", "Hubert6", "Hubert10" });
         checkIsEmpty(WORK);
+    }
+
+    public void testConflict() throws Throwable {
+        logger.info("Checking concurrent transaction features");
+
+        reset();
+        createInitialFiles();
+        
+        final FileResourceManager rm = createFRM(); 
+        
+        rm.start();
+
+        final RendezvousBarrier restart = new RendezvousBarrier("restart",
+                TIMEOUT, sLogger);
+
+        for (int i = 0; i < 25; i++) {
+
+            final RendezvousBarrier deadlockBarrier1 = new RendezvousBarrier("deadlock" + i,
+                    TIMEOUT, sLogger);
+
+            Thread thread1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        rm.startTransaction("tx1");
+                        // first both threads get a lock, this one on res2
+                        rm.createResource("tx1", "key2");
+                        synchronized (deadlockBarrier1) {
+                            deadlockBarrier1.meet();
+                            deadlockBarrier1.reset();
+                        }
+                        // if I am first, the other thread will be dead, i.e.
+                        // exactly one
+                        rm.createResource("tx1", "key1");
+                        rm.commitTransaction("tx1");
+                    } catch (InterruptedException ie) {
+                    } catch (ResourceManagerException e) {
+                        assertEquals(e.getStatus(), ResourceManagerException.ERR_DEAD_LOCK);
+                        deadlockCnt++;
+                        try {
+                            rm.rollbackTransaction("tx1");
+                        } catch (ResourceManagerException e1) {
+                            // TODO Auto-generated catch block
+                            e1.printStackTrace();
+                        }
+                    } finally {
+                        try {
+                        synchronized (restart) {
+                            restart.meet();
+                            restart.reset();
+                        }
+                        } catch (InterruptedException ie) {}
+
+                    }
+                }
+            }, "Thread1");
+
+            thread1.start();
+
+            rm.startTransaction("tx2");
+            try {
+                // first both threads get a lock, this one on res2
+                rm.deleteResource("tx2", "key1");
+                synchronized (deadlockBarrier1) {
+                    deadlockBarrier1.meet();
+                    deadlockBarrier1.reset();
+                }
+                //          if I am first, the other thread will be dead, i.e. exactly
+                // one
+                rm.deleteResource("tx2", "key2");
+                rm.commitTransaction("tx2");
+            } catch (ResourceManagerException e) {
+                assertEquals(e.getStatus(), ResourceManagerException.ERR_DEAD_LOCK);
+                deadlockCnt++;
+                try {
+                    rm.rollbackTransaction("tx2");
+                } catch (ResourceManagerException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            } finally {
+                try {
+                synchronized (restart) {
+                    restart.meet();
+                    restart.reset();
+                }
+                } catch (InterruptedException ie) {}
+
+            }
+
+            assertEquals(deadlockCnt, 1);
+            deadlockCnt = 0;
+        }
     }
 
 }

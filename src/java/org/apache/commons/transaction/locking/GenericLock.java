@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.2 2004/11/29 18:28:17 luetzkendorf Exp $
- * $Revision: 1.2 $
- * $Date: 2004/11/29 18:28:17 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.3 2004/12/14 12:12:46 ozeigermann Exp $
+ * $Revision: 1.3 $
+ * $Date: 2004/12/14 12:12:46 $
  *
  * ====================================================================
  *
@@ -24,8 +24,10 @@
 package org.apache.commons.transaction.locking;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.transaction.util.LoggerFacade;
 
@@ -100,7 +102,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * forgets to release a lock or is not able to do so due to error states or abnormal termination.  
  * </ul>
  * 
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class GenericLock implements MultiLevelLock {
 
@@ -109,8 +111,8 @@ public class GenericLock implements MultiLevelLock {
     public static final int COMPATIBILITY_SUPPORT = 2;
     public static final int COMPATIBILITY_REENTRANT_AND_SUPPORT = 3;
     
-    private Object resourceId;
-    private Map owners = new HashMap();
+    protected Object resourceId;
+    protected Map owners = new HashMap();
     private int maxLockLevel;
     protected LoggerFacade logger;
 
@@ -430,7 +432,7 @@ public class GenericLock implements MultiLevelLock {
         }
 
         // we are only allowed to acquire our locks if we do not compromise locks of any other lock owner
-        if (targetLockLevel <= getLevelMaxLock() - currentLockLevel) {
+        if (isCompatible(targetLockLevel, currentLockLevel)) {
             setLockLevel(ownerId, myLock, targetLockLevel);
             return true;
         } else {
@@ -438,7 +440,46 @@ public class GenericLock implements MultiLevelLock {
         }
     }
 
-    private static class LockOwner {
+    protected boolean isCompatible(int targetLockLevel, int currentLockLevel) {
+        return (targetLockLevel <= getLevelMaxLock() - currentLockLevel);
+    }
+    
+    protected Set getConflictingOwners(Object ownerId, int targetLockLevel,
+            int compatibility) {
+
+        LockOwner myLock = (LockOwner) owners.get(ownerId);
+        if (myLock != null && targetLockLevel <= myLock.lockLevel) {
+            // shortcut as we already have the lock
+            return null;
+        }
+
+        Set conflicts = new HashSet();
+
+        // check if any locks conflict with ours
+        for (Iterator it = owners.values().iterator(); it.hasNext();) {
+            LockOwner owner = (LockOwner) it.next();
+            
+            // we do not interfere with ourselves, except when explicitely said so
+            if ((compatibility == COMPATIBILITY_REENTRANT || compatibility == COMPATIBILITY_REENTRANT_AND_SUPPORT)
+                    && owner.ownerId.equals(ownerId))
+                continue;
+            
+            // otherwise find out the lock level of the owner and see if we conflict with it
+            int onwerLockLevel = owner.lockLevel;
+           
+            if (compatibility == COMPATIBILITY_SUPPORT
+                    || compatibility == COMPATIBILITY_REENTRANT_AND_SUPPORT
+                    && targetLockLevel == onwerLockLevel)
+                continue;
+            
+            if (!isCompatible(targetLockLevel, onwerLockLevel)) {
+                conflicts.add(owner.ownerId);
+            }
+        }
+        return (conflicts.isEmpty() ? null : conflicts);
+    }
+
+    protected static class LockOwner {
         public Object ownerId;
         public int lockLevel;
 

@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileResourceManager.java,v 1.2 2004/11/29 18:28:17 luetzkendorf Exp $
- * $Revision: 1.2 $
- * $Date: 2004/11/29 18:28:17 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileResourceManager.java,v 1.3 2004/12/14 12:12:46 ozeigermann Exp $
+ * $Revision: 1.3 $
+ * $Date: 2004/12/14 12:12:46 $
  *
  * ====================================================================
  *
@@ -44,10 +44,13 @@ import java.util.Map;
 import java.util.Iterator;
 import java.util.Collections;
 
-import org.apache.commons.transaction.util.*;
-import org.apache.commons.transaction.locking.*;
-
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.transaction.locking.GenericLock;
+import org.apache.commons.transaction.locking.GenericLockManager;
+import org.apache.commons.transaction.locking.LockException;
+import org.apache.commons.transaction.locking.LockManager;
+import org.apache.commons.transaction.util.FileHelper;
+import org.apache.commons.transaction.util.LoggerFacade;
 
 /**
  * A resource manager for streamable objects stored in a file system.
@@ -115,7 +118,7 @@ import org.apache.commons.codec.binary.Base64;
  * <em>Special Caution</em>: Be very careful not to have two instances of
  * <code>FileResourceManager</code> working in the same store and/or working dir.
  *   
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class FileResourceManager implements ResourceManager, ResourceManagerErrorCodes {
 
@@ -272,15 +275,15 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
      *  
      */
 
-    public boolean lockResource(Object resourceId, Object txId) throws ResourceManagerException {
-        return lockResource(resourceId, txId, false);
+    public void lockResource(Object resourceId, Object txId) throws ResourceManagerException {
+        lockResource(resourceId, txId, false);
     }
 
-    public boolean lockResource(Object resourceId, Object txId, boolean shared) throws ResourceManagerException {
-        return lockResource(resourceId, txId, shared, true, Long.MAX_VALUE, true);
+    public void lockResource(Object resourceId, Object txId, boolean shared) throws ResourceManagerException {
+        lockResource(resourceId, txId, shared, true, Long.MAX_VALUE, true);
     }
 
-    public boolean lockResource(
+    public void lockResource(
         Object resourceId,
         Object txId,
         boolean shared,
@@ -295,15 +298,21 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
         // XXX allows locking of non existent resources (e.g. to prepare a create)
         int level = (shared ? getSharedLockLevel(context) : LOCK_EXCLUSIVE);
-        MultiLevelLock rl;
-        synchronized (lockManager) {
-            rl = lockManager.atomicGetOrCreateLock(resourceId);
-            context.getLocks().add(rl);
-        }
         try {
-            return rl.acquire(txId, level, wait, reentrant, Math.min(timeoutMSecs, context.timeoutMSecs));
-        } catch (InterruptedException e) {
-            throw new ResourceManagerSystemException(ERR_SYSTEM, txId, e);
+            lockManager.lock(txId, resourceId, level, reentrant, Math.min(timeoutMSecs,
+                    context.timeoutMSecs));
+        } catch (LockException e) {
+            switch (e.getCode()) {
+            case LockException.CODE_INTERRUPTED:
+                throw new ResourceManagerException("Could not get lock for resource at '"
+                        + resourceId + "'", ERR_NO_LOCK, txId);
+            case LockException.CODE_TIMED_OUT:
+                throw new ResourceManagerException("Lock timed out for resource at '" + resourceId
+                        + "'", ERR_NO_LOCK, txId);
+            case LockException.CODE_DEADLOCK_VICTIM:
+                throw new ResourceManagerException("Deadlock victim resource at '" + resourceId
+                        + "'", ERR_DEAD_LOCK, txId);
+            }
         }
     }
 
@@ -662,7 +671,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     }
 
     public boolean resourceExists(Object txId, Object resourceId) throws ResourceManagerException {
-        assureLock(resourceId, txId, true);
+        lockResource(resourceId, txId, true);
         return (getPathForRead(txId, resourceId) != null);
     }
 
@@ -674,7 +683,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
         if (logger.isFineEnabled()) logger.logFine(txId + " deleting " + resourceId);
 
-        assureLock(resourceId, txId, false);
+        lockResource(resourceId, txId, false);
 
         if (getPathForRead(txId, resourceId) == null) {
             if (assureOnly) {
@@ -711,7 +720,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
         if (logger.isFineEnabled()) logger.logFine(txId + " creating " + resourceId);
 
-        assureLock(resourceId, txId, false);
+        lockResource(resourceId, txId, false);
 
         if (getPathForRead(txId, resourceId) != null) {
             if (assureOnly) {
@@ -769,7 +778,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
         if (logger.isFineEnabled()) logger.logFine(txId + " reading " + resourceId);
 
-        assureLock(resourceId, txId, true);
+        lockResource(resourceId, txId, true);
 
         String resourcePath = getPathForRead(txId, resourceId);
         if (resourcePath == null) {
@@ -790,7 +799,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
         if (logger.isFineEnabled()) logger.logFine(txId + " writing " + resourceId);
 
-        assureLock(resourceId, txId, false);
+        lockResource(resourceId, txId, false);
 
         String resourcePath = getPathForWrite(txId, resourceId);
         if (resourcePath == null) {
@@ -1083,16 +1092,6 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         }
     }
 
-    protected void assureLock(Object resourceId, Object txId, boolean shared) throws ResourceManagerException {
-
-        if (!lockResource(resourceId, txId, shared)) {
-            throw new ResourceManagerException(
-                "Could not get lock for resource at '" + resourceId + "'",
-                ERR_NO_LOCK,
-                txId);
-        }
-    }
-
     /*
      * --- Resource Management ---
      *
@@ -1306,17 +1305,12 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         protected boolean readOnly = true;
         protected boolean finished = false;
 
-        private Collection locks = Collections.synchronizedCollection(new ArrayList());
         // list of streams participating in this tx
         private List openResourcs = new ArrayList();
 
         public TransactionContext(Object txId) throws ResourceManagerException {
             this.txId = txId;
             startTime = System.currentTimeMillis();
-        }
-
-        public Collection getLocks() {
-            return locks;
         }
 
         public long getRemainingTimeout() {
@@ -1384,7 +1378,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         }
 
         public synchronized void upgradeLockToCommit() throws ResourceManagerException {
-            for (Iterator it = locks.iterator(); it.hasNext();) {
+            for (Iterator it =  lockManager.getAll(txId).iterator(); it.hasNext();) {
                 GenericLock lock = (GenericLock) it.next();
                 // only upgrade if we had write access
                 if (lock.getLockLevel(txId) == LOCK_EXCLUSIVE) {
@@ -1413,11 +1407,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         }
 
         public synchronized void freeLocks() {
-            for (Iterator it = locks.iterator(); it.hasNext();) {
-                MultiLevelLock lock = (MultiLevelLock) it.next();
-                lock.release(txId);
-                it.remove();
-            }
+            lockManager.releaseAll(txId);
         }
 
         public synchronized void closeResources() {
@@ -1509,8 +1499,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
             if (debug) {
                 buf.append("----- Lock Debug Info -----\n");
                 
-                for (Iterator it = locks.iterator(); it.hasNext();) {
-                    MultiLevelLock lock = (MultiLevelLock) it.next();
+                for (Iterator it = lockManager.getAll(txId).iterator(); it.hasNext();) {
+                    GenericLock lock = (GenericLock) it.next();
                     buf.append(lock.toString()+"\n");
                 }
                 
@@ -1566,8 +1556,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                         globalTransactions.remove(txId);
                     } else {
                         // release access lock in order to allow other transactions to commit
-                        MultiLevelLock lock = lockManager.atomicGetOrCreateLock(resourceId);
-                        if (lock.getLockLevel(txId) == LOCK_ACCESS) {
+                        if (lockManager.getLevel(txId, resourceId) == LOCK_ACCESS) {
                             if (logger.isFinerEnabled()) {
 	                            logger.logFiner(
 	                                "Upon close of resource releasing access lock for tx "
@@ -1575,7 +1564,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 	                                    + " on resource at "
 	                                    + resourceId);
                             }
-                            lock.release(txId);
+                            lockManager.release(txId, resourceId);
                         }
                     }
                 }

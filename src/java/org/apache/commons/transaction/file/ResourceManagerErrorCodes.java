@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/ResourceManagerErrorCodes.java,v 1.1 2004/11/18 23:27:19 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:19 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/ResourceManagerErrorCodes.java,v 1.2 2004/12/14 12:12:46 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/12/14 12:12:46 $
  *
  * ====================================================================
  *
@@ -26,7 +26,7 @@ package org.apache.commons.transaction.file;
 /**
  * Error codes for resource managers.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see ResourceManager
  * @see ResourceManagerException
  * @see ResourceManagerSystemException
@@ -112,5 +112,11 @@ public interface ResourceManagerErrorCodes {
      * Error code: lock could not be acquired error
      */
     public static final int ERR_NO_LOCK = ERR_LOCK + 1;
+
+    /**
+     * Error code: lock could not be acquired error
+     */
+    public static final int ERR_DEAD_LOCK = ERR_LOCK + 2;
+
 
 }
