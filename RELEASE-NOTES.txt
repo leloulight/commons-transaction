@@ -25,16 +25,18 @@ Commons Transaction 1.1 aims at polishing (interface) oddities, improve
 locking and make the file store more flexible.
 
 ENHANCEMENTS FROM 1.0
-------------------------
+---------------------
 
 - Extended and less excentric lock manager
 - Deadlock detection for all lock managers, file store, and pessimistic map
+- Flexible preference mechanism 
 
 
 NEW FEATURES FROM 1.0
 ---------------------
 
 - new ReadWriteLockManager for most intuitive read/write lock usage
+- new read/write/upgrade locking mechanism
 
 MINOR INCOMPATIBILITIES TO 1.0
 -----------------------------------------
