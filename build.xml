@@ -22,6 +22,8 @@
 
   <property name="version" value="1.0"/>
   <property name="name" value="commons-transaction" />
+  <property name="title" value="Commons Transaction" />
+  <property name="package" value="org.apache.commons.transaction" />
   <property name="final.name" value="${name}-${version}"/>
 
   <!-- 
@@ -205,9 +207,25 @@
   =================================================================== 
   -->
   <target name="jar" depends="detect, build, build-jca" description="Creates the jar">
-
-    <jar jarfile="${build.lib}/${final.name}.jar" basedir="${build.classes}" >
+    <mkdir dir="${build.classes}/META-INF"/>
+    <copy file="LICENSE.txt" tofile="${build.classes}/META-INF/LICENSE.txt"/>
+    <copy file="NOTICE.txt" tofile="${build.classes}/META-INF/NOTICE.txt"/>
+             
+    <tstamp/>
+    <copy todir="${build.classes}/META-INF" filtering="on">
+      <filterset>
+        <filter token="name" value="${name}"/>
+        <filter token="title" value="${title}"/>
+        <filter token="package" value="${package}"/>
+        <filter token="version" value="${version}"/>
+      </filterset>
+      <fileset dir="${conf.dir}" includes="*.MF"/>
+    </copy>
+             
+    <jar jarfile="${build.lib}/${final.name}.jar" basedir="${build.classes}" manifest="${build.classes}/META-INF/MANIFEST.MF" >
       <include name="org/apache/**" />
+      <include name="**/NOTICE.txt"/>
+      <include name="**/LICENSE.txt"/>
       <exclude name="**/*Test*" />
     </jar>
 
@@ -289,6 +307,7 @@
   <target name="scrub" depends="clean, clean-javadocs">
     <delete dir="${dist.lib}"/>
     <delete dir="${dist.deploy}"/>
+    <delete dir="${dist.dir}"/>
   </target> 
 
     <!-- =================================================================== -->
@@ -341,14 +360,15 @@
   -->
   
   <target name="test" depends="detect, build-test" description="Exectutes JUnit tests" if="jvm14.present">
+    <mkdir dir="tmp"/>
     <junit printsummary="yes" haltonfailure="yes">
       <classpath refid="classpath" />
       <formatter type="plain" />
-      <test name="org.apache.commons.transaction.file.FileResourceManagerTest" haltonfailure="yes" />
-      <test name="org.apache.commons.transaction.memory.MapWrapperTest" haltonfailure="yes" />
-      <test name="org.apache.commons.transaction.memory.OptimisticMapWrapperTest" haltonfailure="yes" />
-      <test name="org.apache.commons.transaction.memory.PessimisticMapWrapperTest" haltonfailure="yes" />
-      <test name="org.apache.commons.transaction.locking.GenericLockTest" haltonfailure="yes" />
+      <test name="org.apache.commons.transaction.file.FileResourceManagerTest" haltonfailure="yes" todir="tmp"/>
+      <test name="org.apache.commons.transaction.memory.MapWrapperTest" haltonfailure="yes" todir="tmp"/>
+      <test name="org.apache.commons.transaction.memory.OptimisticMapWrapperTest" haltonfailure="yes" todir="tmp"/>
+      <test name="org.apache.commons.transaction.memory.PessimisticMapWrapperTest" haltonfailure="yes" todir="tmp"/>
+      <test name="org.apache.commons.transaction.locking.GenericLockTest" haltonfailure="yes" todir="tmp"/>
     </junit>
   </target>
 
@@ -420,7 +440,7 @@
 
 <!-- ====================================================================== -->
 
-  <target name="package" depends="dist,zip-bin,zip-src" description="Packages distribution">
+  <target name="package" depends="scrub,dist,zip-bin,zip-src" description="Packages distribution">
   </target>
   
   <target name="zip-bin">
