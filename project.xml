@@ -98,6 +98,13 @@
     </developer>
   </developers>
   
+  <contributors>
+    <contributor>
+      <name>Antranig Basman</name>
+    </contributor>
+  </contributors>
+
+
   <dependencies>
     <dependency>
       <groupId>geronimo-spec</groupId>
