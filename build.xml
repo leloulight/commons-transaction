@@ -155,13 +155,14 @@
   =================================================================== 
   -->
 
-  <target name="build" depends="prepare" description="Compiles the main classes">
+  <target name="build" depends="prepare,detect" description="Compiles the main classes">
     <javac destdir="${build.classes}"
       target="${compile.target}"
       debug="${compile.debug}"
       deprecation="${compile.deprecation}"
       optimize="${compile.optimize}" >
       <exclude name="**/jca/**"/>
+      <exclude name="**/JDK14URLEncodeIdMapper.java" unless="jvm14.present"/>
       <src path="${java.dir}"/>
       <classpath refid="classpath" />
     </javac>

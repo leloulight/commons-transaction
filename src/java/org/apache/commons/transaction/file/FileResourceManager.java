@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileResourceManager.java,v 1.4 2004/12/16 17:33:53 ozeigermann Exp $
- * $Revision: 1.4 $
- * $Date: 2004/12/16 17:33:53 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileResourceManager.java,v 1.5 2004/12/18 23:19:09 ozeigermann Exp $
+ * $Revision: 1.5 $
+ * $Date: 2004/12/18 23:19:09 $
  *
  * ====================================================================
  *
@@ -34,8 +34,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,7 +42,6 @@ import java.util.Map;
 import java.util.Iterator;
 import java.util.Collections;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.transaction.locking.GenericLock;
 import org.apache.commons.transaction.locking.GenericLockManager;
 import org.apache.commons.transaction.locking.LockException;
@@ -118,7 +115,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <em>Special Caution</em>: Be very careful not to have two instances of
  * <code>FileResourceManager</code> working in the same store and/or working dir.
  *   
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class FileResourceManager implements ResourceManager, ResourceManagerErrorCodes {
 
@@ -185,7 +182,6 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
     protected String workDir;
     protected String storeDir;
-    protected boolean urlEncodePath = false;
     protected boolean cleanUp = true;
     protected boolean dirty = false;
     protected int operationMode = OPERATION_MODE_STOPPED;
@@ -197,6 +193,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     protected Map globalTransactions;
     protected List globalOpenResources;
     protected LockManager lockManager;
+    
+    protected ResourceIdToPathMapper idMapper = null;
 
     /*
      * --- ctor and general getter / setter methods ---
@@ -231,11 +229,29 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         boolean urlEncodePath,
         LoggerFacade logger,
         boolean debug) {
+        this(storeDir, workDir, urlEncodePath ? new URLEncodeIdMapper() : null, logger, false);
+    }
+
+    /**
+     * Creates a new resouce manager operation on the specified directories.
+     * 
+     * @param storeDir directory where main data should go after commit
+     * @param workDir directory where transactions store temporary data 
+     * @param idMapper mapper for resourceId to path
+     * @param logger the logger to be used by this store
+     * @param debug if set to <code>true</code> logs all locking information to "transaction.log" for debugging inspection 
+     */
+    public FileResourceManager(
+        String storeDir,
+        String workDir,
+        ResourceIdToPathMapper idMapper,
+        LoggerFacade logger,
+        boolean debug) {
         this.workDir = workDir;
         this.storeDir = storeDir;
-        this.urlEncodePath = urlEncodePath;
         this.logger = logger;
         this.debug = debug;
+        this.idMapper = idMapper;
     }
 
     /**
@@ -942,22 +958,10 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     protected String assureLeadingSlash(Object pathObject) {
         String path = "";
         if (pathObject != null) {
-            path = pathObject.toString();
-            if (urlEncodePath) {
-                try {
-                    // XXX not allowed as for JDK1.4 
-                    //                    path = URLEncoder.encode(path, "UTF-8");
-                    // XXX weired replacement for the fine method above
-                    // using this combination as a simple URLEncoder.encode without
-                    // charset may fail depending on local settings
-                    // for this reason the string will be encoded into base64 consisting
-                    // of ascii characters only
-                    // a further URL encoding is need as base64 might contain '/' which
-                    // might be a problem for some file systems 
-                    path = new String(Base64.encodeBase64(path.getBytes("UTF-8")), "ASCII");
-                    path = URLEncoder.encode(path);
-                } catch (UnsupportedEncodingException e) {
-                }
+            if (idMapper != null) {
+                path = idMapper.getPathForId(pathObject);
+            } else {
+                path = pathObject.toString();
             }
             if (path.length() > 0 && path.charAt(0) != '/' && path.charAt(0) != '\\') {
                 path = "/" + path;

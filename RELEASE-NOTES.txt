@@ -27,16 +27,20 @@ locking and make the file store more flexible.
 ENHANCEMENTS FROM 1.0
 ---------------------
 
+Locking:
 - Extended and less excentric lock manager
-- Deadlock detection for all lock managers, file store, and pessimistic map
-- Flexible preference mechanism 
 
+File:
+- Confiburable resource id to path mapping
 
 NEW FEATURES FROM 1.0
 ---------------------
 
+Locking:
 - new ReadWriteLockManager for most intuitive read/write lock usage
 - new read/write/upgrade locking mechanism
+- Deadlock detection for all lock managers, file store, and pessimistic map
+- Flexible preference locking mechanism 
 
 MINOR INCOMPATIBILITIES TO 1.0
 -----------------------------------------
