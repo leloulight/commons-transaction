@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.6 2004/12/19 03:07:04 ozeigermann Exp $
- * $Revision: 1.6 $
- * $Date: 2004/12/19 03:07:04 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.7 2004/12/19 10:10:13 ozeigermann Exp $
+ * $Revision: 1.7 $
+ * $Date: 2004/12/19 10:10:13 $
  *
  * ====================================================================
  *
@@ -36,7 +36,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link GenericLock}s on resources.   
  * 
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class GenericLockManager implements LockManager {
 
@@ -204,6 +204,8 @@ public class GenericLockManager implements LockManager {
                                 LockException.CODE_DEADLOCK_VICTIM, resourceId);
                     }
 
+                    // if there are owners we conflict with lets see if one of them globally times
+                    // out earlier than this lock, if so we will wake up then to check again
                     long nextConflictTimeout = getNextGlobalConflictTimeout(conflicts);
                     if (nextConflictTimeout != -1 && nextConflictTimeout < waitEnd) {
                         timeoutMSecs = nextConflictTimeout - now;
@@ -265,10 +267,12 @@ public class GenericLockManager implements LockManager {
         }
         Set locks = (Set) globalOwners.get(ownerId);
         if (locks != null) {
-            for (Iterator it = locks.iterator(); it.hasNext();) {
-                GenericLock lock = (GenericLock) it.next();
-                lock.release(ownerId);
-                it.remove();
+            synchronized (locks) {
+                for (Iterator it = locks.iterator(); it.hasNext();) {
+                    GenericLock lock = (GenericLock) it.next();
+                    lock.release(ownerId);
+                    it.remove();
+                }
             }
         }
     }
@@ -279,19 +283,21 @@ public class GenericLockManager implements LockManager {
     public Set getAll(Object ownerId) {
         Set locks = (Set) globalOwners.get(ownerId);
         if (locks == null) {
-            locks = new HashSet();
-            globalOwners.put(ownerId, locks);
+            return new HashSet();
+        } else {
+            return locks;
         }
-        return locks;
     }
 
     protected void addOwner(Object ownerId, GenericLock lock) {
-        Set locks = (Set) globalOwners.get(ownerId);
-        if (locks == null) {
-            locks = new HashSet();
-            globalOwners.put(ownerId, locks);
+        synchronized (globalOwners) {
+            Set locks = (Set) globalOwners.get(ownerId);
+            if (locks == null) {
+                locks = Collections.synchronizedSet(new HashSet());
+                globalOwners.put(ownerId, locks);
+            }
+            locks.add(lock);
         }
-        locks.add(lock);
     }
 
     protected void removeOwner(Object ownerId, GenericLock lock) {
