@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/Attic/CounterBarrier.java,v 1.1 2004/12/17 00:11:38 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/12/17 00:11:38 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/Attic/CounterBarrier.java,v 1.2 2004/12/17 12:33:44 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/12/17 12:33:44 $
  *
  * ====================================================================
  *
@@ -25,8 +25,11 @@ package org.apache.commons.transaction.util;
 
 /**
  * Simple counter barrier to make a sequence of calls from different threads deterministic.
+ * This is very useful for testing where you want to have a contious flow throughout 
+ * different threads. The idea is to have an ordered sequence of numbers where n can not be executed before 
+ * n-1 has not been.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class CounterBarrier {
 
