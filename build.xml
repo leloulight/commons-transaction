@@ -20,7 +20,7 @@
   <property name="compile.deprecation" value="true" />
   <property name="compile.optimize" value="true" />
 
-  <property name="version" value="1.1b1"/>
+  <property name="version" value="1.1b2pre"/>
   <property name="name" value="commons-transaction" />
   <property name="title" value="Commons Transaction" />
   <property name="package" value="org.apache.commons.transaction" />

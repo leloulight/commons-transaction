@@ -1,8 +1,8 @@
-Jakarta Commons Transaction Release 1.1 beta1
----------------------------------------------
+Jakarta Commons Transaction Release 1.1 beta2 pre
+-------------------------------------------------
 
-RELEASE NUMBER: 1.1b1
-RELEASE TAG / BRANCH: TRANSACTION_1_1_B1_RELEASE / none yet
+RELEASE NUMBER: 1.1b2pre
+RELEASE TAG / BRANCH: none yet / none yet
 
 DESCRIPTION
 -----------
@@ -19,7 +19,9 @@ There are implementations for:
 GENERAL RELEASE NOTES
 ---------------------
 
-This is the first beta of the Commons Transaction 1.1 feature release. 
+This is the second beta of the Commons Transaction 1.1 feature release.
+It mainly fixes concurrency bugs not discovered before the first beta and
+adds test cases that reveal them.
 
 Commons Transaction 1.1 aims at polishing (interface) oddities, improving
 locking and making the file store more flexible. Locking now is much more
@@ -56,13 +58,11 @@ MINOR INCOMPATIBILITIES TO 1.0
 
 - PessimisticMapWrapper now throws the more general LockException from locking package
 
-BUGFIXES FROM 1.0
------------------
-
+BUGFIXES FROM 1.0 beta1
+-----------------------
+- Fixed deadlock hazard in deadlock detection caused by interleaving access to locks set of an owner
 
 KNOWN ISSUES
 ------------
 
 - Deadlock detection sometimes determines more than one thread as a deadlock victim
-- There are (unverified) reports about deadlocks inside the deadlock detection code 
-  or deadlocks not detected there
