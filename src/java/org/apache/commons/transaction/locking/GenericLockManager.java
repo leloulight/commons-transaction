@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.17 2005/01/09 15:12:11 ozeigermann Exp $
- * $Revision: 1.17 $
- * $Date: 2005/01/09 15:12:11 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.18 2005/01/09 19:10:10 ozeigermann Exp $
+ * $Revision: 1.18 $
+ * $Date: 2005/01/09 19:10:10 $
  *
  * ====================================================================
  *
@@ -42,7 +42,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <li>global transaction timeouts that actively revoke granted rights from transactions
  * </ul>
  * 
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  */
 public class GenericLockManager implements LockManager, LockManager2 {
 
@@ -168,8 +168,8 @@ public class GenericLockManager implements LockManager, LockManager2 {
         GenericLock.LockOwner lockWaiter = new GenericLock.LockOwner(ownerId, targetLockLevel,
                 compatibility, preferred);
         
+        boolean acquired = false;
         try {
-            boolean acquired = false;
             
             // detection for deadlocks and time outs is rather expensive, 
             // so we wait for the lock for a  
@@ -190,19 +190,22 @@ public class GenericLockManager implements LockManager, LockManager2 {
                 addOwner(ownerId, lock);
                 return;
             }
-            
+        } catch (InterruptedException e) {
+            throw new LockException("Interrupted", LockException.CODE_INTERRUPTED, resourceId);
+        }
+        try {
             lock.registerWaiter(lockWaiter);
             
+            boolean deadlock = wouldDeadlock(ownerId, new HashSet());
+            if (deadlock) {
+                throw new LockException("Lock would cause deadlock",
+                        LockException.CODE_DEADLOCK_VICTIM, resourceId);
+            }
+
             while (!acquired && waitEnd > now) {
             
                 // first be sure all locks are stolen from owners that have already timed out
                 releaseTimedOutOwners();
-
-                boolean deadlock = wouldDeadlock(ownerId, new HashSet());
-                if (deadlock) {
-                    throw new LockException("Lock would cause deadlock",
-                            LockException.CODE_DEADLOCK_VICTIM, resourceId);
-                }
 
                 // if there are owners we conflict with lets see if one of them globally times
                 // out earlier than this lock, if so we will wake up then to check again
