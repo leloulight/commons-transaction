@@ -134,6 +134,33 @@ public class GenericLockManager implements LockManager, LockManager2 {
     }
 
     /**
+     * @see LockManager2#checkLock(Object, Object, int, boolean)
+     * @since 1.1
+     */
+    public boolean checkLock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant) {
+        timeoutCheck(ownerId);
+
+        GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
+        boolean possible = lock.test(ownerId, targetLockLevel,
+                reentrant ? GenericLock.COMPATIBILITY_REENTRANT : GenericLock.COMPATIBILITY_NONE);
+        
+        return possible;
+    }
+
+    /**
+     * @see LockManager2#hasLock(Object, Object, int)
+     * @since 1.1
+     */
+    public boolean hasLock(Object ownerId, Object resourceId, int lockLevel) {
+        timeoutCheck(ownerId);
+
+        GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
+        boolean owned = lock.has(ownerId, lockLevel);
+        
+        return owned;
+    }
+
+    /**
      * @see LockManager2#lock(Object, Object, int, boolean)
      * @since 1.1
      */
@@ -261,11 +288,12 @@ public class GenericLockManager implements LockManager, LockManager2 {
      * @see LockManager2#release(Object, Object)
      * @since 1.1
      */
-    public void release(Object ownerId, Object resourceId) {
+    public boolean release(Object ownerId, Object resourceId) {
         timeoutCheck(ownerId);
         GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
-        lock.release(ownerId);
+        boolean released = lock.release(ownerId);
         removeOwner(ownerId, lock);
+        return released;
     }
 
     /**

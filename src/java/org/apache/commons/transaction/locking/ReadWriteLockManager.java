@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteLockManager.java,v 1.4 2005/01/09 15:12:11 ozeigermann Exp $
  * $Revision: 1.4 $
- * $Date: 2005/01/09 15:12:11 $
+ * $Date$
  *
  * ====================================================================
  *
@@ -80,6 +80,72 @@ public class ReadWriteLockManager extends GenericLockManager {
      */
     public boolean tryWriteLock(Object ownerId, Object resourceId) {
         return tryLock(ownerId, resourceId, ReadWriteLock.WRITE_LOCK, true);
+    }
+
+    /**
+     * Determines if a shared, reentrant read lock on a resource 
+     * <em>could</em> be acquired without actually acquiring it. <br>
+     * <br>
+     * This method does not block, but immediatly returns. If a lock is not
+     * available <code>false</code> will be returned.
+     * 
+     * @param ownerId
+     *            a unique id identifying the entity that wants to acquire this
+     *            lock
+     * @param resourceId
+     *            the resource to get the lock for
+     * @return <code>true</code> if the lock could be acquired, <code>false</code> otherwise
+     */
+    public boolean checkReadLock(Object ownerId, Object resourceId) {
+        return checkLock(ownerId, resourceId, ReadWriteLock.READ_LOCK, true);
+    }
+
+    /**
+     * Determines if an exclusive, reentrant write lock on a resource
+     * is held by an owner. <br>
+     * 
+     * @param ownerId
+     *            a unique id identifying the entity that wants to check this
+     *            lock
+     * @param resourceId
+     *            the resource to get the lock for
+     * @return <code>true</code> if the lock is held by the owner, <code>false</code> otherwise
+     */
+    public boolean hasWriteLock(Object ownerId, Object resourceId) {
+        return hasLock(ownerId, resourceId, ReadWriteLock.WRITE_LOCK);
+    }
+
+    /**
+     * Determines if a shared, reentrant read lock on a resource 
+     * is held by an owner. <br>
+     * 
+     * @param ownerId
+     *            a unique id identifying the entity that wants to check this
+     *            lock
+     * @param resourceId
+     *            the resource to get the lock for
+     * @return <code>true</code> if the lock is held by the owner, <code>false</code> otherwise
+     */
+    public boolean hasReadLock(Object ownerId, Object resourceId) {
+        return hasLock(ownerId, resourceId, ReadWriteLock.READ_LOCK);
+    }
+
+    /**
+     * Determines if an exclusive, reentrant write lock on a resource
+     * <em>could</em> be acquired without actually acquiring it. <br>
+     * <br>
+     * This method does not block, but immediatly returns. If a lock is not
+     * available <code>false</code> will be returned.
+     * 
+     * @param ownerId
+     *            a unique id identifying the entity that wants to acquire this
+     *            lock
+     * @param resourceId
+     *            the resource to get the lock for
+     * @return <code>true</code> if the lock could be acquired, <code>false</code> otherwise
+     */
+    public boolean checkWriteLock(Object ownerId, Object resourceId) {
+        return checkLock(ownerId, resourceId, ReadWriteLock.WRITE_LOCK, true);
     }
 
     /**

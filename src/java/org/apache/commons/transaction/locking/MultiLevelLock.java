@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/MultiLevelLock.java,v 1.1 2004/11/18 23:27:17 ozeigermann Exp $
  * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:17 $
+ * $Date$
  *
  * ====================================================================
  *
@@ -51,8 +51,10 @@ public interface MultiLevelLock {
      * Releases any lock levels the specified owner may hold on this lock.
      * 
      * @param ownerId a unique id identifying the entity that wants to release all lock levels
+     * @return <code>true</code> if the lock actually was released, <code>false</code> in case
+     * there was no lock held by the owner
      */
-    public void release(Object ownerId);
+    public boolean release(Object ownerId);
 
    /**
     * Retuns the highest lock level the specified owner holds on this lock or <code>0</code> if it holds no locks at all. 

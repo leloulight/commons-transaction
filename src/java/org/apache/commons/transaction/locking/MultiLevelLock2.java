@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/MultiLevelLock2.java,v 1.3 2005/01/09 23:56:07 ozeigermann Exp $
  * $Revision: 1.3 $
- * $Date: 2005/01/09 23:56:07 $
+ * $Date$
  *
  * ====================================================================
  *
@@ -63,11 +63,24 @@ public interface MultiLevelLock2 extends MultiLevelLock {
     public static final int COMPATIBILITY_REENTRANT_AND_SUPPORT = 3;
     
     /**
+     * Tests if a certain lock level is owned by an owner. 
+     * 
+     * @param ownerId
+     *            a unique id identifying the entity that wants to check a
+     *            certain lock level on this lock
+     * @param lockLevel
+     *            the lock level to test
+     * @return <code>true</code> if the lock could be acquired at the time
+     *         this method was called
+     */
+    public boolean has(Object ownerId, int lockLevel);
+    
+    /**
      * Tests if a certain lock level <em>could</em> be acquired. This method
      * tests only and does <em>not actually acquire</em> the lock.
      * 
      * @param ownerId
-     *            a unique id identifying the entity that wants to acquire a
+     *            a unique id identifying the entity that wants to test a
      *            certain lock level on this lock
      * @param targetLockLevel
      *            the lock level to acquire

@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.14 2005/01/13 23:12:44 ozeigermann Exp $
  * $Revision: 1.14 $
- * $Date: 2005/01/13 23:12:44 $
+ * $Date$
  *
  * ====================================================================
  *
@@ -171,13 +171,16 @@ public class GenericLock implements MultiLevelLock2 {
      * @see MultiLevelLock2#test(Object, int, int)
      */
     public boolean test(Object ownerId, int targetLockLevel, int compatibility) {
-        boolean success = false;
-        try {
-            success = tryLock(ownerId, targetLockLevel, compatibility, false);
-        } finally {
-            release(ownerId);
-        }
+        boolean success = tryLock(ownerId, targetLockLevel, compatibility, false, true);
         return success;
+    }
+    
+    /**
+     * @see MultiLevelLock2#has(Object, int)
+     */
+    public boolean has(Object ownerId, int lockLevel) {
+        int level = getLockLevel(ownerId);
+        return (lockLevel <= level);
     }
     
     /**
@@ -342,7 +345,7 @@ public class GenericLock implements MultiLevelLock2 {
     /**
      * @see org.apache.commons.transaction.locking.MultiLevelLock#release(Object)
      */
-    public synchronized void release(Object ownerId) {
+    public synchronized boolean release(Object ownerId) {
         if (owners.remove(ownerId) != null) {
             if (logger.isFinerEnabled()) {
 	            logger.logFiner(
@@ -353,7 +356,9 @@ public class GenericLock implements MultiLevelLock2 {
 	                    + System.currentTimeMillis());
             }
             notifyAll();
+            return true;
         }
+        return false;
     }
 
     /**
@@ -479,8 +484,13 @@ public class GenericLock implements MultiLevelLock2 {
         owners.put(ownerId, new LockOwner(ownerId, targetLockLevel, compatibility, intention));
     }
 
-    protected synchronized boolean tryLock(Object ownerId, int targetLockLevel, int compatibility,
+    protected boolean tryLock(Object ownerId, int targetLockLevel, int compatibility,
             boolean preferred) {
+        return tryLock(ownerId, targetLockLevel, compatibility, preferred, false);
+    }
+
+    protected synchronized boolean tryLock(Object ownerId, int targetLockLevel, int compatibility,
+            boolean preferred, boolean tryOnly) {
 
         LockOwner myLock = (LockOwner) owners.get(ownerId);
 
@@ -522,8 +532,10 @@ public class GenericLock implements MultiLevelLock2 {
 
         // we are only allowed to acquire our locks if we do not compromise locks of any other lock owner
         if (isCompatible(targetLockLevel, currentLockLevel)) {
-            // if we really have the lock, it no longer is an intention
-            setLockLevel(ownerId, myLock, targetLockLevel, compatibility, false);
+            if (!tryOnly) {
+                // if we really have the lock, it no longer is an intention
+                setLockLevel(ownerId, myLock, targetLockLevel, compatibility, false);
+            }
             return true;
         } else {
             return false;

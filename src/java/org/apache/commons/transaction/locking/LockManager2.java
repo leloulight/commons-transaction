@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockManager2.java,v 1.5 2005/01/10 00:04:27 ozeigermann Exp $
  * $Revision: 1.5 $
- * $Date: 2005/01/10 00:04:27 $
+ * $Date$
  *
  * ====================================================================
  *
@@ -40,6 +40,41 @@ import java.util.Set;
 public interface LockManager2 {
 
     /**
+     * Determines if a lock is owner by an owner. <br>
+     * 
+     * @param ownerId
+     *            a unique id identifying the entity that wants to check this
+     *            lock
+     * @param resourceId
+     *            the resource to get the level for
+     * @param lockLevel
+     *            the lock level to check
+     * @return <code>true</code> if the owner has the lock, <code>false</code> otherwise
+     *  
+     */
+    public boolean hasLock(Object ownerId, Object resourceId, int lockLevel);
+
+    /**
+     * Determines if a lock <em>could</em> be acquire <em>without</em> actually acquiring it. <br>
+     * <br>
+     * This method does not block, but immediatly returns.
+     * 
+     * @param ownerId
+     *            a unique id identifying the entity that wants to check this
+     *            lock
+     * @param resourceId
+     *            the resource to get the level for
+     * @param targetLockLevel
+     *            the lock level to check
+     * @param reentrant
+     *            <code>true</code> if this request shall not be influenced by
+     *            other locks held by the same owner
+     * @return <code>true</code> if the lock could be acquired, <code>false</code> otherwise
+     *  
+     */
+    public boolean checkLock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant);
+
+    /**
      * Tries to acquire a lock on a resource. <br>
      * <br>
      * This method does not block, but immediatly returns. If a lock is not
@@ -53,7 +88,7 @@ public interface LockManager2 {
      * @param targetLockLevel
      *            the lock level to acquire
      * @param reentrant
-     *            <code>true</code> if this request shall not be blocked by
+     *            <code>true</code> if this request shall not be influenced by
      *            other locks held by the same owner
      * @return <code>true</code> if the lock has been acquired, <code>false</code> otherwise
      *  
@@ -170,8 +205,10 @@ public interface LockManager2 {
      * 
      * @param ownerId the id of the owner of the lock
      * @param resourceId the resource to releases the lock for
+     * @return <code>true</code> if the lock actually was released, <code>false</code> in case
+     * there was no lock held by the owner
      */
-    public void release(Object ownerId, Object resourceId);
+    public boolean release(Object ownerId, Object resourceId);
 
     /**
      * Releases all locks (partially) held by an owner.
