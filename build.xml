@@ -373,6 +373,7 @@
       <test name="org.apache.commons.transaction.memory.OptimisticMapWrapperTest" haltonfailure="yes" todir="tmp"/>
       <test name="org.apache.commons.transaction.memory.PessimisticMapWrapperTest" haltonfailure="yes" todir="tmp"/>
       <test name="org.apache.commons.transaction.locking.GenericLockTest" haltonfailure="yes" todir="tmp"/>
+      <test name="org.apache.commons.transaction.locking.LockTestRepeatableReads" haltonfailure="yes" todir="tmp"/>
     </junit>
   </target>
 
