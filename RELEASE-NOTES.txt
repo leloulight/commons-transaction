@@ -1,13 +1,13 @@
-Jakarta Commons-Transaction Release 1.0 release candidate 1
------------------------------------------------------------
+Jakarta Commons-Transaction Release 1.0
+---------------------------------------
 
-RELEASE NUMBER: 1.0rc1
-RELEASE TAG / BRANCH: TRANSACTION_1_0_RC1_RELEASE / none yet
+RELEASE NUMBER: 1.0
+RELEASE TAG / BRANCH: TRANSACTION_1_0_RELEASE / none yet
 
 GENERAL NOTES
 -------------
 
-This is the first release candidate of Commons-Transaction 1.0. 
+This is the first Commons-Transaction release. 
 The 1.0 release contains an initial collection of rudimentary
 implementations for transactional Java programming. Future
 releases might both extend the implementations as well as 
@@ -17,6 +17,11 @@ NEW FEATURES
 ------------
 
 n/a
+
+ENHANCEMENTS FROM 1.0RC1
+------------------------
+
+- Frequent log accesses are now guarded for speedup
 
 BUGFIXES
 --------
