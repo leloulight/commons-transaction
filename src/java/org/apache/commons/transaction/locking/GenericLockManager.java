@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.7 2004/12/19 10:10:13 ozeigermann Exp $
- * $Revision: 1.7 $
- * $Date: 2004/12/19 10:10:13 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.8 2004/12/19 10:54:52 ozeigermann Exp $
+ * $Revision: 1.8 $
+ * $Date: 2004/12/19 10:54:52 $
  *
  * ====================================================================
  *
@@ -36,7 +36,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link GenericLock}s on resources.   
  * 
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class GenericLockManager implements LockManager {
 
@@ -100,16 +100,22 @@ public class GenericLockManager implements LockManager {
         this(maxLockLevel, logger, DEFAULT_TIMEOUT);
     }
 
-
+    /**
+     * Sets a global timeout for an owner. This is especially usefull, when the owner is a 
+     * transaction. After a global timeout occurs all of the owner's lock will be released and 
+     * the owner will not be allowed to access any
+     * locks before before calling {@link #releaseAll(Object)}.
+     * 
+     * @param ownerId
+     *            a unique id identifying the entity that wants to acquire this
+     *            lock
+     * @param timeoutMSecs
+     *            specifies the global timeout in milliseconds
+     */
     public void setGlobalTimeout(Object ownerId, long timeoutMSecs) {
         long now = System.currentTimeMillis();
         long timeout = now + timeoutMSecs;
         globalTimeouts.put(ownerId, new Long(timeout));
-    }
-    
-    public long getGlobalTimeoutTime(Object ownerId) {
-        Long timeout = (Long) globalTimeouts.get(ownerId);
-        return timeout.longValue();
     }
     
     /**
@@ -160,6 +166,9 @@ public class GenericLockManager implements LockManager {
         //    is important as the other thread might be the one to discover the deadlock
         
         // (b) register us as a waiter before actually trying, so other threads take us into account
+        // XXX: This may however mean both deadlocking parts detect the deadlock simultaneously,
+        // and both will be rolled back. The (worse) alternative, however, is that we add us
+        // as a waiter ofter deadlock check which may mean we do not detect the deadlock at all
         addWaiter(lock, ownerId);
 
         try {
