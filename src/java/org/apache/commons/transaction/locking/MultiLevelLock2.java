@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/MultiLevelLock2.java,v 1.2 2005/01/09 15:12:11 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2005/01/09 15:12:11 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/MultiLevelLock2.java,v 1.3 2005/01/09 23:56:07 ozeigermann Exp $
+ * $Revision: 1.3 $
+ * $Date: 2005/01/09 23:56:07 $
  *
  * ====================================================================
  *
@@ -28,13 +28,13 @@ package org.apache.commons.transaction.locking;
  * Extended multi level lock. Compared to basic {@link MultiLevelLock} allows for more flexible
  * locking including preference and more compatibility modes.
  * 
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see LockManager2
  * @see MultiLevelLock
  * @see GenericLock
  * @since 1.1
  */
-public interface MultiLevelLock2 {
+public interface MultiLevelLock2 extends MultiLevelLock {
 
     /**
      * Compatibility mode: none reentrant. Lock level by the same owner <em>shall</em>
@@ -119,18 +119,4 @@ public interface MultiLevelLock2 {
     public boolean acquire(Object ownerId, int targetLockLevel, boolean wait, int compatibility,
             boolean preferred, long timeoutMSecs) throws InterruptedException;
 
-    /**
-     * Releases any lock levels the specified owner may hold on this lock.
-     * 
-     * @param ownerId a unique id identifying the entity that wants to release all lock levels
-     */
-    public void release(Object ownerId);
-
-   /**
-    * Retuns the highest lock level the specified owner holds on this lock or <code>0</code> if it holds no locks at all. 
-    * 
-    * @param ownerId a unique id identifying the entity that wants to know its highest lock level
-    * @return the highest lock level
-    */
-    public int getLockLevel(Object ownerId);
 }

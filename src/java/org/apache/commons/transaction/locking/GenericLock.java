@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.12 2005/01/09 15:12:11 ozeigermann Exp $
- * $Revision: 1.12 $
- * $Date: 2005/01/09 15:12:11 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.13 2005/01/09 23:56:07 ozeigermann Exp $
+ * $Revision: 1.13 $
+ * $Date: 2005/01/09 23:56:07 $
  *
  * ====================================================================
  *
@@ -122,9 +122,9 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * </ul>
  * </p>
  * 
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
-public class GenericLock implements MultiLevelLock, MultiLevelLock2 {
+public class GenericLock implements MultiLevelLock2 {
 
     protected Object resourceId;
     // XXX needs to be synchronized to allow for unsynchronized access for deadlock detection
