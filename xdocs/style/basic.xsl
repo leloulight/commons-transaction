@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- Temporary Stylesheet for Catalina Developer Documentation -->
-<!-- $Id: basic.xsl,v 1.2 2004/12/19 03:11:06 ozeigermann Exp $ -->
+<!-- $Id$ -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="1.0">
@@ -317,7 +317,7 @@
       <td>
     <xsl:if test="@bugzilla-id"> [
     <xsl:element name="a">
-    <xsl:attribute name="href">http://nagoya.apache.org/bugzilla/show_bug.cgi?id=<xsl:value-of select="@bugzilla-id"/></xsl:attribute>
+    <xsl:attribute name="href">http://issues.apache.org/bugzilla/show_bug.cgi?id=<xsl:value-of select="@bugzilla-id"/></xsl:attribute>
     bug #<xsl:value-of select="@bugzilla-id"/>
     </xsl:element>
     ]</xsl:if>
