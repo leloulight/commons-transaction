@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.11 2005/01/08 18:56:03 ozeigermann Exp $
- * $Revision: 1.11 $
- * $Date: 2005/01/08 18:56:03 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.12 2005/01/13 16:44:03 ozeigermann Exp $
+ * $Revision: 1.12 $
+ * $Date: 2005/01/13 16:44:03 $
  *
  * ====================================================================
  *
@@ -37,7 +37,7 @@ import org.apache.commons.transaction.util.TurnBarrier;
 /**
  * Tests for generic locks. 
  *
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class GenericLockTest extends TestCase {
 
@@ -262,6 +262,9 @@ public class GenericLockTest extends TestCase {
 
         sLogger.logInfo("\n\nChecking detection of indirect deadlock \n\n");
 
+        final String jamowner1 = "jamowner1";
+        final String jamowner2 = "jamowner2";
+
         final String owner1 = "owner1";
         final String owner2 = "owner2";
         final String owner3 = "owner3";
@@ -274,13 +277,81 @@ public class GenericLockTest extends TestCase {
         final ReadWriteLockManager manager = new ReadWriteLockManager(sLogger,
                 TIMEOUT);
 
-        final RendezvousBarrier restart = new RendezvousBarrier("restart", 3, TIMEOUT, sLogger);
+        final RendezvousBarrier restart = new RendezvousBarrier("restart", 5, TIMEOUT, sLogger);
 
         final TurnBarrier cb = new TurnBarrier("cb1", TIMEOUT, sLogger, 1);
 
         for (int i = 0; i < CONCURRENT_TESTS; i++) {
             
             System.out.print(".");
+
+            // thread that accesses lock of res1 just to cause interference and
+            // possibly detect concurrency problems
+            Thread jamThread1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        for (int i = 0; i < 10; i++) {
+                            manager.readLock(jamowner1, res1);
+                            Thread.sleep(10);
+                            manager.releaseAll(jamowner1);
+                            Thread.sleep(10);
+                            manager.writeLock(jamowner1, res1);
+                            Thread.sleep(10);
+                            manager.releaseAll(jamowner1);
+                            Thread.sleep(10);
+                        }
+                    } catch (LockException le) {
+                        fail("Jam Thread should not fail");
+                    } catch (InterruptedException ie) {
+                    } finally {
+                        manager.releaseAll(jamowner1);
+                        synchronized (restart) {
+                            try {
+                                synchronized (restart) {
+                                    restart.meet();
+                                    restart.reset();
+                                }
+                                } catch (InterruptedException ie) {}
+                        }
+                    }
+                }
+            }, "Jam Thread #1");
+
+            jamThread1.start();
+
+            // thread that accesses lock of res1 just to cause interference and
+            // possibly detect concurrency problems
+            Thread jamThread2 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        for (int i = 0; i < 10; i++) {
+                            manager.writeLock(jamowner2, res1);
+                            Thread.sleep(10);
+                            manager.releaseAll(jamowner2);
+                            Thread.sleep(10);
+                            manager.readLock(jamowner2, res1);
+                            Thread.sleep(10);
+                            manager.releaseAll(jamowner2);
+                            Thread.sleep(10);
+                        }
+                    } catch (LockException le) {
+                        fail("Jam Thread should not fail");
+                    } catch (InterruptedException ie) {
+                    } finally {
+                        manager.releaseAll(jamowner2);
+                        synchronized (restart) {
+                            try {
+                                synchronized (restart) {
+                                    restart.meet();
+                                    restart.reset();
+                                }
+                                } catch (InterruptedException ie) {}
+                        }
+                    }
+                }
+            }, "Jam Thread #2");
+
+            jamThread2.start();
 
             Thread t1 = new Thread(new Runnable() {
                 public void run() {
@@ -368,7 +439,7 @@ public class GenericLockTest extends TestCase {
             // XXX in special scenarios the current implementation might cause more than one
             // owner to be a deadlock victim
             if (deadlockCnt != 1) {
-                sLogger.logWarning("More than one thread was deadlock victim!");
+                sLogger.logWarning("\nMore than one thread was deadlock victim!\n");
             }
             assertTrue(deadlockCnt >= 1);
             deadlockCnt = 0;

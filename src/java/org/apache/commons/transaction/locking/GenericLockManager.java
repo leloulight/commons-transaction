@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.19 2005/01/09 19:33:53 ozeigermann Exp $
- * $Revision: 1.19 $
- * $Date: 2005/01/09 19:33:53 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.20 2005/01/13 16:44:03 ozeigermann Exp $
+ * $Revision: 1.20 $
+ * $Date: 2005/01/13 16:44:03 $
  *
  * ====================================================================
  *
@@ -42,7 +42,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <li>global transaction timeouts that actively revoke granted rights from transactions
  * </ul>
  * 
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  */
 public class GenericLockManager implements LockManager, LockManager2 {
 
@@ -281,12 +281,17 @@ public class GenericLockManager implements LockManager, LockManager2 {
     protected void releaseAllNoTimeOutReset(Object ownerId) {
         Set locks = (Set) globalOwners.get(ownerId);
         if (locks != null) {
+            Collection locksCopy;
+            // need to copy in order not to interfere with wouldDeadlock
+            // possibly called by
+            // other threads
             synchronized (locks) {
-                for (Iterator it = locks.iterator(); it.hasNext();) {
-                    GenericLock lock = (GenericLock) it.next();
-                    lock.release(ownerId);
-                    it.remove();
-                }
+                locksCopy = new ArrayList(locks);
+            }
+            for (Iterator it = locksCopy.iterator(); it.hasNext();) {
+                GenericLock lock = (GenericLock) it.next();
+                lock.release(ownerId);
+                it.remove();
             }
         }
     }
