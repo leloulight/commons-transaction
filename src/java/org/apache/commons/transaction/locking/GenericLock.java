@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.8 2005/01/07 13:52:42 ozeigermann Exp $
- * $Revision: 1.8 $
- * $Date: 2005/01/07 13:52:42 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.9 2005/01/07 23:33:24 ozeigermann Exp $
+ * $Revision: 1.9 $
+ * $Date: 2005/01/07 23:33:24 $
  *
  * ====================================================================
  *
@@ -118,7 +118,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * </ul>
  * </p>
  * 
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class GenericLock implements MultiLevelLock {
 
@@ -191,6 +191,17 @@ public class GenericLock implements MultiLevelLock {
     public synchronized boolean acquire(Object ownerId, int targetLockLevel, boolean wait,
             int compatibility, long timeoutMSecs) throws InterruptedException {
         return acquire(ownerId, targetLockLevel, wait, compatibility, false, timeoutMSecs);
+    }
+    
+    /**
+     * Tries to blockingly acquire a lock which can be preferred.
+     * 
+     * @see #acquire(Object, int, boolean, int, boolean, long) 
+     */
+    public synchronized boolean acquire(Object ownerId, int targetLockLevel, boolean preferred,
+            long timeoutMSecs) throws InterruptedException {
+        return acquire(ownerId, targetLockLevel, true, COMPATIBILITY_REENTRANT, preferred,
+                timeoutMSecs);
     }
     
     /**

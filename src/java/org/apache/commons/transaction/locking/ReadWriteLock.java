@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteLock.java,v 1.2 2004/12/13 10:51:40 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2004/12/13 10:51:40 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteLock.java,v 1.3 2005/01/07 23:33:24 ozeigermann Exp $
+ * $Revision: 1.3 $
+ * $Date: 2005/01/07 23:33:24 $
  *
  * ====================================================================
  *
@@ -32,7 +32,9 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * Reads are shared which means there can be any number of concurrent read
  * accesses allowed by this lock. Writes are exclusive. This means when there is
  * a write access no other access neither read nor write are allowed by this
- * lock. <br>
+ * lock. Additionally, writes are preferred over reads in order to avoid starvation. The idea
+ * is that there are many readers, but few writers and if things work out bad the writer would
+ * never be served at all. That's why it is preferred.<br>
  * <br>
  * Calls to both {@link #acquireRead(Object, long)}and
  * {@link #acquireWrite(Object, long)}are blocking and reentrant. Blocking
@@ -42,7 +44,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * again you will not be blocked by this first lock, while others of course will be. This is the
  * natural way you already know from Java monitors and synchronized blocks.
  * 
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see GenericLock
  */
 public class ReadWriteLock extends GenericLock {
@@ -80,7 +82,7 @@ public class ReadWriteLock extends GenericLock {
      *             when the thread waiting on this method is interrupted
      */
     public boolean acquireRead(Object ownerId, long timeoutMSecs) throws InterruptedException {
-        return acquire(ownerId, READ_LOCK, true, true, timeoutMSecs);
+        return acquire(ownerId, READ_LOCK, false, timeoutMSecs);
     }
 
     /**
@@ -98,6 +100,6 @@ public class ReadWriteLock extends GenericLock {
      *             when the thread waiting on this method is interrupted
      */
     public boolean acquireWrite(Object ownerId, long timeoutMSecs) throws InterruptedException {
-        return acquire(ownerId, WRITE_LOCK, true, true, timeoutMSecs);
+        return acquire(ownerId, WRITE_LOCK, true, timeoutMSecs);
     }
 }
