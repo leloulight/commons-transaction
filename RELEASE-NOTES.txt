@@ -36,10 +36,10 @@ NEW FEATURES FROM 1.0
 
 - new ReadWriteLockManager for most intuitive read/write lock usage
 
-POSSIBLE MINOR INCOMPATIBILITIES TO 1.0
+MINOR INCOMPATIBILITIES TO 1.0
 -----------------------------------------
 
-- LockException has been moved from memory to locking package
+- PessimisticMapWrapper now throws the more general LockException from locking package
 
 BUGFIXES FROM 1.0
 -----------------
