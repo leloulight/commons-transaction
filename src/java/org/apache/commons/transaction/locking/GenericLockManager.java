@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.18 2005/01/09 19:10:10 ozeigermann Exp $
- * $Revision: 1.18 $
- * $Date: 2005/01/09 19:10:10 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.19 2005/01/09 19:33:53 ozeigermann Exp $
+ * $Revision: 1.19 $
+ * $Date: 2005/01/09 19:33:53 $
  *
  * ====================================================================
  *
@@ -42,7 +42,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <li>global transaction timeouts that actively revoke granted rights from transactions
  * </ul>
  * 
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  */
 public class GenericLockManager implements LockManager, LockManager2 {
 
@@ -218,9 +218,15 @@ public class GenericLockManager implements LockManager, LockManager2 {
                 } else {
                     timeoutMSecs = waitEnd - now;
                 }
-        
-                acquired = lock.acquire(ownerId, targetLockLevel, true, compatibility,
-                        preferred, timeoutMSecs);
+
+                // XXX acquire will remove us as a waiter, but it is important to remain us such
+                // to constantly indicate it to other owners, otherwise there might be undetected
+                // deadlocks
+                synchronized (lock) {
+                    acquired = lock.acquire(ownerId, targetLockLevel, true, compatibility,
+                            preferred, timeoutMSecs);
+                    lock.registerWaiter(lockWaiter);
+                }
                 
             }
             if (!acquired) {
