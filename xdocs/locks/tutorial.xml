@@ -20,12 +20,12 @@ href="../apidocs/org/apache/commons/transaction/locking/MultiLevelLock.html">mul
 lock</a> and specific implementations. There is a <a
 href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html">generic
 implementation</a> of a multi level lock with a subtle, yet simple
-compatibility mechanism. This mechanism allows to implement quite a
+compatibility mechanism. This mechanism allows for implementing quite a
 number of different lock types such as a read write lock which is
 <a
 href="../apidocs/org/apache/commons/transaction/locking/ReadWriteLock.html">provided
-for covenience</a>, although very easy to implement. As already
-<a href="index.html">exlained</a> in the locking agent can be any Java
+for covenience</a>. As explained
+<a href="index.html">earlier</a> the locking agent can be any Java
 object. Have a look at the simple <a
 href="../apidocs/org/apache/commons/transaction/locking/ReadWriteLock.html#acquireRead(java.lang.Object,%20long)">
 method for acquiring a lock for read access</a> as a reference.</p>
@@ -39,7 +39,7 @@ implementation</a>. The most <a
 href="../apidocs/org/apache/commons/transaction/locking/LockManager.html#atomicGetOrCreateLock(java.lang.Object)">important
 method</a> is for either creating a non existing lock in a specified
 resource or retrieving it if it was created before. It is important to
-make this atomically so there is no chance of acciently creating more
+make this atomic so there is no chance of accidently creating more
 than one lock for a single resource.</p>
 <p><em>The whole trick is to have at
 most one lock for a resource and have different compatible lock levels
@@ -50,23 +50,23 @@ for different agents acquiring the lock on that resource</em>.
 <subsection name="Example: Fine grained locks in Jakarta Slide">
 
 <p>Lets get to the first example which is how Jakarta Slide handles
-fine grained locking in its WebDAV layer. Slide can store resources to
-all kinds of stores which most likely have locks for consistency as
-well. However, there is this generic locking to be very sure there are
-no deadlocks, the behavior is similar for all stores and finally to
+fine grained locking in its WebDAV layer. Slide can store resources in
+all kinds of stores which most likely will implement their own locks for
+consistency. However, Slide has generic locking to be certain there are
+no deadlocks, and the behavior is similar for all stores to
 provide locking for stores that do not have locks of their own. All
-locks must be set at the very beginning of a request and release at
+locks must be set at the very beginning of a request and released at
 the end of the request in an atomic 
 block to ban the hazard of deadlocks. Slide does this with a simple
 synchronized block, but to have something to show here we will exercise it
 with a multi level lock. Such a lock is very simple and is merely
-exclusive, it will look like this:</p>
+exclusive. It will look like this:</p>
 <source>
 GenericLock exclusive = new new GenericLock("Mutex", 1,
             new PrintWriterLogger(new PrintWriter(System.out), "Locking", false));
 </source>
 <p>
-Now we have a lock called "Mutex" with the highest lock level of
+Now we have a lock called "Mutex" with a highest lock level of
 <code>1</code> and a logger that simply writes to stdout. Different
 lock levels and their compatibility is a special feature of
 <a
@@ -80,16 +80,16 @@ exclusive.acquire("Owner", 1, true, true, Long.MAX_VALUE);
 This tries to <a
 href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html#acquire(java.lang.Object,%20int,%20boolean,%20boolean,%20long)">acquire
 a lock</a> of level one (=exclusive) for the agent 
-"Owner". Parameters three and four tells the lock that it should block
+"Owner". Parameters three and four tell the lock that it should block
 the current thread if this lock level can not be acquired and that
-this lock is reentrant. Reentrant means that the same agant can
-require lock levels otherwise incompatible. Finally, there is a
+this lock is reentrant. Reentrant means that the same agent can
+require lock levels that would be otherwise incompatible. Finally, there is a
 timeout which is the maximum time the agent will wait for a lock. If a
 lock still is unavailable after this time the method will return
-false. In our case the request will (practically) never time out, we just wait until
+false. In our case the request will (practically) never time out; we just wait until
 we are served.</p>
 
-<p>Now all requests to fine grained locks will be braced with the
+<p>Now all requests with fine grained locks will be braced with the
 above statement and the <a
 href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html#release(java.lang.Object)">release
 statement</a> after all fine grained locks are acquired:</p>    
@@ -103,7 +103,7 @@ the agent is required as a parameter.
 
 <p>Coming to the fain grained locks: Slide puts read and write locks
 on resources accessed by WebDAV requests. As we really have no idea
-with resources will be accessed until we receive the actual request we
+which resources will be accessed until we receive the request we
 use a lock manager which looks like this:</p>
 <source>
 public final static READ_LOCK = 1;
@@ -113,17 +113,17 @@ LockManager lockManager = new GenericLockManager(WRITE_LOCK,
             new PrintWriterLogger(new PrintWriter(System.out), "Locking", false));
 </source>
 
-<p>Logs are the same as with the generic lock, they go to stdout. Before
+<p>Logs are the same as with the generic lock: they go to stdout. Before
 explaining more details, let's see how we get a lock from that manager:</p> 
 <source>
 GenericLock lock = (GenericLock) lockManager.atomicGetOrCreateLock("/");
 </source>
-<p>This gives us the lock for the resource called "/" which of course is semantically
-associated with the root of Slide's resource tree. The highst lock
+<p>This gives us the lock for the resource called "/" which is semantically
+associated with the root of Slide's resource tree. The highest lock
 level for the lock has been defined to two using the constant
-<code>WRITE_LOCK</code>. Besides, it is good practice to use constants for the
-lock levels in order to avoid unreadable code. Anyway, this returns a
-lock that might have been created by this statement as well:</p>
+<code>WRITE_LOCK</code>. It is good practice to use constants for the
+lock levels in order to avoid unreadable code. This returns a
+lock that could have been created by this statement as well:</p>
 
 <source>
 GenericLock readWrite = new new GenericLock("/", 2,
@@ -131,21 +131,21 @@ GenericLock readWrite = new new GenericLock("/", 2,
 </source>
 
 <p>However, if we ask the lock manager for this lock the next time it
-will not create a new lock, but will return the one created first
+will not create a new lock. Instead it will return the lock created first
 - preserving all lock levels already set. The assertion that all this
 will be done atomically is very important for correctness and because
-of this is reflected in the name of the method.
+of this it is reflected in the name of the method.
 </p>
 
 <p>The locks created by the above lock manager have two levels where
-write is exclusive and read is shared. This means if there is a
+the write level is exclusive and the read level is shared. This means if there is a
 write lock there can be no read locks and the other way
 round. However, in the absense of a write lock read locks can happily
 coexist with other read locks - they are shared - while write locks can not coexist with
-other write locks - they are exclusive. This is very useful for server
+other write locks - they are exclusive. This is very useful for webdav server
 locks as a there is no reason not to allow two GET requests to the
 same resource at the same time. However, you should not allow a PUT
-and a GET request to the same resource at the same time or even two PUT
+and a GET request to the same resource at the same time or two PUT
 requests. This means that none of the below statements will block</p>
 <source>
 readWrite.acquire("request1", READ_LOCK, true, true, Long.MAX_VALUE);
@@ -165,15 +165,15 @@ readWrite.acquire("request3", WRITE_LOCK, true, true, Long.MAX_VALUE);
 
 <p>In Slide there is a search method that allows you to
 query for a set of documents that satisfy certain search
-conditions. When you execute such a query at least the result
+conditions. When you execute such a query the result
 documents and indices will be touched with read access. As we learned
 before we need to acquire all locks on the documents accessed before
 starting the actual request to guarantee correctness and eliminate the
-hazard of any deadlock. Of course there is no way to determine which
-documents this will be beforehand as this would require anticipate the
-result. Effectively, we need a global read lock. Now, while there is a
-global read lock no other request must be allowed to write
-concurrently. More than one concurrent search request all having a
+hazard of deadlocks. Of course there is no way to determine which
+documents this will be beforehand as that would require anticipating the
+search results. Effectively, we need a global read lock. Now, while there is a
+global read lock no other request may be allowed to write
+concurrently. More than one concurrent search request having a
 global read lock would be no problem, but all requests that write in
 any way must acquire an exclusive write lock. Easy, one could say, so
 we have a lock with levels READ and WRITE which is a
@@ -181,9 +181,9 @@ simple read/write-lock as we have seen above. However, this is not quite adequat
 will demolish our fine grained locking mentioned before: writes would
 now be globally exclusive again. So, what we want from our lock is
 that an unrestricted number of search requests - in absence of any
-write request - may be done concurrently. Additionally, an
+write requests - may happen concurrently. Additionally, an
 unrestricted number of concurrent write requests - in absence of any
-search request - should be allowed as well. Sometimes the solution to
+search requests - should be allowed as well. Sometimes the solution to
 a problem becomes obvious as soon as you have written it down - like
 in or case: we need two read/write locks!</p>  
 
@@ -207,7 +207,7 @@ searchLock.acquire("write request", EXCLUSIVE_LOCK, true, true, Long.MAX_VALUE);
 as the counter part of the above. 
 </p>
 
-<p>That's it, isn't it? No, it is not. You might have already noticed,
+<p>That's it, isn't it? No, it is not. You might have already noticed
 that nothing has been gained. Now all write methods block each other
 in the searchLock and all search methods block each other in the
 writeLock! <em>Sigh</em>! This is not what we wanted, we just wanted
@@ -216,7 +216,7 @@ exclusive locks for write and search should have been
 <em>compatible</em>. This is tough as the compatibility mechanism of
 the generic lock is based on the order of the levels and the highest
 simply is exclusive. Adding another lock level to make the formerly
-highest non exclusive would only cause a mess as no one would
+highest non-exclusive would only cause a mess as no one would
 understand anything any more and most important it would still not be
 compatible to itself. Luckily, next to the additional reentrant compatibility we
 have already used above there is the so called <code>support</code>
@@ -243,7 +243,7 @@ searchLock.acquire("write request", EXCLUSIVE_LOCK, true,
 <p>As much for our short round trip. More information about this additional compatibility can be found <a
 href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html#acquire(java.lang.Object,%20int,%20boolean,%20int,%20long)">here</a>.
 If you still need more turn
-to the mailing list, get through the Javadocs and as the last resort through
+to the mailing list, go through the Javadocs and as the last resort through
 the sources ;) 
 
 </p>
