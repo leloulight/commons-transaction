@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.2 2004/12/14 12:12:47 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2004/12/14 12:12:47 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.3 2004/12/15 17:36:35 ozeigermann Exp $
+ * $Revision: 1.3 $
+ * $Date: 2004/12/15 17:36:35 $
  *
  * ====================================================================
  *
@@ -36,7 +36,7 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
 /**
  * Tests for generic locks. 
  *
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class GenericLockTest extends TestCase {
 
@@ -153,6 +153,9 @@ public class GenericLockTest extends TestCase {
 
         // a read / write lock
         final ReadWriteLockManager manager = new ReadWriteLockManager(sLogger, TIMEOUT);
+        
+        final RendezvousBarrier restart = new RendezvousBarrier("restart",
+                TIMEOUT, sLogger);
 
         for (int i = 0; i < 25; i++) {
 
@@ -177,6 +180,12 @@ public class GenericLockTest extends TestCase {
                     } catch (InterruptedException ie) {
                     } finally {
                         manager.releaseAll(owner2);
+                        try {
+                            synchronized (restart) {
+                                restart.meet();
+                                restart.reset();
+                            }
+                            } catch (InterruptedException ie) {}
                     }
                 }
             }, "Deadlock Thread");
@@ -198,6 +207,10 @@ public class GenericLockTest extends TestCase {
                 deadlockCnt++;
             } finally {
                 manager.releaseAll(owner1);
+                synchronized (restart) {
+                    restart.meet();
+                    restart.reset();
+                }
             }
 
             assertEquals(deadlockCnt, 1);
