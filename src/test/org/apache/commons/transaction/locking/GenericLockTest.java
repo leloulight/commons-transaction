@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.4 2004/12/17 00:31:22 ozeigermann Exp $
- * $Revision: 1.4 $
- * $Date: 2004/12/17 00:31:22 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.5 2004/12/17 16:37:07 ozeigermann Exp $
+ * $Revision: 1.5 $
+ * $Date: 2004/12/17 16:37:07 $
  *
  * ====================================================================
  *
@@ -37,7 +37,7 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
 /**
  * Tests for generic locks. 
  *
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class GenericLockTest extends TestCase {
 
@@ -252,7 +252,7 @@ public class GenericLockTest extends TestCase {
      * 8                                release         resumed
      * 9                                                release
      */
-    public void testPreference() throws Throwable {
+    public void testUpgrade() throws Throwable {
 
         sLogger.logInfo("\n\nChecking upgrade and preference lock\n\n");
         
@@ -360,4 +360,126 @@ public class GenericLockTest extends TestCase {
 
     }
     
+    /*
+     * 
+     * Test shows that two preference locks that are imcompatible do not cause a lock out
+     * which was the case with GenericLock 1.5
+     * Before the fix this test would dealock
+     * 
+     *                  Owner           Owner           Owner
+     * Step             #1              #2              #3
+     * 1                read (ok)
+     * 2                                write preferred 
+     *                                  (blocked 
+     *                                  because of #1)
+     * 3                                                write preferred 
+     *                                                  (blocked 
+     *                                                  because of #1 and #2)
+     * 4                release
+     * 5                                resumed   or    resumed 
+     *                                  (as both are preferred, problem
+     *                                   is that that would exclude each other
+     *                                   in the algorithm used)
+     * 6                                released   or   released
+     * 7                                resumed   or    resumed 
+     * 8                                released   or   released
+     * 
+     * 
+     * In CounterBarrierNotation this looks like
+     * 
+     *                  Owner           Owner           Owner
+     *                  #1              #2              #3
+     *                  0read1
+     *                                  2(write3)
+     *                                                  4(write5)
+     *                  6(release)7
+     *                                  8release9       8release9
+     * 
+     * Round brackets mean atomic execution
+     * 
+     * 
+     */
+    public void testPreference() throws Throwable {
+
+        sLogger.logInfo("\n\nChecking incompatible preference locks\n\n");
+        
+        final String owner1 = "owner1";
+        final String owner2 = "owner2";
+        final String owner3 = "owner3";
+
+        final String res1 = "res1";
+
+        final ReadWriteLock lock = new ReadWriteLock(res1, sLogger);
+
+        final RendezvousBarrier restart = new RendezvousBarrier("restart", 3, TIMEOUT, sLogger);
+
+        final CounterBarrier cb = new CounterBarrier("cb1", TIMEOUT, sLogger);
+
+        for (int i = 0; i < CONCURRENT_TESTS; i++) {
+            
+            System.out.print(".");
+
+            Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        cb.count(2);
+                        synchronized (lock) {
+                            cb.count(3);
+                            lock.acquire(owner2, ReadWriteLock.WRITE_LOCK, true,
+                                    GenericLock.COMPATIBILITY_REENTRANT, true, TIMEOUT);
+                        }
+                        cb.count(8);
+                        lock.release(owner2);
+                        cb.count(9);
+                        synchronized (restart) {
+                            restart.meet();
+                            restart.reset();
+                        }
+                    } catch (InterruptedException ie) {
+                    }
+                }
+            }, "Thread #1");
+
+            t1.start();
+
+            Thread t2 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        cb.count(4);
+                        synchronized (lock) {
+                            cb.count(5);
+                            lock.acquire(owner3, ReadWriteLock.WRITE_LOCK, true,
+                                    GenericLock.COMPATIBILITY_REENTRANT, true, TIMEOUT);
+                        }
+                        cb.count(8);
+                        lock.release(owner3);
+                        cb.count(9);
+                        synchronized (restart) {
+                            restart.meet();
+                            restart.reset();
+                        }
+                    } catch (InterruptedException ie) {
+                    }
+                }
+            }, "Thread #2");
+
+            t2.start();
+
+            cb.count(0);
+            lock.acquireRead(owner1, TIMEOUT);
+            cb.count(1);
+            cb.count(6);
+            synchronized (lock) {
+                lock.release(owner1);
+            }
+            cb.count(7);
+            synchronized (restart) {
+                restart.meet();
+                restart.reset();
+            }
+
+            cb.reset();
+        }
+
+    }
 }
