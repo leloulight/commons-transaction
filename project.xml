@@ -90,7 +90,7 @@
       <name>Daniel Florey</name>
       <id>dflorey</id>
       <email>dflorey@apache.org</email>
-      <organization>Apache Software Foundation</organization>
+      <organization></organization>
       <timezone>+1</timezone>
       <roles>
          <role>Java Developer</role>
