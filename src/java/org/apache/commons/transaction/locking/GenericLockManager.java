@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.5 2004/12/17 16:36:21 ozeigermann Exp $
- * $Revision: 1.5 $
- * $Date: 2004/12/17 16:36:21 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.6 2004/12/19 03:07:04 ozeigermann Exp $
+ * $Revision: 1.6 $
+ * $Date: 2004/12/19 03:07:04 $
  *
  * ====================================================================
  *
@@ -36,11 +36,12 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link GenericLock}s on resources.   
  * 
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class GenericLockManager implements LockManager {
 
     public static final long DEFAULT_TIMEOUT = 30000;
+    public static final long DEFAULT_CHECK_THRESHHOLD = 500;
     
     /** Maps lock to ownerIds waiting for it. */
     protected Map waitsForLock = Collections.synchronizedMap(new HashMap());
@@ -51,30 +52,47 @@ public class GenericLockManager implements LockManager {
     /** Maps resourceId to lock. */
     protected Map globalLocks = new HashMap();
     
+    /** Maps onwerId to global time outs. */
+    protected Map globalTimeouts = Collections.synchronizedMap(new HashMap());
+
+    protected Set timedOutOwners = Collections.synchronizedSet(new HashSet());
+    
     protected int maxLockLevel = -1;
     protected LoggerFacade logger;
     protected long globalTimeoutMSecs;
+    protected long checkThreshhold;
     
     /**
      * Creates a new generic lock manager.
      * 
      * @param maxLockLevel
-     *            highest allowed lock level as described in {@link GenericLock}'s class intro
+     *            highest allowed lock level as described in {@link GenericLock}
+     *            's class intro
      * @param logger
      *            generic logger used for all kind of debug logging
      * @param timeoutMSecs
      *            specifies the maximum time to wait for a lock in milliseconds
+     * @param checkThreshholdMSecs
+     *            specifies a special wait threshhold before deadlock and
+     *            timeout detection come into play or <code>-1</code> switch
+     *            it off and check for directly
      * @throws IllegalArgumentException
      *             if maxLockLevel is less than 1
      */
-    public GenericLockManager(int maxLockLevel, LoggerFacade logger, long timeoutMSecs)
-            throws IllegalArgumentException {
+    public GenericLockManager(int maxLockLevel, LoggerFacade logger, long timeoutMSecs,
+            long checkThreshholdMSecs) throws IllegalArgumentException {
         if (maxLockLevel < 1)
             throw new IllegalArgumentException("The maximum lock level must be at least 1 ("
                     + maxLockLevel + " was specified)");
         this.maxLockLevel = maxLockLevel;
         this.logger = logger.createLogger("Locking");
         this.globalTimeoutMSecs = timeoutMSecs;
+        this.checkThreshhold = checkThreshholdMSecs;
+    }
+
+    public GenericLockManager(int maxLockLevel, LoggerFacade logger, long timeoutMSecs)
+            throws IllegalArgumentException {
+        this(maxLockLevel, logger, timeoutMSecs, DEFAULT_CHECK_THRESHHOLD);
     }
 
     public GenericLockManager(int maxLockLevel, LoggerFacade logger)
@@ -82,10 +100,24 @@ public class GenericLockManager implements LockManager {
         this(maxLockLevel, logger, DEFAULT_TIMEOUT);
     }
 
+
+    public void setGlobalTimeout(Object ownerId, long timeoutMSecs) {
+        long now = System.currentTimeMillis();
+        long timeout = now + timeoutMSecs;
+        globalTimeouts.put(ownerId, new Long(timeout));
+    }
+    
+    public long getGlobalTimeoutTime(Object ownerId) {
+        Long timeout = (Long) globalTimeouts.get(ownerId);
+        return timeout.longValue();
+    }
+    
     /**
      * @see LockManager#tryLock(Object, Object, int, boolean)
      */
     public boolean tryLock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant) {
+        timeoutCheck(ownerId);
+
         GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
         boolean acquired = lock.tryLock(ownerId, targetLockLevel,
                 reentrant ? GenericLock.COMPATIBILITY_REENTRANT : GenericLock.COMPATIBILITY_NONE,
@@ -111,6 +143,11 @@ public class GenericLockManager implements LockManager {
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant,
             long timeoutMSecs) throws LockException {
 
+        timeoutCheck(ownerId);
+        
+        long now = System.currentTimeMillis();
+        long waitEnd = now + timeoutMSecs;
+
         GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
 
         // we need to be careful that we the detected deadlock status is still valid when actually
@@ -126,23 +163,60 @@ public class GenericLockManager implements LockManager {
         addWaiter(lock, ownerId);
 
         try {
-            boolean acquired;
-            // (a) while we are checking if we can have this lock, no one else must apply for it
-            // and possibly change the data
-            synchronized (lock) {
-                
-                // TODO: detection is rather expensive, would be an idea to wait for a 
-                // short time (<5 seconds) to see if we get the lock, after that we can still check
-                // for the deadlock and if not try with the remaining timeout time
-                boolean deadlock = wouldDeadlock(ownerId, lock, targetLockLevel,
-                        reentrant ? GenericLock.COMPATIBILITY_REENTRANT : GenericLock.COMPATIBILITY_NONE);
-                if (deadlock) {
-                    throw new LockException("Lock would cause deadlock",
-                            LockException.CODE_DEADLOCK_VICTIM, resourceId);
-                }
-        
+            boolean acquired = false;
+            
+            // detection for deadlocks and time outs is rather expensive, 
+            // so we wait for the lock for a  
+            // short time (<5 seconds) to see if we get it without checking;
+            // if not we still can check what the reason for this is
+            if (checkThreshhold != -1 && timeoutMSecs > checkThreshhold) {
                 acquired = lock
-                        .acquire(ownerId, targetLockLevel, true, reentrant, timeoutMSecs);
+                        .acquire(ownerId, targetLockLevel, true, reentrant, checkThreshhold);
+                if (acquired) {
+                    addOwner(ownerId, lock);
+                    return;
+                } else {
+                    timeoutMSecs -= checkThreshhold;
+                }
+            }
+            
+            while (!acquired && waitEnd > now) {
+            
+                // first be sure all locks are stolen from owners that have already timed out
+                releaseTimedOutOwners();
+
+                // (a) while we are checking if we can have this lock, no one else must apply for it
+                // and possibly change the data
+                synchronized (lock) {
+                    
+                    // let's see if any of the conflicting owners waits for us, if so we
+                    // have a deadlock
+    
+                    Set conflicts = lock.getConflictingOwners(ownerId, targetLockLevel,
+                            reentrant ? GenericLock.COMPATIBILITY_REENTRANT
+                                    : GenericLock.COMPATIBILITY_NONE);
+
+                    boolean deadlock = wouldDeadlock(ownerId, lock, targetLockLevel,
+                            reentrant ? GenericLock.COMPATIBILITY_REENTRANT
+                                    : GenericLock.COMPATIBILITY_NONE, conflicts);
+                    if (deadlock) {
+                        throw new LockException("Lock would cause deadlock",
+                                LockException.CODE_DEADLOCK_VICTIM, resourceId);
+                    }
+
+                    long nextConflictTimeout = getNextGlobalConflictTimeout(conflicts);
+                    if (nextConflictTimeout != -1 && nextConflictTimeout < waitEnd) {
+                        timeoutMSecs = nextConflictTimeout - now;
+                        // XXX add 10% to ensure the lock really is timed out
+                        timeoutMSecs += timeoutMSecs / 10;
+                    } else {
+                        timeoutMSecs = waitEnd - now;
+                    }
+            
+                    acquired = lock
+                            .acquire(ownerId, targetLockLevel, true, reentrant, timeoutMSecs);
+                    
+                }
             }
             if (!acquired) {
                 throw new LockException("Lock wait timed out", LockException.CODE_TIMED_OUT,
@@ -161,6 +235,7 @@ public class GenericLockManager implements LockManager {
      * @see LockManager#getLevel(Object, Object)
      */
     public int getLevel(Object ownerId, Object resourceId) {
+        timeoutCheck(ownerId);
         GenericLock lock = (GenericLock) getLock(resourceId);
         if (lock != null) {
             return lock.getLockLevel(ownerId);
@@ -173,6 +248,7 @@ public class GenericLockManager implements LockManager {
      * @see LockManager#release(Object, Object)
      */
     public void release(Object ownerId, Object resourceId) {
+        timeoutCheck(ownerId);
         GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
         lock.release(ownerId);
         removeOwner(ownerId, lock);
@@ -182,6 +258,11 @@ public class GenericLockManager implements LockManager {
      * @see LockManager#releaseAll(Object)
      */
     public void releaseAll(Object ownerId) {
+        // reset time out status for this owner
+        if (timedOutOwners.remove(ownerId)) {
+            // short cut if we were timed out there are no more locks
+            return;
+        }
         Set locks = (Set) globalOwners.get(ownerId);
         if (locks != null) {
             for (Iterator it = locks.iterator(); it.hasNext();) {
@@ -221,12 +302,14 @@ public class GenericLockManager implements LockManager {
     }
 
     protected void addWaiter(GenericLock lock, Object ownerId) {
-        Set waiters = (Set) waitsForLock.get(lock);
-        if (waiters == null) {
-            waiters = new HashSet();
-            waitsForLock.put(lock, waiters);
+        synchronized (waitsForLock) {
+            Set waiters = (Set) waitsForLock.get(lock);
+            if (waiters == null) {
+                waiters = Collections.synchronizedSet(new HashSet());
+                waitsForLock.put(lock, waiters);
+            }
+            waiters.add(ownerId);
         }
-        waiters.add(ownerId);
     }
 
     protected void removeWaiter(GenericLock lock, Object ownerId) {
@@ -237,11 +320,7 @@ public class GenericLockManager implements LockManager {
     }
 
     protected boolean wouldDeadlock(Object ownerId, GenericLock lock, int targetLockLevel,
-            int compatibility) {
-        // let's see if any of the conflicting owners waits for us, if so we
-        // have a deadlock
-
-        Set conflicts = lock.getConflictingOwners(ownerId, targetLockLevel, compatibility);
+            int compatibility, Set conflicts) {
         if (conflicts != null) {
             // these are our locks
             Set locks = (Set) globalOwners.get(ownerId);
@@ -251,13 +330,15 @@ public class GenericLockManager implements LockManager {
                     // these are the ones waiting for one of our locks
                     Set waiters = (Set) waitsForLock.get(mylock);
                     if (waiters != null) {
-                        for (Iterator j = waiters.iterator(); j.hasNext();) {
-                            Object waitingOwnerId = j.next();
-                            // if someone waiting for one of our locks would make us wait
-                            // this is a deadlock
-                            if (conflicts.contains(waitingOwnerId))
-                                return true;
-
+                        synchronized (waiters) {
+                            for (Iterator j = waiters.iterator(); j.hasNext();) {
+                                Object waitingOwnerId = j.next();
+                                // if someone waiting for one of our locks would make us wait
+                                // this is a deadlock
+                                if (conflicts.contains(waitingOwnerId))
+                                    return true;
+        
+                            }
                         }
                     }
                 }
@@ -266,6 +347,44 @@ public class GenericLockManager implements LockManager {
         return false;
     }
 
+    protected boolean releaseTimedOutOwners() {
+        boolean released = false;
+        synchronized (globalTimeouts) {
+            for (Iterator it = globalTimeouts.entrySet().iterator(); it.hasNext();) {
+                Map.Entry entry = (Map.Entry) it.next();
+                Object ownerId = entry.getKey();
+                long timeout = ((Long)entry.getValue()).longValue();
+                long now = System.currentTimeMillis();
+                if (timeout < now) {
+                    releaseAll(ownerId);
+                    timedOutOwners.add(ownerId);
+                    it.remove();
+                    released = true;
+                }
+            }
+        }
+        return released;
+    }
+    
+    protected long getNextGlobalConflictTimeout(Set conflicts) {
+        long minTimeout = -1;
+        long now = System.currentTimeMillis();
+        if (conflicts != null) {
+            synchronized (globalTimeouts) {
+                for (Iterator it = globalTimeouts.entrySet().iterator(); it.hasNext();) {
+                    Map.Entry entry = (Map.Entry) it.next();
+                    Object ownerId = entry.getKey();
+                    if (conflicts.contains(ownerId)) {
+                        long timeout = ((Long) entry.getValue()).longValue();
+                        if (minTimeout == -1 || timeout < minTimeout) {
+                            minTimeout = timeout;
+                        }
+                    }
+                }
+            }
+        }
+        return minTimeout;
+    }
     
     public MultiLevelLock getLock(Object resourceId) {
         synchronized (globalLocks) {
@@ -305,6 +424,17 @@ public class GenericLockManager implements LockManager {
             GenericLock lock = new GenericLock(resourceId, maxLockLevel, logger);
             globalLocks.put(resourceId, lock);
             return lock;
+        }
+    }
+    
+    protected void timeoutCheck(Object ownerId) throws LockException {
+        if (timedOutOwners.contains(ownerId)) {
+            throw new LockException(
+                    "All locks of owner "
+                            + ownerId
+                            + " have globally timed out."
+                            + " You will not be able to to continue with this owner until you call releaseAll.",
+                    LockException.CODE_TIMED_OUT, null);
         }
     }
 }
