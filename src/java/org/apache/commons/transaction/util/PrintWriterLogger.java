@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/PrintWriterLogger.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:18 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/PrintWriterLogger.java,v 1.2 2004/12/16 23:32:44 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/12/16 23:32:44 $
  *
  * ====================================================================
  *
@@ -29,7 +29,7 @@ import java.io.PrintWriter;
  * Logger implementation that logs into a pring writer like the one
  * passed in JCA.
  *
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class PrintWriterLogger implements LoggerFacade {
 
@@ -98,5 +98,6 @@ public class PrintWriterLogger implements LoggerFacade {
 
     protected void log(String level, String message) {
         printWriter.write(name + "(" + level + ":" + message);
+        printWriter.flush();
     }
 }
