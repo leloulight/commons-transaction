@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteUpgradeLock.java,v 1.1 2004/12/17 00:30:54 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/12/17 00:30:54 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteUpgradeLock.java,v 1.2 2005/01/08 18:57:38 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2005/01/08 18:57:38 $
  *
  * ====================================================================
  *
@@ -56,7 +56,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * blocked by this first lock, while others of course will be. This is the
  * natural way you already know from Java monitors and synchronized blocks.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * 
  * @see GenericLock
  * @see org.apache.commons.transaction.locking.ReadWriteLock
@@ -140,14 +140,14 @@ public class ReadWriteUpgradeLock extends GenericLock {
     }
 
     /**
-     * @see GenericLock#acquire(Object, int, boolean, boolean, long)
+     * @see GenericLock#acquire(Object, int, boolean, int, boolean, long)
      */
     public synchronized boolean acquire(Object ownerId, int targetLockLevel, boolean wait,
-            boolean reentrant, long timeoutMSecs) throws InterruptedException {
-        boolean preferred = (targetLockLevel == WRITE_LOCK && getLockLevel(ownerId) == UPGRADE_LOCK);
-        
-        return acquire(ownerId, targetLockLevel, wait, reentrant ? COMPATIBILITY_REENTRANT
-                : COMPATIBILITY_NONE, preferred, timeoutMSecs);
+            int compatibility, boolean preferred, long timeoutMSecs) throws InterruptedException {
+        if (targetLockLevel == WRITE_LOCK && getLockLevel(ownerId) == UPGRADE_LOCK) {
+            preferred = true;
+        }
+        return super.acquire(ownerId, targetLockLevel, wait, compatibility, preferred, timeoutMSecs);
     }
 
 }
