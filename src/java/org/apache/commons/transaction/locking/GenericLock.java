@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.7 2004/12/18 20:02:05 ozeigermann Exp $
- * $Revision: 1.7 $
- * $Date: 2004/12/18 20:02:05 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.8 2005/01/07 13:52:42 ozeigermann Exp $
+ * $Revision: 1.8 $
+ * $Date: 2005/01/07 13:52:42 $
  *
  * ====================================================================
  *
@@ -106,7 +106,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * 
  * </p>
  * <p>
- * Additionally, there are no preferences for specific locks you can pass to
+ * Additionally, there are preferences for specific locks you can pass to
  * {@link #acquire(Object, int, boolean, int, boolean, long)}. 
  * This means whenever more thanone party
  * waits for a lock you can specify which one is to be preferred. This gives you
@@ -118,16 +118,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * </ul>
  * </p>
  * 
- * General limitations include: <br>
- * <ul>
- * <li>You are restricted to the scheme described above
- * <li>You can not specify a timeframe for the validity of a lock. This means
- * an owner of a thread can never lose a lock except when <em>actively</em>
- * releasing it. This is bad when an owner either forgets to release a lock or
- * is not able to do so due to error states or abnormal termination.
- * </ul>
- * 
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class GenericLock implements MultiLevelLock {
 

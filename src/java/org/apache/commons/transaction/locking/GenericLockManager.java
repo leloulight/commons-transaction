@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.12 2005/01/07 13:36:19 ozeigermann Exp $
- * $Revision: 1.12 $
- * $Date: 2005/01/07 13:36:19 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.13 2005/01/07 13:52:42 ozeigermann Exp $
+ * $Revision: 1.13 $
+ * $Date: 2005/01/07 13:52:42 $
  *
  * ====================================================================
  *
@@ -34,9 +34,14 @@ import java.util.Set;
 import org.apache.commons.transaction.util.LoggerFacade;
 
 /**
- * Manager for {@link GenericLock}s on resources.   
+ * Manager for {@link GenericLock}s on resources. This implementation includes 
+ * <ul>
+ * <li>deadlock detection, which is configurable to come into effect after an initial short waiting
+ * lock request; this is useful as it is somewhat expensive
+ * <li>global transaction timeouts that actively revok granted rights from transactions
+ * </ul>
  * 
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 public class GenericLockManager implements LockManager, LockManager2 {
 
@@ -123,7 +128,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
     }
     
     /**
-     * @see LockManager#tryLock(Object, Object, int, boolean)
+     * @see LockManager2#tryLock(Object, Object, int, boolean)
      */
     public boolean tryLock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant) {
         timeoutCheck(ownerId);
@@ -140,7 +145,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
     }
 
     /**
-     * @see LockManager#lock(Object, Object, int, boolean)
+     * @see LockManager2#lock(Object, Object, int, boolean)
      */
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant)
             throws LockException {
@@ -148,7 +153,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
     }
 
     /**
-     * @see LockManager#lock(Object, Object, int, boolean, long)
+     * @see LockManager2#lock(Object, Object, int, boolean, long)
      */
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant,
             long timeoutMSecs) throws LockException {
@@ -172,7 +177,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
         // (b) register us as a waiter before actually trying, so other threads take us into account
         // XXX: This may however mean both deadlocking parts detect the deadlock simultaneously,
         // and both will be rolled back. The (worse) alternative, however, is that we add us
-        // as a waiter ofter deadlock check which may mean we do not detect the deadlock at all
+        // as a waiter after deadlock check which may mean we do not detect the deadlock at all
         addWaiter(lock, ownerId);
 
         try {
@@ -247,7 +252,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
     }
 
     /**
-     * @see LockManager#getLevel(Object, Object)
+     * @see LockManager2#getLevel(Object, Object)
      */
     public int getLevel(Object ownerId, Object resourceId) {
         timeoutCheck(ownerId);
@@ -260,7 +265,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
     }
 
     /**
-     * @see LockManager#release(Object, Object)
+     * @see LockManager2#release(Object, Object)
      */
     public void release(Object ownerId, Object resourceId) {
         timeoutCheck(ownerId);
@@ -270,7 +275,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
     }
 
     /**
-     * @see LockManager#releaseAll(Object)
+     * @see LockManager2#releaseAll(Object)
      */
     public void releaseAll(Object ownerId) {
         // XXX even if we are timed out we can still have
@@ -296,7 +301,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
     }
 
     /**
-     * @see LockManager#getAll(Object)
+     * @see LockManager2#getAll(Object)
      */
     public Set getAll(Object ownerId) {
         Set locks = (Set) globalOwners.get(ownerId);
