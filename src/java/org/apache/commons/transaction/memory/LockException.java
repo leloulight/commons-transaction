@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/LockException.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:18 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/LockException.java,v 1.2 2004/12/13 10:52:03 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/12/13 10:52:03 $
  *
  * ====================================================================
  *
@@ -27,22 +27,26 @@ package org.apache.commons.transaction.memory;
 /**
  * Exception displaying a lock problem in pessimistic transactions.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see OptimisticMapWrapper
  */
-public class LockException extends RuntimeException /* FIXME Exception*/ {
+public class LockException extends RuntimeException /* FIXME Exception */{
 
     public static final int CODE_INTERRUPTED = 1;
+
     public static final int CODE_TIMED_OUT = 2;
+
     public static final int CODE_DEADLOCK_VICTIM = 3;
-    
-	protected Object key;
+
+    protected Object key;
+
     protected String reason;
+
     protected int code;
-	
-	public LockException(String reason, int code, Object key) {
+
+    public LockException(String reason, int code, Object key) {
         this.reason = reason;
-		this.key = key;
+        this.key = key;
         this.code = code;
-	}
+    }
 }
