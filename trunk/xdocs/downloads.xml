@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<document>
+   <properties>
+      <title>Downloads</title>
+      <author email="commons-dev@jakarta.apache.org">Commons Documentation Team</author>
+      <revision>$Id: downloads.xml,v 1.5 2005/01/13 01:23:57 ozeigermann Exp $</revision>
+   </properties>
+
+   <body>
+      <section name="Releases">
+         <p>The following releases are available:</p>
+         <ul>
+           <li><a href="http://archive.apache.org/dist/jakarta/commons/transaction/">Version 1.0 - 15 December 2004</a> / <a href="http://cvs.apache.org/viewcvs.cgi/*checkout*/jakarta-commons/transaction/RELEASE-NOTES.txt?rev=1.3">release notes</a></li>
+           <li><a href="http://jakarta.apache.org/site/binindex.cgi#commons-transaction">Version 1.0.1 - 13 January 2004</a> / <a href="http://cvs.apache.org/viewcvs.cgi/*checkout*/jakarta-commons/transaction/RELEASE-NOTES.txt?rev=1.3.2.1">release notes</a></li>
+         </ul>
+         <p>
+            The latest binary release is always available on the 
+            <a href="http://jakarta.apache.org/site/binindex.cgi#commons-transaction">
+            Jakarta Binary Downloads page</a>,
+            its source is available from 
+            <a href="http://jakarta.apache.org/site/sourceindex.cgi#commons-transaction">
+            Jakarta Source Downloads page</a>.
+         </p>
+         <p>
+            Older releases are retained by the Apache Software Foundation but are 
+            moved into a
+            <a href="http://archive.apache.org/dist/jakarta/commons/transaction/">
+            special archive area</a>.
+         </p>
+      </section>
+      <section name="Beta Releases / Release Candidates">
+c         <p>The following beta releases / release candidates are available:</p>
+         <ul>
+           <li><a href="http://cvs.apache.org/dist/jakarta/commons/transaction/1.1b1/">Version 1.1 beta 1 - 13 January 2004</a> / <a href="http://cvs.apache.org/viewcvs.cgi/*checkout*/jakarta-commons/transaction/RELEASE-NOTES.txt?rev=1.14">release notes</a></li>
+         </ul>
+      </section>
+      <section name="Latest Sources">
+         <p>
+            Access to the source tree to see the latest and greatest code is possible
+            through <a href="cvs-usage.html">anonymous CVS access</a>.
+         </p>
+      </section>
+
+   </body>
+</document>
