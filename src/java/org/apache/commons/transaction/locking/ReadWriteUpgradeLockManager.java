@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteUpgradeLockManager.java,v 1.1 2004/12/17 00:30:54 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/12/17 00:30:54 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteUpgradeLockManager.java,v 1.2 2005/01/09 15:12:11 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2005/01/09 15:12:11 $
  *
  * ====================================================================
  *
@@ -43,9 +43,10 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * served before all other none preferred locking requests.
  * </p>
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * 
  * @see ReadWriteUpgradeLock
+ * @since 1.1
  */
 public class ReadWriteUpgradeLockManager extends ReadWriteLockManager {
 

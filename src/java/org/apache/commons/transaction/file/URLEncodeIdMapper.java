@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/URLEncodeIdMapper.java,v 1.1 2004/12/18 23:19:09 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/12/18 23:19:09 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/URLEncodeIdMapper.java,v 1.2 2005/01/09 15:12:12 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2005/01/09 15:12:12 $
  *
  * ====================================================================
  *
@@ -29,7 +29,9 @@ import java.net.URLEncoder;
 import org.apache.commons.codec.binary.Base64;
 
 /**
- *
+ * URL encodes a resource.
+ *  
+ * @since 1.1
  */
 public class URLEncodeIdMapper implements ResourceIdToPathMapper {
     public String getPathForId(Object resourceId) {

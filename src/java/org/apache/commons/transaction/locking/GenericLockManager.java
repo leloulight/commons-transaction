@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.16 2005/01/08 19:02:34 ozeigermann Exp $
- * $Revision: 1.16 $
- * $Date: 2005/01/08 19:02:34 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.17 2005/01/09 15:12:11 ozeigermann Exp $
+ * $Revision: 1.17 $
+ * $Date: 2005/01/09 15:12:11 $
  *
  * ====================================================================
  *
@@ -42,7 +42,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <li>global transaction timeouts that actively revoke granted rights from transactions
  * </ul>
  * 
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  */
 public class GenericLockManager implements LockManager, LockManager2 {
 
@@ -81,6 +81,8 @@ public class GenericLockManager implements LockManager, LockManager2 {
      *            it off and check for directly
      * @throws IllegalArgumentException
      *             if maxLockLevel is less than 1
+     * 
+     * @since 1.1
      */
     public GenericLockManager(int maxLockLevel, LoggerFacade logger, long timeoutMSecs,
             long checkThreshholdMSecs) throws IllegalArgumentException {
@@ -105,6 +107,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
 
     /**
      * @see LockManager2#startGlobalTimeout(Object, long)
+     * @since 1.1
      */
     public void startGlobalTimeout(Object ownerId, long timeoutMSecs) {
         long now = System.currentTimeMillis();
@@ -114,6 +117,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
     
     /**
      * @see LockManager2#tryLock(Object, Object, int, boolean)
+     * @since 1.1
      */
     public boolean tryLock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant) {
         timeoutCheck(ownerId);
@@ -131,6 +135,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
 
     /**
      * @see LockManager2#lock(Object, Object, int, boolean)
+     * @since 1.1
      */
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant)
             throws LockException {
@@ -139,6 +144,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
 
     /**
      * @see LockManager2#lock(Object, Object, int, boolean, long)
+     * @since 1.1
      */
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant,
             long timeoutMSecs) throws LockException {
@@ -148,6 +154,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
 
     /**
      * @see LockManager2#lock(Object, Object, int, int, boolean, long)
+     * @since 1.1
      */
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, int compatibility,
             boolean preferred, long timeoutMSecs) throws LockException {
@@ -228,6 +235,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
 
     /**
      * @see LockManager2#getLevel(Object, Object)
+     * @since 1.1
      */
     public int getLevel(Object ownerId, Object resourceId) {
         timeoutCheck(ownerId);
@@ -241,6 +249,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
 
     /**
      * @see LockManager2#release(Object, Object)
+     * @since 1.1
      */
     public void release(Object ownerId, Object resourceId) {
         timeoutCheck(ownerId);
@@ -251,6 +260,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
 
     /**
      * @see LockManager2#releaseAll(Object)
+     * @since 1.1
      */
     public void releaseAll(Object ownerId) {
         releaseAllNoTimeOutReset(ownerId);
@@ -274,6 +284,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
     
     /**
      * @see LockManager2#getAll(Object)
+     * @since 1.1
      */
     public Set getAll(Object ownerId) {
         Set locks = (Set) globalOwners.get(ownerId);

@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/JDK14URLEncodeIdMapper.java,v 1.1 2004/12/18 23:19:09 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/12/18 23:19:09 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/JDK14URLEncodeIdMapper.java,v 1.2 2005/01/09 15:12:12 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2005/01/09 15:12:12 $
  *
  * ====================================================================
  *
@@ -27,7 +27,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 /**
- *  
+ * URL encodes a resource id using JDK1.4 functionality. 
+ * 
+ * @since 1.1 
  */
 public class JDK14URLEncodeIdMapper implements ResourceIdToPathMapper {
     public String getPathForId(Object resourceId) {

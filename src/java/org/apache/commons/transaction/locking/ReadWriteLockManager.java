@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteLockManager.java,v 1.3 2005/01/07 23:33:24 ozeigermann Exp $
- * $Revision: 1.3 $
- * $Date: 2005/01/07 23:33:24 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteLockManager.java,v 1.4 2005/01/09 15:12:11 ozeigermann Exp $
+ * $Revision: 1.4 $
+ * $Date: 2005/01/09 15:12:11 $
  *
  * ====================================================================
  *
@@ -28,7 +28,8 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link org.apache.commons.transaction.locking.ReadWriteLock}s on resources.
  * 
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
+ * @since 1.1
  */
 public class ReadWriteLockManager extends GenericLockManager {
 

@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockException.java,v 1.1 2004/12/14 12:12:46 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/12/14 12:12:46 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockException.java,v 1.2 2005/01/09 15:12:11 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2005/01/09 15:12:11 $
  *
  * ====================================================================
  *
@@ -26,7 +26,8 @@ package org.apache.commons.transaction.locking;
 /**
  * Exception displaying a lock problem.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
+ * @since 1.1
  */
 public class LockException extends RuntimeException {
 

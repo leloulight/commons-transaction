@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockManager2.java,v 1.3 2005/01/08 18:52:23 ozeigermann Exp $
- * $Revision: 1.3 $
- * $Date: 2005/01/08 18:52:23 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockManager2.java,v 1.4 2005/01/09 15:12:11 ozeigermann Exp $
+ * $Revision: 1.4 $
+ * $Date: 2005/01/09 15:12:11 $
  *
  * ====================================================================
  *
@@ -29,10 +29,11 @@ import java.util.Set;
  * Extended version of a lock manager that also has global knowledge or all locks and should be
  * used as a delegate for all locking requests. This allows for things like deadlock detection.
  * 
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  * @see MultiLevelLock
  * @see LockManager
  * @see GenericLockManager
+ * @since 1.1
  */
 public interface LockManager2 {
 

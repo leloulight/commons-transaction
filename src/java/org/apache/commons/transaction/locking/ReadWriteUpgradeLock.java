@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteUpgradeLock.java,v 1.2 2005/01/08 18:57:38 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2005/01/08 18:57:38 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteUpgradeLock.java,v 1.3 2005/01/09 15:12:11 ozeigermann Exp $
+ * $Revision: 1.3 $
+ * $Date: 2005/01/09 15:12:11 $
  *
  * ====================================================================
  *
@@ -56,11 +56,12 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * blocked by this first lock, while others of course will be. This is the
  * natural way you already know from Java monitors and synchronized blocks.
  * 
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * 
  * @see GenericLock
  * @see org.apache.commons.transaction.locking.ReadWriteLock
  * @see ReadWriteUpgradeLockManager
+ * @since 1.1
  */
 public class ReadWriteUpgradeLock extends GenericLock {
 

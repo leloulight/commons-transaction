@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/MultiLevelLock2.java,v 1.1 2005/01/08 19:22:47 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2005/01/08 19:22:47 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/MultiLevelLock2.java,v 1.2 2005/01/09 15:12:11 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2005/01/09 15:12:11 $
  *
  * ====================================================================
  *
@@ -28,10 +28,11 @@ package org.apache.commons.transaction.locking;
  * Extended multi level lock. Compared to basic {@link MultiLevelLock} allows for more flexible
  * locking including preference and more compatibility modes.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see LockManager2
  * @see MultiLevelLock
  * @see GenericLock
+ * @since 1.1
  */
 public interface MultiLevelLock2 {
 
