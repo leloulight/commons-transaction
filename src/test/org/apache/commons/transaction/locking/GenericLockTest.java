@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.8 2004/12/19 10:35:55 ozeigermann Exp $
- * $Revision: 1.8 $
- * $Date: 2004/12/19 10:35:55 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.9 2004/12/28 21:11:12 ozeigermann Exp $
+ * $Revision: 1.9 $
+ * $Date: 2004/12/28 21:11:12 $
  *
  * ====================================================================
  *
@@ -29,7 +29,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.apache.commons.transaction.util.CounterBarrier;
+import org.apache.commons.transaction.util.SequenceBarrier;
 import org.apache.commons.transaction.util.LoggerFacade;
 import org.apache.commons.transaction.util.PrintWriterLogger;
 import org.apache.commons.transaction.util.RendezvousBarrier;
@@ -37,7 +37,7 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
 /**
  * Tests for generic locks. 
  *
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class GenericLockTest extends TestCase {
 
@@ -268,7 +268,7 @@ public class GenericLockTest extends TestCase {
 
         final RendezvousBarrier restart = new RendezvousBarrier("restart", 3, TIMEOUT, sLogger);
 
-        final CounterBarrier cb = new CounterBarrier("cb1", TIMEOUT, sLogger);
+        final SequenceBarrier cb = new SequenceBarrier("cb1", TIMEOUT, sLogger);
 
         for (int i = 0; i < CONCURRENT_TESTS; i++) {
             
@@ -385,7 +385,7 @@ public class GenericLockTest extends TestCase {
      * 8                                released   or   released
      * 
      * 
-     * In CounterBarrierNotation this looks like
+     * In SequenceBarrier notation this looks like
      * 
      *                  Owner           Owner           Owner
      *                  #1              #2              #3
@@ -413,7 +413,7 @@ public class GenericLockTest extends TestCase {
 
         final RendezvousBarrier restart = new RendezvousBarrier("restart", 3, TIMEOUT, sLogger);
 
-        final CounterBarrier cb = new CounterBarrier("cb1", TIMEOUT, sLogger);
+        final SequenceBarrier cb = new SequenceBarrier("cb1", TIMEOUT, sLogger);
 
         for (int i = 0; i < CONCURRENT_TESTS; i++) {
             
@@ -496,7 +496,7 @@ public class GenericLockTest extends TestCase {
 
         final RendezvousBarrier restart = new RendezvousBarrier("restart", 2, TIMEOUT, sLogger);
 
-        final CounterBarrier cb = new CounterBarrier("cb1", TIMEOUT, sLogger);
+        final SequenceBarrier cb = new SequenceBarrier("cb1", TIMEOUT, sLogger);
 
         for (int i = 0; i < CONCURRENT_TESTS; i++) {
             
