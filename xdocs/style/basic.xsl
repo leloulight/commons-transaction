@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- Temporary Stylesheet for Catalina Developer Documentation -->
-<!-- $Id: basic.xsl,v 1.1 2004/11/19 23:58:46 ozeigermann Exp $ -->
+<!-- $Id: basic.xsl,v 1.1.2.1 2005/01/10 00:45:16 ozeigermann Exp $ -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   version="1.0">
@@ -28,7 +28,7 @@
   <!-- Process an entire document into an HTML page -->
   <xsl:template match="document">
     <xsl:variable name="project"
-                select="document('../project.xml')/project"/>
+                select="document('../../project.xml')/project"/>
     <html>
     <head>
     <title><xsl:value-of select="$project/title"/> - <xsl:value-of select="properties/title"/></title>
