@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.3 2004/12/14 12:12:46 ozeigermann Exp $
- * $Revision: 1.3 $
- * $Date: 2004/12/14 12:12:46 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.4 2004/12/16 19:14:00 ozeigermann Exp $
+ * $Revision: 1.4 $
+ * $Date: 2004/12/16 19:14:00 $
  *
  * ====================================================================
  *
@@ -102,7 +102,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * forgets to release a lock or is not able to do so due to error states or abnormal termination.  
  * </ul>
  * 
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class GenericLock implements MultiLevelLock {
 
@@ -444,7 +444,7 @@ public class GenericLock implements MultiLevelLock {
         return (targetLockLevel <= getLevelMaxLock() - currentLockLevel);
     }
     
-    protected Set getConflictingOwners(Object ownerId, int targetLockLevel,
+    protected synchronized Set getConflictingOwners(Object ownerId, int targetLockLevel,
             int compatibility) {
 
         LockOwner myLock = (LockOwner) owners.get(ownerId);
