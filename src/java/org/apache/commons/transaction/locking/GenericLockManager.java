@@ -202,6 +202,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
                         LockException.CODE_DEADLOCK_VICTIM, resourceId);
             }
 
+            now = System.currentTimeMillis();
             while (!acquired && waitEnd > now) {
             
                 // first be sure all locks are stolen from owners that have already timed out

@@ -154,8 +154,18 @@ public class GenericLockTest extends TestCase {
         
         sLogger.logInfo("\n\nChecking timeouts\n\n");
 
-        ReadWriteLockManager lockManager = new ReadWriteLockManager(sLogger, 100);
+        ReadWriteLockManager lockManager = new ReadWriteLockManager(sLogger, 1000);
         boolean timedOut = false;
+        try {
+            lockManager.readLock("owner1", "resource");
+            lockManager.writeLock("owner2", "resource");
+        } catch (LockException le) {
+            assertEquals(le.getCode(), LockException.CODE_TIMED_OUT);
+            timedOut = true;
+        }
+        assertTrue(timedOut);
+        lockManager = new ReadWriteLockManager(sLogger, 100);
+        timedOut = false;
         try {
             lockManager.readLock("owner1", "resource");
             lockManager.writeLock("owner2", "resource");
@@ -173,6 +183,7 @@ public class GenericLockTest extends TestCase {
             assertEquals(le.getCode(), LockException.CODE_TIMED_OUT);
             timedOut = true;
         }
+        assertTrue(timedOut);
     }
     
 
