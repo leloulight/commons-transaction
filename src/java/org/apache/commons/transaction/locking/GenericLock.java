@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.13 2005/01/09 23:56:07 ozeigermann Exp $
- * $Revision: 1.13 $
- * $Date: 2005/01/09 23:56:07 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.14 2005/01/13 23:12:44 ozeigermann Exp $
+ * $Revision: 1.14 $
+ * $Date: 2005/01/13 23:12:44 $
  *
  * ====================================================================
  *
@@ -122,7 +122,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * </ul>
  * </p>
  * 
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class GenericLock implements MultiLevelLock2 {
 
@@ -154,6 +154,17 @@ public class GenericLock implements MultiLevelLock2 {
         this.resourceId = resourceId;
         this.maxLockLevel = maxLockLevel;
         this.logger = logger;
+    }
+
+    public boolean equals(Object o) {
+        if (o instanceof GenericLock) {
+            return ((GenericLock)o).resourceId.equals(resourceId);
+        }
+        return false;
+    }
+
+    public int hashCode() {
+        return resourceId.hashCode();
     }
 
     /**
