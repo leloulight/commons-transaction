@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.9 2004/12/20 15:23:56 ozeigermann Exp $
- * $Revision: 1.9 $
- * $Date: 2004/12/20 15:23:56 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.10 2004/12/23 15:42:34 ozeigermann Exp $
+ * $Revision: 1.10 $
+ * $Date: 2004/12/23 15:42:34 $
  *
  * ====================================================================
  *
@@ -36,7 +36,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link GenericLock}s on resources.   
  * 
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class GenericLockManager implements LockManager {
 
@@ -334,6 +334,9 @@ public class GenericLockManager implements LockManager {
         }
     }
 
+    // TODO this does not detect indirect deadlocks where we would be deadlocked by 
+    // an owner we wait for that waits for a lock that is owner by a third owner that
+    // waits for us
     protected boolean wouldDeadlock(Object ownerId, GenericLock lock, int targetLockLevel,
             int compatibility, Set conflicts) {
         if (conflicts != null) {
