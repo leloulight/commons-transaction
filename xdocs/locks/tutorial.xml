@@ -12,31 +12,31 @@
 <section name="Locking tutorial">
 
 <p>The <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/package-summary.html">locking
+href="../apidocs/org/apache/commons/transaction/locking/package-summary.html">locking
 package</a> merely consists of two interfaces for a <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/LockManager.html">lock
+href="../apidocs/org/apache/commons/transaction/locking/LockManager.html">lock
 manager</a> and a <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/MultiLevelLock.html">multilevel
+href="../apidocs/org/apache/commons/transaction/locking/MultiLevelLock.html">multilevel
 lock</a> and specific implementations. There is a <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/GenericLock.html">generic
+href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html">generic
 implementation</a> of a multi level lock with a subtle, yet simple
 compatibility mechanism. This mechanism allows to implement quite a
 number of different lock types such as a read write lock which is
 <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/ReadWriteLock.html">provided
+href="../apidocs/org/apache/commons/transaction/locking/ReadWriteLock.html">provided
 for covenience</a>, although very easy to implement. As already
 <a href="index.html">exlained</a> in the locking agent can be any Java
 object. Have a look at the simple <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/ReadWriteLock.html#acquireRead(java.lang.Object,%20long)">
+href="../apidocs/org/apache/commons/transaction/locking/ReadWriteLock.html#acquireRead(java.lang.Object,%20long)">
 method for acquiring a lock for read access</a> as a reference.</p>
 <p>If you
 need a single or pre-determined number of classes the generic or
 read/write lock is all you need. However, sometimes you may not know
 how many locks and which locks you will need in advance. In this case you can use the
 lock manager with its <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/GenericLockManager.html">default
+href="../apidocs/org/apache/commons/transaction/locking/GenericLockManager.html">default
 implementation</a>. The most <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/LockManager.html#atomicGetOrCreateLock(java.lang.Object)">important
+href="../apidocs/org/apache/commons/transaction/locking/LockManager.html#atomicGetOrCreateLock(java.lang.Object)">important
 method</a> is for either creating a non existing lock in a specified
 resource or retrieving it if it was created before. It is important to
 make this atomically so there is no chance of acciently creating more
@@ -70,7 +70,7 @@ Now we have a lock called "Mutex" with the highest lock level of
 <code>1</code> and a logger that simply writes to stdout. Different
 lock levels and their compatibility is a special feature of
 <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/GenericLock.html">GenericLock</a>
+href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html">GenericLock</a>
 and is explained there in detail. As we have one locking level, this
 also is the only level we can possibly acquire causing an exclusive lock:</p>  
 <source>
@@ -78,7 +78,7 @@ exclusive.acquire("Owner", 1, true, true, Long.MAX_VALUE);
 </source>
 <p>
 This tries to <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/GenericLock.html#acquire(java.lang.Object,%20int,%20boolean,%20boolean,%20long)">acquire
+href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html#acquire(java.lang.Object,%20int,%20boolean,%20boolean,%20long)">acquire
 a lock</a> of level one (=exclusive) for the agent 
 "Owner". Parameters three and four tells the lock that it should block
 the current thread if this lock level can not be acquired and that
@@ -91,7 +91,7 @@ we are served.</p>
 
 <p>Now all requests to fine grained locks will be braced with the
 above statement and the <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/GenericLock.html#release(java.lang.Object)">release
+href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html#release(java.lang.Object)">release
 statement</a> after all fine grained locks are acquired:</p>    
 <source>
 exclusive.release("Owner");
@@ -241,7 +241,7 @@ searchLock.acquire("write request", EXCLUSIVE_LOCK, true,
 </source>
 
 <p>As much for our short round trip. More information about this additional compatibility can be found <a
-href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/locking/GenericLock.html#acquire(java.lang.Object,%20int,%20boolean,%20int,%20long)">here</a>.
+href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html#acquire(java.lang.Object,%20int,%20boolean,%20int,%20long)">here</a>.
 If you still need more turn
 to the mailing list, get through the Javadocs and as the last resort through
 the sources ;) 

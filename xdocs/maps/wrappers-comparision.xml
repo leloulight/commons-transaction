@@ -19,9 +19,9 @@
 <tr>
 <th align="left" valign="bottom" scope="col"></th>
 <th align="left" valign="bottom" scope="col"> <font face="Arial,
-Helvetica, sans-serif"><strong><a href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/memory/TransactionalMapWrapper.html">TransactionalMapWrapper</a></strong></font></th>
-<th align="left" valign="bottom" scope="col"> <font face="Arial, Helvetica, sans-serif"><strong><a href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/memory/OptimisticMapWrapper.html">OptimisticMapWrapper</a></strong></font></th>
-<th align="left" valign="bottom" scope="col"> <font face="Arial, Helvetica, sans-serif"><strong><a href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/memory/PessimisticMapWrapper.html">PessimisticMapWrapper</a></strong></font></th>
+Helvetica, sans-serif"><strong><a href="../apidocs/org/apache/commons/transaction/memory/TransactionalMapWrapper.html">TransactionalMapWrapper</a></strong></font></th>
+<th align="left" valign="bottom" scope="col"> <font face="Arial, Helvetica, sans-serif"><strong><a href="../apidocs/org/apache/commons/transaction/memory/OptimisticMapWrapper.html">OptimisticMapWrapper</a></strong></font></th>
+<th align="left" valign="bottom" scope="col"> <font face="Arial, Helvetica, sans-serif"><strong><a href="../apidocs/org/apache/commons/transaction/memory/PessimisticMapWrapper.html">PessimisticMapWrapper</a></strong></font></th>
 </tr>
 </thead>
 
