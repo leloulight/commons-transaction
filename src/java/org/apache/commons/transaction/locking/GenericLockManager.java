@@ -139,11 +139,14 @@ public class GenericLockManager implements LockManager, LockManager2 {
      */
     public boolean checkLock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant) {
         timeoutCheck(ownerId);
+        boolean possible = true;
 
-        GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
-        boolean possible = lock.test(ownerId, targetLockLevel,
-                reentrant ? GenericLock.COMPATIBILITY_REENTRANT : GenericLock.COMPATIBILITY_NONE);
-        
+        GenericLock lock = (GenericLock) getLock(resourceId);
+        if (lock != null) {
+            possible = lock.test(ownerId, targetLockLevel,
+                    reentrant ? GenericLock.COMPATIBILITY_REENTRANT
+                            : GenericLock.COMPATIBILITY_NONE);
+        }
         return possible;
     }
 
@@ -153,10 +156,12 @@ public class GenericLockManager implements LockManager, LockManager2 {
      */
     public boolean hasLock(Object ownerId, Object resourceId, int lockLevel) {
         timeoutCheck(ownerId);
+        boolean owned = false;
 
-        GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
-        boolean owned = lock.has(ownerId, lockLevel);
-        
+        GenericLock lock = (GenericLock) getLock(resourceId);
+        if (lock != null) {
+            owned = lock.has(ownerId, lockLevel);
+        }
         return owned;
     }
 
@@ -290,9 +295,13 @@ public class GenericLockManager implements LockManager, LockManager2 {
      */
     public boolean release(Object ownerId, Object resourceId) {
         timeoutCheck(ownerId);
-        GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
-        boolean released = lock.release(ownerId);
-        removeOwner(ownerId, lock);
+        boolean released = false;
+
+        GenericLock lock = (GenericLock) getLock(resourceId);
+        if (lock != null) {
+            released = lock.release(ownerId);
+            removeOwner(ownerId, lock);
+        }
         return released;
     }
 
