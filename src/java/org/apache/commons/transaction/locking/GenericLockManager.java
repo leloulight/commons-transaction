@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.8 2004/12/19 10:54:52 ozeigermann Exp $
- * $Revision: 1.8 $
- * $Date: 2004/12/19 10:54:52 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.9 2004/12/20 15:23:56 ozeigermann Exp $
+ * $Revision: 1.9 $
+ * $Date: 2004/12/20 15:23:56 $
  *
  * ====================================================================
  *
@@ -36,7 +36,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link GenericLock}s on resources.   
  * 
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class GenericLockManager implements LockManager {
 
@@ -269,11 +269,9 @@ public class GenericLockManager implements LockManager {
      * @see LockManager#releaseAll(Object)
      */
     public void releaseAll(Object ownerId) {
-        // reset time out status for this owner
-        if (timedOutOwners.remove(ownerId)) {
-            // short cut if we were timed out there are no more locks
-            return;
-        }
+        // XXX even if we are timed out we can still have
+        // locks acquired because we might have been waiting for one
+        // while we were set to timed out
         Set locks = (Set) globalOwners.get(ownerId);
         if (locks != null) {
             synchronized (locks) {
@@ -284,6 +282,8 @@ public class GenericLockManager implements LockManager {
                 }
             }
         }
+        // reset time out status for this owner
+        timedOutOwners.remove(ownerId);
     }
 
     /**
@@ -373,12 +373,23 @@ public class GenericLockManager implements LockManager {
                 if (timeout < now) {
                     releaseAll(ownerId);
                     timedOutOwners.add(ownerId);
-                    it.remove();
                     released = true;
                 }
             }
         }
         return released;
+    }
+    
+    protected boolean timeOut(Object ownerId) {
+        Long timeout = (Long)globalTimeouts.get(ownerId);
+        long now = System.currentTimeMillis();
+        if (timeout != null && timeout.longValue() < now) {
+            releaseAll(ownerId);
+            timedOutOwners.add(ownerId);
+            return true;
+        } else {
+            return false;
+        }
     }
     
     protected long getNextGlobalConflictTimeout(Set conflicts) {
@@ -443,6 +454,7 @@ public class GenericLockManager implements LockManager {
     }
     
     protected void timeoutCheck(Object ownerId) throws LockException {
+        timeOut(ownerId);
         if (timedOutOwners.contains(ownerId)) {
             throw new LockException(
                     "All locks of owner "
