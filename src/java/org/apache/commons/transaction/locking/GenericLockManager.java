@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.20 2005/01/13 16:44:03 ozeigermann Exp $
- * $Revision: 1.20 $
- * $Date: 2005/01/13 16:44:03 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.21 2005/01/13 23:11:56 ozeigermann Exp $
+ * $Revision: 1.21 $
+ * $Date: 2005/01/13 23:11:56 $
  *
  * ====================================================================
  *
@@ -42,7 +42,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <li>global transaction timeouts that actively revoke granted rights from transactions
  * </ul>
  * 
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  */
 public class GenericLockManager implements LockManager, LockManager2 {
 
@@ -291,7 +291,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
             for (Iterator it = locksCopy.iterator(); it.hasNext();) {
                 GenericLock lock = (GenericLock) it.next();
                 lock.release(ownerId);
-                it.remove();
+                locks.remove(lock);
             }
         }
     }
