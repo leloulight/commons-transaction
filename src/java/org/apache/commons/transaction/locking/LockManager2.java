@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockManager2.java,v 1.2 2005/01/07 23:24:03 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2005/01/07 23:24:03 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockManager2.java,v 1.3 2005/01/08 18:52:23 ozeigermann Exp $
+ * $Revision: 1.3 $
+ * $Date: 2005/01/08 18:52:23 $
  *
  * ====================================================================
  *
@@ -29,7 +29,7 @@ import java.util.Set;
  * Extended version of a lock manager that also has global knowledge or all locks and should be
  * used as a delegate for all locking requests. This allows for things like deadlock detection.
  * 
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see MultiLevelLock
  * @see LockManager
  * @see GenericLockManager
@@ -140,6 +140,20 @@ public interface LockManager2 {
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, int compatibility,
             boolean preferred, long timeoutMSecs) throws LockException;
 
+    /**
+     * Starts a global timeout for an owner. This is especially usefull, when the owner is a 
+     * transaction. After a global timeout occurs all of the owner's lock will be released and 
+     * the owner will not be allowed to access any
+     * locks before before calling {@link #releaseAll(Object)}.
+     * 
+     * @param ownerId
+     *            a unique id identifying the entity that wants to acquire this
+     *            lock
+     * @param timeoutMSecs
+     *            specifies the global timeout in milliseconds
+     */
+    public void startGlobalTimeout(Object ownerId, long timeoutMSecs);
+    
     /**
      * Gets the lock level held by certain owner on a certain resource.
      * 
