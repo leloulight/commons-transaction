@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/ResourceManager.java,v 1.2 2004/12/14 12:12:46 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2004/12/14 12:12:46 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/ResourceManager.java,v 1.3 2004/12/16 17:33:53 ozeigermann Exp $
+ * $Revision: 1.3 $
+ * $Date: 2004/12/16 17:33:53 $
  *
  * ====================================================================
  *
@@ -45,7 +45,7 @@ import javax.transaction.Status;
  * <li>for reading and writing of resources
  * </ul> 
  *  
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
  */
 public interface ResourceManager extends Status {
@@ -315,9 +315,10 @@ public interface ResourceManager extends Status {
      * @param wait <code>true</code> if the method shall block when lock can not be acquired now
      * @param timeoutMSecs timeout in milliseconds
      * @param reentrant <code>true</code> if the lock should be acquired even when the <em>requesting transaction and no other</em> holds an incompatible lock
+     * @return <code>true</code> when the lock has been acquired
      * @throws ResourceManagerException if an error occured
      */
-    public void lockResource(
+    public boolean lockResource(
         Object resourceId,
         Object txId,
         boolean shared,
@@ -336,7 +337,7 @@ public interface ResourceManager extends Status {
      * @throws ResourceManagerException if an error occured
      * @see #lockResource(Object, Object, boolean, boolean, long, boolean)
      */
-    public void lockResource(Object resourceId, Object txId, boolean shared) throws ResourceManagerException;
+    public boolean lockResource(Object resourceId, Object txId, boolean shared) throws ResourceManagerException;
 
     /**
      * Explicitly locks a resource exclusively, i.e. for writing, in reentrant style. This method blocks until the lock
@@ -348,7 +349,7 @@ public interface ResourceManager extends Status {
      * @see #lockResource(Object, Object, boolean)
      * @see #lockResource(Object, Object, boolean, boolean, long, boolean)
      */
-    public void lockResource(Object resourceId, Object txId) throws ResourceManagerException;
+    public boolean lockResource(Object resourceId, Object txId) throws ResourceManagerException;
 
     /**
      * Checks if a resource exists. 

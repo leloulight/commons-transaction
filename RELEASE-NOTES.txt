@@ -40,8 +40,6 @@ POSSIBLE MINOR INCOMPATIBILITIES TO 1.0
 -----------------------------------------
 
 - LockException has been moved from memory to locking package
-- defunct ResourceManager interface no longer claims to return a boolean
-  on lockResource
 
 BUGFIXES FROM 1.0
 -----------------

@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileResourceManager.java,v 1.3 2004/12/14 12:12:46 ozeigermann Exp $
- * $Revision: 1.3 $
- * $Date: 2004/12/14 12:12:46 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileResourceManager.java,v 1.4 2004/12/16 17:33:53 ozeigermann Exp $
+ * $Revision: 1.4 $
+ * $Date: 2004/12/16 17:33:53 $
  *
  * ====================================================================
  *
@@ -118,7 +118,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <em>Special Caution</em>: Be very careful not to have two instances of
  * <code>FileResourceManager</code> working in the same store and/or working dir.
  *   
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class FileResourceManager implements ResourceManager, ResourceManagerErrorCodes {
 
@@ -275,15 +275,19 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
      *  
      */
 
-    public void lockResource(Object resourceId, Object txId) throws ResourceManagerException {
+    public boolean lockResource(Object resourceId, Object txId) throws ResourceManagerException {
         lockResource(resourceId, txId, false);
+        // XXX will never return false as it will either throw or return true
+        return true;
     }
 
-    public void lockResource(Object resourceId, Object txId, boolean shared) throws ResourceManagerException {
+    public boolean lockResource(Object resourceId, Object txId, boolean shared) throws ResourceManagerException {
         lockResource(resourceId, txId, shared, true, Long.MAX_VALUE, true);
+        // XXX will never return false as it will either throw or return true
+        return true;
     }
 
-    public void lockResource(
+    public boolean lockResource(
         Object resourceId,
         Object txId,
         boolean shared,
@@ -301,6 +305,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         try {
             lockManager.lock(txId, resourceId, level, reentrant, Math.min(timeoutMSecs,
                     context.timeoutMSecs));
+            // XXX will never return false as it will either throw or return true
+            return true;
         } catch (LockException e) {
             switch (e.getCode()) {
             case LockException.CODE_INTERRUPTED:
@@ -311,6 +317,9 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                         + "'", ERR_NO_LOCK, txId);
             case LockException.CODE_DEADLOCK_VICTIM:
                 throw new ResourceManagerException("Deadlock victim resource at '" + resourceId
+                        + "'", ERR_DEAD_LOCK, txId);
+            default :
+                throw new ResourceManagerException("Locking exception for resource at '" + resourceId
                         + "'", ERR_DEAD_LOCK, txId);
             }
         }
