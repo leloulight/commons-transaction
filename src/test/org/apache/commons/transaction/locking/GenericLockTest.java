@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.3 2004/12/15 17:36:35 ozeigermann Exp $
- * $Revision: 1.3 $
- * $Date: 2004/12/15 17:36:35 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.4 2004/12/17 00:31:22 ozeigermann Exp $
+ * $Revision: 1.4 $
+ * $Date: 2004/12/17 00:31:22 $
  *
  * ====================================================================
  *
@@ -29,6 +29,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import org.apache.commons.transaction.util.CounterBarrier;
 import org.apache.commons.transaction.util.LoggerFacade;
 import org.apache.commons.transaction.util.PrintWriterLogger;
 import org.apache.commons.transaction.util.RendezvousBarrier;
@@ -36,7 +37,7 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
 /**
  * Tests for generic locks. 
  *
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class GenericLockTest extends TestCase {
 
@@ -46,9 +47,12 @@ public class GenericLockTest extends TestCase {
     protected static final int READ_LOCK = 1;
     protected static final int WRITE_LOCK = 2;
     
+    private static final int CONCURRENT_TESTS = 25;
+    
     protected static final long TIMEOUT = Long.MAX_VALUE;
     
     private static int deadlockCnt = 0;
+    private static String first = null;
 
     public static Test suite() {
         TestSuite suite = new TestSuite(GenericLockTest.class);
@@ -73,6 +77,9 @@ public class GenericLockTest extends TestCase {
     }
     
     public void testBasic() throws Throwable {
+
+        sLogger.logInfo("\n\nChecking basic map features\n\n");
+
         String owner1 = "owner1";
         String owner2 = "owner2";
         String owner3 = "owner3";
@@ -144,9 +151,11 @@ public class GenericLockTest extends TestCase {
     }
 
     public void testDeadlock() throws Throwable {
+
+        sLogger.logInfo("\n\nChecking deadlock detection\n\n");
+
         final String owner1 = "owner1";
         final String owner2 = "owner2";
-        final String owner3 = "owner3";
 
         final String res1 = "res1";
         final String res2 = "res2";
@@ -157,8 +166,10 @@ public class GenericLockTest extends TestCase {
         final RendezvousBarrier restart = new RendezvousBarrier("restart",
                 TIMEOUT, sLogger);
 
-        for (int i = 0; i < 25; i++) {
+        for (int i = 0; i < CONCURRENT_TESTS; i++) {
 
+//            System.out.print(".");
+            
             final RendezvousBarrier deadlockBarrier1 = new RendezvousBarrier("deadlock1" + i,
                     TIMEOUT, sLogger);
 
@@ -218,4 +229,135 @@ public class GenericLockTest extends TestCase {
         }
     }
 
+    /*
+     * 
+     * Test shows the following
+     * - upgrade works with read locks no matter if they are acquired before or later (1-4)
+     * - write is blocked by read (5)
+     * - read is blocked by intention lock (6)
+     * - write lock coming from an intention lock always has preference over others (7)
+     * 
+     * 
+     *                  Owner           Owner           Owner
+     * Step             #1              #2              #3
+     * 1                read (ok)
+     * 2                                upgrade (ok)
+     * 3                release (ok)
+     * 4                read (ok)
+     * 5                                write (blocked 
+     *                                  because of #1)
+     * 6                                                read (blocked 
+     *                                                  because intention of #2)        
+     * 7                release         resumed
+     * 8                                release         resumed
+     * 9                                                release
+     */
+    public void testPreference() throws Throwable {
+
+        sLogger.logInfo("\n\nChecking upgrade and preference lock\n\n");
+        
+        final String owner1 = "owner1";
+        final String owner2 = "owner2";
+        final String owner3 = "owner3";
+
+        final String res1 = "res1";
+
+        // a read / write lock
+        final ReadWriteUpgradeLockManager manager = new ReadWriteUpgradeLockManager(sLogger,
+                TIMEOUT);
+
+        final RendezvousBarrier restart = new RendezvousBarrier("restart", 3, TIMEOUT, sLogger);
+
+        final CounterBarrier cb = new CounterBarrier("cb1", TIMEOUT, sLogger);
+
+        for (int i = 0; i < CONCURRENT_TESTS; i++) {
+            
+//            System.out.print(".");
+
+            Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        cb.count(2);
+                        manager.upgradeLock(owner2, res1);
+                        cb.count(3);
+                        cb.count(6);
+                        synchronized (manager.getLock(res1)) {
+                            cb.count(7);
+                            manager.writeLock(owner2, res1);
+                        }
+                        // we must always be first as we will be preferred over
+                        // as I had the upgrade
+                        // lock before
+                        synchronized (this) {
+                            if (first == null)
+                                first = owner2;
+                        }
+                        cb.count(12);
+                        manager.releaseAll(owner2);
+                        cb.count(13);
+                        synchronized (restart) {
+                            restart.meet();
+                            restart.reset();
+                        }
+                    } catch (InterruptedException ie) {
+                    }
+                }
+            }, "Thread #1");
+
+            t1.start();
+
+            Thread t2 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        // I wait until the others are blocked
+                        // when I release my single read lock, thread #1 always
+                        // should be the
+                        // next to get the lock as it is preferred over the main
+                        // thread
+                        // that only waits for a read lock
+                        cb.count(8);
+                        synchronized (manager.getLock(res1)) {
+                            cb.count(9);
+                            manager.readLock(owner3, res1);
+                        }
+                        synchronized (this) {
+                            if (first == null)
+                                first = owner3;
+                        }
+                        manager.releaseAll(owner3);
+                        synchronized (restart) {
+                            restart.meet();
+                            restart.reset();
+                        }
+                    } catch (InterruptedException ie) {
+                    }
+                }
+            }, "Thread #2");
+
+            t2.start();
+
+            cb.count(0);
+            manager.readLock(owner1, res1);
+            cb.count(1);
+            cb.count(4);
+            manager.release(owner1, res1);
+            manager.readLock(owner1, res1);
+            cb.count(5);
+            cb.count(10);
+            synchronized (manager.getLock(res1)) {
+                manager.releaseAll(owner1);
+            }
+            cb.count(11);
+            synchronized (restart) {
+                restart.meet();
+                restart.reset();
+            }
+
+            assertEquals(first, owner2);
+            first = null;
+            cb.reset();
+        }
+
+    }
+    
 }
