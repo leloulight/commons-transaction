@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.3 2004/12/14 15:23:10 ozeigermann Exp $
- * $Revision: 1.3 $
- * $Date: 2004/12/14 15:23:10 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.4 2004/12/16 23:26:31 ozeigermann Exp $
+ * $Revision: 1.4 $
+ * $Date: 2004/12/16 23:26:31 $
  *
  * ====================================================================
  *
@@ -36,7 +36,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link GenericLock}s on resources.   
  * 
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class GenericLockManager implements LockManager {
 
@@ -180,14 +180,12 @@ public class GenericLockManager implements LockManager {
      * @see LockManager#releaseAll(Object)
      */
     public void releaseAll(Object ownerId) {
-        synchronized (globalOwners) {
-            Set locks = (Set) globalOwners.get(ownerId);
-            if (locks != null) {
-                for (Iterator it = locks.iterator(); it.hasNext();) {
-                    GenericLock lock = (GenericLock) it.next();
-                    lock.release(ownerId);
-                    it.remove();
-                }
+        Set locks = (Set) globalOwners.get(ownerId);
+        if (locks != null) {
+            for (Iterator it = locks.iterator(); it.hasNext();) {
+                GenericLock lock = (GenericLock) it.next();
+                lock.release(ownerId);
+                it.remove();
             }
         }
     }
