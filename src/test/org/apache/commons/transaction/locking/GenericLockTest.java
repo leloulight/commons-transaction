@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.5 2004/12/17 16:37:07 ozeigermann Exp $
- * $Revision: 1.5 $
- * $Date: 2004/12/17 16:37:07 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.6 2004/12/18 23:15:08 ozeigermann Exp $
+ * $Revision: 1.6 $
+ * $Date: 2004/12/18 23:15:08 $
  *
  * ====================================================================
  *
@@ -37,7 +37,7 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
 /**
  * Tests for generic locks. 
  *
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class GenericLockTest extends TestCase {
 
@@ -417,7 +417,7 @@ public class GenericLockTest extends TestCase {
 
         for (int i = 0; i < CONCURRENT_TESTS; i++) {
             
-            System.out.print(".");
+//            System.out.print(".");
 
             Thread t1 = new Thread(new Runnable() {
                 public void run() {
