@@ -21,15 +21,23 @@ GENERAL RELEASE NOTES
 
 This is the first beta of the Commons Transaction 1.1 feature release. 
 
-Commons Transaction 1.1 aims at polishing (interface) oddities, improve 
-locking and make the file store more flexible.
+Commons Transaction 1.1 aims at polishing (interface) oddities, improving
+locking and making the file store more flexible. Locking now is much more
+flexible, extensible and allows for rudimentary transaction management. There
+is a new lock manager hides locks from the user and keeps track of all of them
+allowing for deadlock detection and more convenient management.
 
 ENHANCEMENTS FROM 1.0
 ---------------------
 
 Locking:
-- Extended and less excentric lock manager
-
+- Extended and less excentric lock manager interface LockManager2
+- Extended multi level lock interface MultiLevelLock2
+- GenericLock and GenericLockManager now implement new interfaces as well
+- GenericLock and GenericLockManager offer much better inspection with toString
+- GenericLock offers (protected) means for waiter management and opens 
+  possibility for fair strategies to subclasses
+  
 File:
 - Confiburable resource id to path mapping
 
@@ -38,9 +46,10 @@ NEW FEATURES FROM 1.0
 
 Locking:
 - new ReadWriteLockManager for most intuitive read/write lock usage
-- new read/write/upgrade locking mechanism
+- new read/write/upgrade locking mechanism (ReadWriteUpgradeLock, ReadWriteUpgradeLockManager)
 - Deadlock detection for all lock managers, file store, and pessimistic map
-- Flexible preference locking mechanism 
+- Flexible preference locking mechanism
+- Global transaction timeouts that actively revoke granted rights from transactions
 
 MINOR INCOMPATIBILITIES TO 1.0
 -----------------------------------------
@@ -54,4 +63,4 @@ BUGFIXES FROM 1.0
 KNOWN ISSUES
 ------------
 
-none
+- Deadlock detection rarely determines more than one thread as a deadlock victim
