@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.6 2004/12/17 16:36:21 ozeigermann Exp $
- * $Revision: 1.6 $
- * $Date: 2004/12/17 16:36:21 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.7 2004/12/18 20:02:05 ozeigermann Exp $
+ * $Revision: 1.7 $
+ * $Date: 2004/12/18 20:02:05 $
  *
  * ====================================================================
  *
@@ -127,7 +127,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * is not able to do so due to error states or abnormal termination.
  * </ul>
  * 
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class GenericLock implements MultiLevelLock {
 
@@ -140,7 +140,8 @@ public class GenericLock implements MultiLevelLock {
     protected Map owners = new HashMap();
     private int maxLockLevel;
     protected LoggerFacade logger;
-
+    protected int waiters = 0;
+    
     /**
      * Creates a new lock.
      * 
@@ -280,36 +281,41 @@ public class GenericLock implements MultiLevelLock {
 	                            + System.currentTimeMillis());
                     }
 
-                    if (preferred) {
-                        // while waiting we already make our claim we are next
-                        LockOwner oldLock = null;
-                        try {
-                            // we need to remember it to restore it after waiting
-                            oldLock = (LockOwner) owners.get(ownerId);
-                            // this creates a new owner, so we do not need to
-                            // copy the old one
-                            setLockLevel(ownerId, null, targetLockLevel, preferred);
-
-                            // finally wait
-                            wait(remaining);
-                            
-                        } finally {
-                            // we need to restore the old lock in order not to
-                            // interfere with the intention lock in the
-                            // following check
-                            // and not to have it in case of success either
-                            // as there will be an ordinary lock then
-                            if (oldLock != null) {
-                                owners.put(ownerId, oldLock);
-                            } else {
-                                owners.remove(ownerId);
+                    try {
+                        waiters++;
+                        if (preferred) {
+                            // while waiting we already make our claim we are next
+                            LockOwner oldLock = null;
+                            try {
+                                // we need to remember it to restore it after waiting
+                                oldLock = (LockOwner) owners.get(ownerId);
+                                // this creates a new owner, so we do not need to
+                                // copy the old one
+                                setLockLevel(ownerId, null, targetLockLevel, preferred);
+    
+                                // finally wait
+                                wait(remaining);
+                                
+                            } finally {
+                                // we need to restore the old lock in order not to
+                                // interfere with the intention lock in the
+                                // following check
+                                // and not to have it in case of success either
+                                // as there will be an ordinary lock then
+                                if (oldLock != null) {
+                                    owners.put(ownerId, oldLock);
+                                } else {
+                                    owners.remove(ownerId);
+                                }
                             }
+    
+                        } else {
+                            wait(remaining);
                         }
-
-                    } else {
-                        wait(remaining);
+                    } finally {
+                        waiters--;
                     }
-
+                    
                     if (tryLock(ownerId, targetLockLevel, compatibility, preferred)) {
 
                         if (logger.isFinerEnabled()) {
@@ -401,6 +407,7 @@ public class GenericLock implements MultiLevelLock {
             buf.append("- ").append(owner.ownerId.toString()).append(": ").append(owner.lockLevel)
                     .append(owner.intention ? " intention" : " acquired").append("\n");
         }
+        buf.append(waiters).append(" waiting\n");
         return buf.toString();
 
     }
