@@ -64,3 +64,5 @@ KNOWN ISSUES
 ------------
 
 - Deadlock detection sometimes determines more than one thread as a deadlock victim
+- There are (unverified) reports about deadlocks inside the deadlock detection code 
+  or deadlocks not detected there
