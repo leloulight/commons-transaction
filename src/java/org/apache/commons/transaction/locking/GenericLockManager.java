@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.11 2005/01/07 12:26:14 ozeigermann Exp $
- * $Revision: 1.11 $
- * $Date: 2005/01/07 12:26:14 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.12 2005/01/07 13:36:19 ozeigermann Exp $
+ * $Revision: 1.12 $
+ * $Date: 2005/01/07 13:36:19 $
  *
  * ====================================================================
  *
@@ -36,9 +36,9 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link GenericLock}s on resources.   
  * 
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
-public class GenericLockManager implements LockManager {
+public class GenericLockManager implements LockManager, LockManager2 {
 
     public static final long DEFAULT_TIMEOUT = 30000;
     public static final long DEFAULT_CHECK_THRESHHOLD = 500;

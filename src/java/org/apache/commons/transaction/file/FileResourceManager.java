@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileResourceManager.java,v 1.5 2004/12/18 23:19:09 ozeigermann Exp $
- * $Revision: 1.5 $
- * $Date: 2004/12/18 23:19:09 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileResourceManager.java,v 1.6 2005/01/07 13:32:33 ozeigermann Exp $
+ * $Revision: 1.6 $
+ * $Date: 2005/01/07 13:32:33 $
  *
  * ====================================================================
  *
@@ -45,7 +45,7 @@ import java.util.Collections;
 import org.apache.commons.transaction.locking.GenericLock;
 import org.apache.commons.transaction.locking.GenericLockManager;
 import org.apache.commons.transaction.locking.LockException;
-import org.apache.commons.transaction.locking.LockManager;
+import org.apache.commons.transaction.locking.LockManager2;
 import org.apache.commons.transaction.util.FileHelper;
 import org.apache.commons.transaction.util.LoggerFacade;
 
@@ -115,7 +115,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <em>Special Caution</em>: Be very careful not to have two instances of
  * <code>FileResourceManager</code> working in the same store and/or working dir.
  *   
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class FileResourceManager implements ResourceManager, ResourceManagerErrorCodes {
 
@@ -192,7 +192,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
     protected Map globalTransactions;
     protected List globalOpenResources;
-    protected LockManager lockManager;
+    protected LockManager2 lockManager;
     
     protected ResourceIdToPathMapper idMapper = null;
 
