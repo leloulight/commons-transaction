@@ -64,3 +64,4 @@ KNOWN ISSUES
 ------------
 
 - Deadlock detection rarely determines more than one thread as a deadlock victim
+- More conceptual papers for new features are still missing
