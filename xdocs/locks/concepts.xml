@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<document>
+
+ <properties>
+  <title>Locking concepts</title>
+  <author email="commons-dev@jakarta.apache.org">Commons Documentation Team</author>
+ </properties>
+
+ <body>
+
+<section name="Locking Concepts">
+
+<subsection name="Rudimentary Transaction support for GenericLockManager implementing LockManager2">
+  - Transaction wide lock management
+  - Global transaction timeouts
+  - Deadlock detection
+</subsection>
+
+<subsection name="Extended Locking capacities of GenricLock implementing MultiLevelLock2">
+  - preference locks
+  - waiter recording and management
+  - improved debugging with toString
+</subsection>
+
+</section>
+
+</body>
+</document>
