@@ -190,13 +190,19 @@ public class GenericLockManager implements LockManager, LockManager2 {
      */
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, int compatibility,
             boolean preferred, long timeoutMSecs) throws LockException {
+        timeoutCheck(ownerId);
+        GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
+        doLock(lock, ownerId, resourceId, targetLockLevel, compatibility, preferred, timeoutMSecs);
+    }
+
+    protected void doLock(GenericLock lock, Object ownerId, Object resourceId, int targetLockLevel,
+                          int compatibility, boolean preferred, long timeoutMSecs)
+    {
         long now = System.currentTimeMillis();
         long waitEnd = now + timeoutMSecs;
 
         timeoutCheck(ownerId);
         
-        GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
-
         GenericLock.LockOwner lockWaiter = new GenericLock.LockOwner(ownerId, targetLockLevel,
                 compatibility, preferred);
         
