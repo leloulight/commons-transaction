@@ -9,7 +9,10 @@
             	<item name="Map Wrapper comparision" href="/maps/wrappers-comparision.html"/>
             </item>	
             <item name="Locking" href="/locks/index.html">
-            	<item name="Lock tutorial" href="/locks/tutorial.html"/>
+            	<item name="Introduction" href="/locks/tutorial.html"/>
+            	<item name="Preference Locks" href="/locks/preference.html"/>
+            	<item name="Transaction Concepts" href="/locks/concepts.html"/>
+            	<item name="Deadlocks" href="/locks/deadlock.html"/>
             </item>	
             <item name="Transactional file access" href="/file/index.html"/>
 <!--            <item name="Configuration"                 href="/configuration.html" /> -->

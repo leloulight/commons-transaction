@@ -44,9 +44,17 @@ is error prone and unpleasant work.</p>
  component make heavy
  use of them.
  </p>
+<subsection name="Where go to from here?">
 <p>To learn more about multi level locks and how you can use them continue
- with the <a href="tutorial.html">tutorial</a>. It explains how
- Jakarta Slide's WebDAV layer uses them to deadlock free avoid conflicts.</p> 
+ with the <a href="tutorial.html">introductory tutorial</a>. It explains how
+ Jakarta Slide's WebDAV layer uses them to deadlock free avoid
+ conflicts. New features introduced in 1.1 are <a
+ href="concepts.html">extended transaction support</a> and <a
+ href="preference.html">general preferences for locks</a>. You can also find information about <a
+ href="deadlock.html">deadlocks and how they are handled in the
+ Commons Transaction package</a>. </p> 
+</subsection>
+
 </section>
 
 </body>
