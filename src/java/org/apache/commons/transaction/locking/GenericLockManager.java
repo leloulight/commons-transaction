@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.21 2005/01/13 23:11:56 ozeigermann Exp $
  * $Revision: 1.21 $
- * $Date: 2005/01/13 23:11:56 $
+ * $Date$
  *
  * ====================================================================
  *
@@ -158,11 +158,11 @@ public class GenericLockManager implements LockManager, LockManager2 {
      */
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, int compatibility,
             boolean preferred, long timeoutMSecs) throws LockException {
-        timeoutCheck(ownerId);
-        
         long now = System.currentTimeMillis();
         long waitEnd = now + timeoutMSecs;
 
+        timeoutCheck(ownerId);
+        
         GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
 
         GenericLock.LockOwner lockWaiter = new GenericLock.LockOwner(ownerId, targetLockLevel,
@@ -227,7 +227,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
                             preferred, timeoutMSecs);
                     lock.registerWaiter(lockWaiter);
                 }
-                
+                now = System.currentTimeMillis();
             }
             if (!acquired) {
                 throw new LockException("Lock wait timed out", LockException.CODE_TIMED_OUT,

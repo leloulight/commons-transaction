@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.12 2005/01/13 16:44:03 ozeigermann Exp $
  * $Revision: 1.12 $
- * $Date: 2005/01/13 16:44:03 $
+ * $Date$
  *
  * ====================================================================
  *
@@ -75,7 +75,7 @@ public class GenericLockTest extends TestCase {
             return false;
         }
     }
-    
+
     public void testBasic() throws Throwable {
 
         sLogger.logInfo("\n\nChecking basic map features\n\n");
@@ -149,6 +149,32 @@ public class GenericLockTest extends TestCase {
         canRead1 = acquireNoWait(lock, owner1, READ_LOCK);
         assertTrue(canRead1);
     }
+
+    public void testTimeout() {
+        
+        sLogger.logInfo("\n\nChecking timeouts\n\n");
+
+        ReadWriteLockManager lockManager = new ReadWriteLockManager(sLogger, 100);
+        boolean timedOut = false;
+        try {
+            lockManager.readLock("owner1", "resource");
+            lockManager.writeLock("owner2", "resource");
+        } catch (LockException le) {
+            assertEquals(le.getCode(), LockException.CODE_TIMED_OUT);
+            timedOut = true;
+        }
+        assertTrue(timedOut);
+        lockManager = new ReadWriteLockManager(sLogger, 0);
+        timedOut = false;
+        try {
+            lockManager.readLock("owner1", "resource");
+            lockManager.writeLock("owner2", "resource");
+        } catch (LockException le) {
+            assertEquals(le.getCode(), LockException.CODE_TIMED_OUT);
+            timedOut = true;
+        }
+    }
+    
 
     public void testDeadlock() throws Throwable {
 
