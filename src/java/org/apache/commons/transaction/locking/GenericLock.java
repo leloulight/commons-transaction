@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.10 2005/01/08 18:53:18 ozeigermann Exp $
- * $Revision: 1.10 $
- * $Date: 2005/01/08 18:53:18 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.11 2005/01/08 19:22:47 ozeigermann Exp $
+ * $Revision: 1.11 $
+ * $Date: 2005/01/08 19:22:47 $
  *
  * ====================================================================
  *
@@ -122,15 +122,10 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * </ul>
  * </p>
  * 
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
-public class GenericLock implements MultiLevelLock {
+public class GenericLock implements MultiLevelLock, MultiLevelLock2 {
 
-    public static final int COMPATIBILITY_NONE = 0;
-    public static final int COMPATIBILITY_REENTRANT = 1;
-    public static final int COMPATIBILITY_SUPPORT = 2;
-    public static final int COMPATIBILITY_REENTRANT_AND_SUPPORT = 3;
-    
     protected Object resourceId;
     // XXX needs to be synchronized to allow for unsynchronized access for deadlock detection
     // in getConflictingOwners to avoid deadlocks between lock to acquire and lock to check for
@@ -162,20 +157,7 @@ public class GenericLock implements MultiLevelLock {
     }
 
     /**
-     * Tests if a certain lock level could be acquired.
-     * 
-     * @param ownerId a unique id identifying the entity that wants to acquire a certain lock level on this lock
-     * @param targetLockLevel the lock level to acquire
-     * @param compatibility 
-     *            {@link #COMPATIBILITY_NONE} if no additional compatibility is
-     *            desired (same as reentrant set to false) ,
-     *            {@link #COMPATIBILITY_REENTRANT} if lock level by the same
-     *            owner shall not affect compatibility (same as reentrant set to
-     *            true), or {@link #COMPATIBILITY_SUPPORT} if lock levels that
-     *            are the same as the desired shall not affect compatibility, or finally
-     * {@link #COMPATIBILITY_REENTRANT_AND_SUPPORT} which is a combination of reentrant and support
-     * @return <code>true</code> if the lock could be acquired acquired at the time this method
-     * was called
+     * @see MultiLevelLock2#test(Object, int, int)
      */
     public boolean test(Object ownerId, int targetLockLevel, int compatibility) {
         boolean success = false;
@@ -217,31 +199,8 @@ public class GenericLock implements MultiLevelLock {
     }
     
     /**
-     * Tries to acquire a certain lock level on this lock. Does the same as
-     * {@link org.apache.commons.transaction.locking.MultiLevelLock#acquire(java.lang.Object, int, boolean, boolean, long)}
-     * except that it allows for different compatibility settings. There is an
-     * additional compatibility mode {@link #COMPATIBILITY_SUPPORT}that allows
-     * equal lock levels not to interfere with each other. This is like an
-     * additional shared compatibility and useful when you only want to make
-     * sure not to interfer with lowe levels, but are fine with the same.
-     * 
-     * @param compatibility
-     *            {@link #COMPATIBILITY_NONE}if no additional compatibility is
-     *            desired (same as reentrant set to false) ,
-     *            {@link #COMPATIBILITY_REENTRANT}if lock level by the same
-     *            owner shall not affect compatibility (same as reentrant set to
-     *            true), or {@link #COMPATIBILITY_SUPPORT}if lock levels that
-     *            are the same as the desired shall not affect compatibility, or
-     *            finally {@link #COMPATIBILITY_REENTRANT_AND_SUPPORT}which is
-     *            a combination of reentrant and support
-     * 
-     * @param preferred
-     *            in case this lock request is incompatible with existing ones
-     *            and we wait, it shall be granted before other waiting requests
-     *            that are not preferred
-     * 
-     * @see org.apache.commons.transaction.locking.MultiLevelLock#acquire(java.lang.Object,
-     *      int, boolean, boolean, long)
+     * @see org.apache.commons.transaction.locking.MultiLevelLock2#acquire(Object,
+     *      int, boolean, int, boolean, long)
      */
     public synchronized boolean acquire(
         Object ownerId,
