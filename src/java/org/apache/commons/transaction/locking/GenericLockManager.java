@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.4 2004/12/16 23:26:31 ozeigermann Exp $
- * $Revision: 1.4 $
- * $Date: 2004/12/16 23:26:31 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.5 2004/12/17 16:36:21 ozeigermann Exp $
+ * $Revision: 1.5 $
+ * $Date: 2004/12/17 16:36:21 $
  *
  * ====================================================================
  *
@@ -36,7 +36,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link GenericLock}s on resources.   
  * 
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class GenericLockManager implements LockManager {
 
@@ -88,7 +88,9 @@ public class GenericLockManager implements LockManager {
     public boolean tryLock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant) {
         GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
         boolean acquired = lock.tryLock(ownerId, targetLockLevel,
-                reentrant ? GenericLock.COMPATIBILITY_REENTRANT : GenericLock.COMPATIBILITY_NONE);
+                reentrant ? GenericLock.COMPATIBILITY_REENTRANT : GenericLock.COMPATIBILITY_NONE,
+                false);
+        
         if (acquired) {
             addOwner(ownerId, lock);
         }

@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.5 2004/12/17 00:20:36 ozeigermann Exp $
- * $Revision: 1.5 $
- * $Date: 2004/12/17 00:20:36 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.6 2004/12/17 16:36:21 ozeigermann Exp $
+ * $Revision: 1.6 $
+ * $Date: 2004/12/17 16:36:21 $
  *
  * ====================================================================
  *
@@ -127,7 +127,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * is not able to do so due to error states or abnormal termination.
  * </ul>
  * 
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class GenericLock implements MultiLevelLock {
 
@@ -176,7 +176,7 @@ public class GenericLock implements MultiLevelLock {
     public boolean test(Object ownerId, int targetLockLevel, int compatibility) {
         boolean success = false;
         try {
-            success = tryLock(ownerId, targetLockLevel, compatibility);
+            success = tryLock(ownerId, targetLockLevel, compatibility, false);
         } finally {
             release(ownerId);
         }
@@ -248,7 +248,7 @@ public class GenericLock implements MultiLevelLock {
 	                + System.currentTimeMillis());
         }
 
-        if (tryLock(ownerId, targetLockLevel, compatibility)) {
+        if (tryLock(ownerId, targetLockLevel, compatibility, preferred)) {
             
             if (logger.isFinerEnabled()) {
 	            logger.logFiner(
@@ -288,7 +288,7 @@ public class GenericLock implements MultiLevelLock {
                             oldLock = (LockOwner) owners.get(ownerId);
                             // this creates a new owner, so we do not need to
                             // copy the old one
-                            setLockLevel(ownerId, null, targetLockLevel);
+                            setLockLevel(ownerId, null, targetLockLevel, preferred);
 
                             // finally wait
                             wait(remaining);
@@ -299,14 +299,18 @@ public class GenericLock implements MultiLevelLock {
                             // following check
                             // and not to have it in case of success either
                             // as there will be an ordinary lock then
-                            owners.put(ownerId, oldLock);
+                            if (oldLock != null) {
+                                owners.put(ownerId, oldLock);
+                            } else {
+                                owners.remove(ownerId);
+                            }
                         }
 
                     } else {
                         wait(remaining);
                     }
 
-                    if (tryLock(ownerId, targetLockLevel, compatibility)) {
+                    if (tryLock(ownerId, targetLockLevel, compatibility, preferred)) {
 
                         if (logger.isFinerEnabled()) {
 	                        logger.logFiner(
@@ -394,37 +398,43 @@ public class GenericLock implements MultiLevelLock {
 
         for (Iterator it = owners.values().iterator(); it.hasNext();) {
             LockOwner owner = (LockOwner) it.next();
-            buf.append("- ").append(owner.ownerId.toString()).append(": ").append(owner.lockLevel).append("\n");
+            buf.append("- ").append(owner.ownerId.toString()).append(": ").append(owner.lockLevel)
+                    .append(owner.intention ? " intention" : " acquired").append("\n");
         }
         return buf.toString();
 
     }
 
     protected synchronized LockOwner getMaxLevelOwner() {
-        return getMaxLevelOwner(null, -1);
+        return getMaxLevelOwner(null, -1, false);
     }
 
-    protected synchronized LockOwner getMaxLevelOwner(LockOwner reentrantOwner) {
-        return getMaxLevelOwner(reentrantOwner, -1);
+    protected synchronized LockOwner getMaxLevelOwner(LockOwner reentrantOwner, boolean preferred) {
+        return getMaxLevelOwner(reentrantOwner, -1, preferred);
     }
 
-    protected synchronized LockOwner getMaxLevelOwner(int supportLockLevel) {
-        return getMaxLevelOwner(null, supportLockLevel);
+    protected synchronized LockOwner getMaxLevelOwner(int supportLockLevel, boolean preferred) {
+        return getMaxLevelOwner(null, supportLockLevel, preferred);
     }
 
-    protected synchronized LockOwner getMaxLevelOwner(LockOwner reentrantOwner, int supportLockLevel) {
+    protected synchronized LockOwner getMaxLevelOwner(LockOwner reentrantOwner,
+            int supportLockLevel, boolean preferred) {
         LockOwner maxOwner = null;
         for (Iterator it = owners.values().iterator(); it.hasNext();) {
             LockOwner owner = (LockOwner) it.next();
             if (owner.lockLevel != supportLockLevel && !owner.equals(reentrantOwner)
-                    && (maxOwner == null || maxOwner.lockLevel < owner.lockLevel)) {
+                    && (maxOwner == null || maxOwner.lockLevel < owner.lockLevel)
+                    // if we are a preferred lock we must not interfere with other intention
+                    // locks as we otherwise might mututally lock without resolvation
+                    && !(preferred && owner.intention)) {
                 maxOwner = owner;
             }
         }
         return maxOwner;
     }
     
-    protected synchronized void setLockLevel(Object ownerId, LockOwner lock, int targetLockLevel) {
+    protected synchronized void setLockLevel(Object ownerId, LockOwner lock, int targetLockLevel,
+            boolean intention) {
         // be sure there exists at most one lock per owner
         if (lock != null) {
 
@@ -440,6 +450,7 @@ public class GenericLock implements MultiLevelLock {
             }
 
             lock.lockLevel = targetLockLevel;
+            lock.intention = intention;
         } else {
 
             if (logger.isFinestEnabled()) {
@@ -453,11 +464,12 @@ public class GenericLock implements MultiLevelLock {
 	                    + System.currentTimeMillis());
             }
 
-            owners.put(ownerId, new LockOwner(ownerId, targetLockLevel));
+            owners.put(ownerId, new LockOwner(ownerId, targetLockLevel, intention));
         }
     }
 
-    protected synchronized boolean tryLock(Object ownerId, int targetLockLevel, int compatibility) {
+    protected synchronized boolean tryLock(Object ownerId, int targetLockLevel, int compatibility,
+            boolean preferred) {
 
         LockOwner myLock = (LockOwner) owners.get(ownerId);
 
@@ -469,12 +481,12 @@ public class GenericLock implements MultiLevelLock {
                 return true;
             } else {
                 // our own lock will not be compromised by ourself
-                highestOwner = getMaxLevelOwner(myLock);
+                highestOwner = getMaxLevelOwner(myLock, preferred);
             }
         } else if (compatibility == COMPATIBILITY_SUPPORT) {
             // we are compatible with any other lock owner holding
             // the same lock level
-            highestOwner = getMaxLevelOwner(targetLockLevel);
+            highestOwner = getMaxLevelOwner(targetLockLevel, preferred);
 
         } else if (compatibility == COMPATIBILITY_REENTRANT_AND_SUPPORT) {
             if (myLock != null && targetLockLevel <= myLock.lockLevel) {
@@ -482,7 +494,7 @@ public class GenericLock implements MultiLevelLock {
                 return true;
             } else {
                 // our own lock will not be compromised by ourself and same lock level 
-                highestOwner = getMaxLevelOwner(myLock, targetLockLevel);
+                highestOwner = getMaxLevelOwner(myLock, targetLockLevel, preferred);
             }
         } else {
             highestOwner = getMaxLevelOwner();
@@ -498,7 +510,8 @@ public class GenericLock implements MultiLevelLock {
 
         // we are only allowed to acquire our locks if we do not compromise locks of any other lock owner
         if (isCompatible(targetLockLevel, currentLockLevel)) {
-            setLockLevel(ownerId, myLock, targetLockLevel);
+            // if we really have the lock, it no longer is an intention
+            setLockLevel(ownerId, myLock, targetLockLevel, false);
             return true;
         } else {
             return false;
@@ -547,10 +560,16 @@ public class GenericLock implements MultiLevelLock {
     protected static class LockOwner {
         public Object ownerId;
         public int lockLevel;
+        public boolean intention;
 
-        public LockOwner(Object ownerId, int lockLevel) {
+        public LockOwner(Object ownerId, int lockLevel, boolean intention) {
             this.ownerId = ownerId;
             this.lockLevel = lockLevel;
+            this.intention = intention;
+        }
+
+        public LockOwner(Object ownerId, int lockLevel) {
+            this(ownerId, lockLevel, false);
         }
     }
 
