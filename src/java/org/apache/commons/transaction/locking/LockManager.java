@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockManager.java,v 1.2 2004/12/14 12:12:46 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2004/12/14 12:12:46 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockManager.java,v 1.3 2004/12/17 00:14:08 ozeigermann Exp $
+ * $Revision: 1.3 $
+ * $Date: 2004/12/17 00:14:08 $
  *
  * ====================================================================
  *
@@ -32,7 +32,7 @@ import java.util.Set;
  * accessing entity to have influence on this lock via different lock levels that may be 
  * provided by the according implementation of {@link MultiLevelLock}. 
  * 
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see MultiLevelLock
  */
 public interface LockManager {
@@ -139,29 +139,11 @@ public interface LockManager {
 
     
     /**
-     * Either gets an existing lock on the specified resource or creates one if none exists. 
-     * This methods guarantees to do this atomically. 
-     * 
-     * @param resourceId the resource to get or create the lock on
-     * @return the lock for the specified resource
-     * 
-     * @deprecated Direct access to locks is discouraged as dead lock detection and lock
-     * maintenance now relies on the call to {@link #lock(Object, Object, int, int, long)}, 
-     * {@link #tryLock(Object, Object, int, int)}, {@link #release(Object, Object)} and 
-     * {@link #releaseAll(Object)}. This method will be deleted. 
-     */
-    public MultiLevelLock atomicGetOrCreateLock(Object resourceId);
-
-    /**
      * Gets an existing lock on the specified resource. If none exists it returns <code>null</code>. 
      * 
      * @param resourceId the resource to get the lock for
      * @return the lock on the specified resource
      * 
-     * @deprecated Direct access to locks is discouraged as dead lock detection and lock
-     * maintenance now relies on the call to {@link #lock(Object, Object, int, int, long)}, 
-     * {@link #tryLock(Object, Object, int, int)}, {@link #release(Object, Object)} and 
-     * {@link #releaseAll(Object)}. This method will be deleted. 
      */
     public MultiLevelLock getLock(Object resourceId);
 
@@ -174,4 +156,18 @@ public interface LockManager {
      * @param lock the lock to be removed
      */
     public void removeLock(MultiLevelLock lock);
+
+    /**
+     * Either gets an existing lock on the specified resource or creates one if none exists. 
+     * This methods guarantees to do this atomically. 
+     * 
+     * @param resourceId the resource to get or create the lock on
+     * @return the lock for the specified resource
+     * 
+     * @deprecated Direct access to locks is discouraged as dead lock detection and lock
+     * maintenance now relies on the call to {@link #lock(Object, Object, int, int, long)}, 
+     * {@link #tryLock(Object, Object, int, int)}, {@link #release(Object, Object)} and 
+     * {@link #releaseAll(Object)}. This method will be deleted. 
+     */
+    public MultiLevelLock atomicGetOrCreateLock(Object resourceId);
 }
