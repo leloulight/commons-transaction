@@ -150,7 +150,7 @@
         <include>org/apache/commons/transaction/memory/PessimisticMapWrapperTest.java</include>
         <include>org/apache/commons/transaction/locking/GenericLockTest.java</include>
         <include>org/apache/commons/transaction/locking/LockTestRepeatableReads.java</include>
-      <includes>
+      </includes>
     </unitTest>
   </build>
 
