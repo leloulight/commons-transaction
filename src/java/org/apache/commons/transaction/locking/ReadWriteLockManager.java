@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteLockManager.java,v 1.1 2004/12/14 12:12:46 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/12/14 12:12:46 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteLockManager.java,v 1.2 2004/12/17 00:21:15 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/12/17 00:21:15 $
  *
  * ====================================================================
  *
@@ -28,7 +28,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link org.apache.commons.transaction.locking.ReadWriteLock}s on resources.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class ReadWriteLockManager extends GenericLockManager {
 
@@ -42,6 +42,11 @@ public class ReadWriteLockManager extends GenericLockManager {
         super(ReadWriteLock.WRITE_LOCK, logger, timeoutMSecs);
     }
 
+    protected ReadWriteLockManager(int maxLockLevel, LoggerFacade logger, long timeoutMSecs)
+            throws IllegalArgumentException {
+        super(maxLockLevel, logger, timeoutMSecs);
+    }
+
     /**
      * Tries to acquire a shared, reentrant read lock on a resource. <br>
      * <br>
@@ -52,11 +57,11 @@ public class ReadWriteLockManager extends GenericLockManager {
      *            a unique id identifying the entity that wants to acquire this
      *            lock
      * @param resourceId
-     *            the resource to get the level for
+     *            the resource to get the lock for
      * @return <code>true</code> if the lock has been acquired, <code>false</code> otherwise
      */
     public boolean tryReadLock(Object ownerId, Object resourceId) {
-        return super.tryLock(ownerId, resourceId, ReadWriteLock.READ_LOCK, true);
+        return tryLock(ownerId, resourceId, ReadWriteLock.READ_LOCK, true);
     }
 
     /**
@@ -69,11 +74,11 @@ public class ReadWriteLockManager extends GenericLockManager {
      *            a unique id identifying the entity that wants to acquire this
      *            lock
      * @param resourceId
-     *            the resource to get the level for
+     *            the resource to get the lock for
      * @return <code>true</code> if the lock has been acquired, <code>false</code> otherwise
      */
     public boolean tryWriteLock(Object ownerId, Object resourceId) {
-        return super.tryLock(ownerId, resourceId, ReadWriteLock.WRITE_LOCK, true);
+        return tryLock(ownerId, resourceId, ReadWriteLock.WRITE_LOCK, true);
     }
 
     /**
@@ -87,12 +92,12 @@ public class ReadWriteLockManager extends GenericLockManager {
      *            a unique id identifying the entity that wants to acquire this
      *            lock
      * @param resourceId
-     *            the resource to get the level for
+     *            the resource to get the lock for
      * @throws LockException
      *             will be thrown when the lock can not be acquired
      */
     public void readLock(Object ownerId, Object resourceId) throws LockException {
-        super.lock(ownerId, resourceId, ReadWriteLock.READ_LOCK, true);
+        lock(ownerId, resourceId, ReadWriteLock.READ_LOCK, true);
     }
 
     /**
@@ -106,12 +111,12 @@ public class ReadWriteLockManager extends GenericLockManager {
      *            a unique id identifying the entity that wants to acquire this
      *            lock
      * @param resourceId
-     *            the resource to get the level for
+     *            the resource to get the lock for
      * @throws LockException
      *             will be thrown when the lock can not be acquired
      */
     public void writeLock(Object ownerId, Object resourceId) throws LockException {
-        super.lock(ownerId, resourceId, ReadWriteLock.WRITE_LOCK, true);
+        lock(ownerId, resourceId, ReadWriteLock.WRITE_LOCK, true);
     }
 
     protected GenericLock createLock(Object resourceId) {
