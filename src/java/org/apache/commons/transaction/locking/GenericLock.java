@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.4 2004/12/16 19:14:00 ozeigermann Exp $
- * $Revision: 1.4 $
- * $Date: 2004/12/16 19:14:00 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.5 2004/12/17 00:20:36 ozeigermann Exp $
+ * $Revision: 1.5 $
+ * $Date: 2004/12/17 00:20:36 $
  *
  * ====================================================================
  *
@@ -33,76 +33,101 @@ import org.apache.commons.transaction.util.LoggerFacade;
 
 /**
  * 
- * A generic implementaion of a simple multi level lock. 
+ * A generic implementaion of a simple multi level lock.
  * 
- * <p>The idea is to have an ascending number of
- * lock levels ranging from <code>0</code> to <code>maxLockLevel</code> as specified in 
- * {@link #GenericLock(Object, int, LoggerFacade)}: the higher the lock level the stronger and more restrictive the lock. To determine which lock may coexist with other locks you have to imagine matching pairs of lock levels.
- * For each pair both parts allow for all lock levels less than or equal to the matching other part. Pairs are composed by the lowest and highest level not yet part of a pair and successively applying this 
- * method until no lock level is left. For an even amount of levels each level is part of exactly one pair.
- * For an odd amount the middle level is paired with itself. The highst lock level may coexist with the lowest one (<code>0</code>) which by definition means 
- * <code>NO LOCK</code>. This implies that you will have to specify at least one other lock level and thus 
- * set <code>maxLockLevel</code> to at least <code>1</code>.</p>
+ * <p>
+ * The idea is to have an ascending number of lock levels ranging from
+ * <code>0</code> to <code>maxLockLevel</code> as specified in
+ * {@link #GenericLock(Object, int, LoggerFacade)}: the higher the lock level
+ * the stronger and more restrictive the lock. To determine which lock may
+ * coexist with other locks you have to imagine matching pairs of lock levels.
+ * For each pair both parts allow for all lock levels less than or equal to the
+ * matching other part. Pairs are composed by the lowest and highest level not
+ * yet part of a pair and successively applying this method until no lock level
+ * is left. For an even amount of levels each level is part of exactly one pair.
+ * For an odd amount the middle level is paired with itself. The highst lock
+ * level may coexist with the lowest one (<code>0</code>) which by
+ * definition means <code>NO LOCK</code>. This implies that you will have to
+ * specify at least one other lock level and thus set <code>maxLockLevel</code>
+ * to at least <code>1</code>.
+ * </p>
  * 
- * <p>Although this may sound complicated, in practice this is quite simple. Let us imagine you have three lock levels:
+ * <p>
+ * Although this may sound complicated, in practice this is quite simple. Let us
+ * imagine you have three lock levels:
  * <ul>
- * <li><code>0</code>: <code>NO LOCK</code> (always needed by the
+ * <li><code>0</code>:<code>NO LOCK</code> (always needed by the
  * implementation of this lock)
- * <li><code>1</code>: <code>SHARED</code>
- * <li><code>2</code>: <code>EXCLUSIVE</code>
+ * <li><code>1</code>:<code>SHARED</code>
+ * <li><code>2</code>:<code>EXCLUSIVE</code>
  * </ul>
- * Accordingly, you will have to set <code>maxLockLevel</code> to <code>2</code>.
- * Now, there are two pairs of levels
+ * Accordingly, you will have to set <code>maxLockLevel</code> to
+ * <code>2</code>. Now, there are two pairs of levels
  * <ul>
  * <li><code>NO LOCK</code> with <code>EXCLUSIVE</code>
  * <li><code>SHARED</code> with <code>SHARED</code>
  * </ul>
- * This means when the current highest lock level is
- * <code>NO LOCK</code> everything less or equal to
- * <code>EXCLUSIVE</code> is allowed - which means every other lock
- * level. On the other side <code>EXCLUSIVE</code> allows exacly for
- * <code>NO LOCK</code> - which means nothing else. In conclusion,
+ * This means when the current highest lock level is <code>NO LOCK</code>
+ * everything less or equal to <code>EXCLUSIVE</code> is allowed - which means
+ * every other lock level. On the other side <code>EXCLUSIVE</code> allows
+ * exacly for <code>NO LOCK</code>- which means nothing else. In conclusion,
  * <code>SHARED</code> allows for <code>SHARED</code> or <code>NO
- * LOCK</code>, but not for <code>EXCLUSIVE</code>. To make this very
- * clear have a look at this table, where <code>o</code> means
- * compatible or can coexist and <code>x</code> means incompatible or can
- * not coexist:</p>
- * <table>
- *   <tbody>
- *     <tr>
- *       <td align="center"></td>
- *       <td align="center">NO LOCK</td>
- *       <td align="center">SHARED</td><td align="center">EXCLUSIVE</td>
- *     </tr>
- *     <tr><td align="center">NO LOCK</td><td align="center">o</td><td align="center">o</td><td align="center">o</td>
- *     </tr>
- *     <tr><td align="center">SHARED</td><td align="center">o</td><td align="center">o</td><td align="center">x</td>
- *     </tr>
- *     <tr><td align="center">EXCLUSIVE</td><td align="center" align="center">o</td><td align="center">x</td><td align="center">x</td>
- *     </tr>
- *   </tbody>
- * </table>
+ * LOCK</code>,
+ * but not for <code>EXCLUSIVE</code>. To make this very clear have a look at
+ * this table, where <code>o</code> means compatible or can coexist and
+ * <code>x</code> means incompatible or can not coexist:
+ * </p>
+ * <table><tbody>
+ * <tr>
+ * <td align="center"></td>
+ * <td align="center">NO LOCK</td>
+ * <td align="center">SHARED</td>
+ * <td align="center">EXCLUSIVE</td>
+ * </tr>
+ * <tr>
+ * <td align="center">NO LOCK</td>
+ * <td align="center">o</td>
+ * <td align="center">o</td>
+ * <td align="center">o</td>
+ * </tr>
+ * <tr>
+ * <td align="center">SHARED</td>
+ * <td align="center">o</td>
+ * <td align="center">o</td>
+ * <td align="center">x</td>
+ * </tr>
+ * <tr>
+ * <td align="center">EXCLUSIVE</td>
+ * <td align="center" align="center">o</td>
+ * <td align="center">x</td>
+ * <td align="center">x</td>
+ * </tr>
+ * </tbody> </table>
  * 
- * </p> 
+ * </p>
+ * <p>
+ * Additionally, there are no preferences for specific locks you can pass to
+ * {@link #acquire(Object, int, boolean, int, boolean, long)}. 
+ * This means whenever more thanone party
+ * waits for a lock you can specify which one is to be preferred. This gives you
+ * every freedom you might need to specifcy e.g. 
+ * <ul>
+ * <li>priority to parties either applying for higher or lower lock levels
+ * <li>priority not only to higher or lower locks, but to a specific level
+ * <li>completely random preferences
+ * </ul>
+ * </p>
  * 
- * General limitations include:<br>
+ * General limitations include: <br>
  * <ul>
  * <li>You are restricted to the scheme described above
- * <li>There are no preferences configurable for lock levels. This means whenever more than
- * one party waits for a lock you can not specify which one is to be preferred. Under certain circumstances
- * I might be nice to have the opportunity to give priority to parties either applying for 
- * higher or lower lock levels. It might even be desirable not only to give priority to higher or lower locks,
- * but to a special level. For example you do not want to prefer higher lock levels, but exactly lock 
- * level <code>3</code> which might stand for <code>WRITE</code> access.
- * <li>It is not possible to represent hierarchical locks, i.e. locks having descendants
- * that are locked whenever the lock itself is locked. Consequently, there also is no notion
- * of an intention lock.
- * <li>You can not specify a timeframe for the validity of a lock. This means an owner of a thread
- * can never lose a lock except when <em>actively</em> releasing it. This is bad when an owner either
- * forgets to release a lock or is not able to do so due to error states or abnormal termination.  
+ * <li>You can not specify a timeframe for the validity of a lock. This means
+ * an owner of a thread can never lose a lock except when <em>actively</em>
+ * releasing it. This is bad when an owner either forgets to release a lock or
+ * is not able to do so due to error states or abnormal termination.
  * </ul>
  * 
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class GenericLock implements MultiLevelLock {
 
@@ -167,24 +192,38 @@ public class GenericLock implements MultiLevelLock {
         return acquire(ownerId, targetLockLevel, wait, reentrant ? COMPATIBILITY_REENTRANT
                 : COMPATIBILITY_NONE, timeoutMSecs);
     }
-        
+
+    /**
+     * @see #acquire(Object, int, boolean, int, boolean, long) 
+     */
+    public synchronized boolean acquire(Object ownerId, int targetLockLevel, boolean wait,
+            int compatibility, long timeoutMSecs) throws InterruptedException {
+        return acquire(ownerId, targetLockLevel, wait, compatibility, false, timeoutMSecs);
+    }
+    
     /**
      * Tries to acquire a certain lock level on this lock. Does the same as
      * {@link org.apache.commons.transaction.locking.MultiLevelLock#acquire(java.lang.Object, int, boolean, boolean, long)}
      * except that it allows for different compatibility settings. There is an
-     * additional compatibility mode {@link #COMPATIBILITY_SUPPORT} that allows
+     * additional compatibility mode {@link #COMPATIBILITY_SUPPORT}that allows
      * equal lock levels not to interfere with each other. This is like an
-     * additional shared compatibility and useful when you only want to make sure not to interfer
-     * with lowe levels, but are fine with the same.
+     * additional shared compatibility and useful when you only want to make
+     * sure not to interfer with lowe levels, but are fine with the same.
      * 
-     * @param compatibility 
-     *            {@link #COMPATIBILITY_NONE} if no additional compatibility is
+     * @param compatibility
+     *            {@link #COMPATIBILITY_NONE}if no additional compatibility is
      *            desired (same as reentrant set to false) ,
-     *            {@link #COMPATIBILITY_REENTRANT} if lock level by the same
+     *            {@link #COMPATIBILITY_REENTRANT}if lock level by the same
      *            owner shall not affect compatibility (same as reentrant set to
-     *            true), or {@link #COMPATIBILITY_SUPPORT} if lock levels that
-     *            are the same as the desired shall not affect compatibility, or finally
-     * {@link #COMPATIBILITY_REENTRANT_AND_SUPPORT} which is a combination of reentrant and support
+     *            true), or {@link #COMPATIBILITY_SUPPORT}if lock levels that
+     *            are the same as the desired shall not affect compatibility, or
+     *            finally {@link #COMPATIBILITY_REENTRANT_AND_SUPPORT}which is
+     *            a combination of reentrant and support
+     * 
+     * @param preferred
+     *            in case this lock request is incompatible with existing ones
+     *            and we wait, it shall be granted before other waiting requests
+     *            that are not preferred
      * 
      * @see org.apache.commons.transaction.locking.MultiLevelLock#acquire(java.lang.Object,
      *      int, boolean, boolean, long)
@@ -194,6 +233,7 @@ public class GenericLock implements MultiLevelLock {
         int targetLockLevel,
         boolean wait,
         int compatibility,
+        boolean preferred,
         long timeoutMSecs)
         throws InterruptedException {
 
@@ -240,7 +280,32 @@ public class GenericLock implements MultiLevelLock {
 	                            + System.currentTimeMillis());
                     }
 
-                    wait(remaining);
+                    if (preferred) {
+                        // while waiting we already make our claim we are next
+                        LockOwner oldLock = null;
+                        try {
+                            // we need to remember it to restore it after waiting
+                            oldLock = (LockOwner) owners.get(ownerId);
+                            // this creates a new owner, so we do not need to
+                            // copy the old one
+                            setLockLevel(ownerId, null, targetLockLevel);
+
+                            // finally wait
+                            wait(remaining);
+                            
+                        } finally {
+                            // we need to restore the old lock in order not to
+                            // interfere with the intention lock in the
+                            // following check
+                            // and not to have it in case of success either
+                            // as there will be an ordinary lock then
+                            owners.put(ownerId, oldLock);
+                        }
+
+                    } else {
+                        wait(remaining);
+                    }
+
                     if (tryLock(ownerId, targetLockLevel, compatibility)) {
 
                         if (logger.isFinerEnabled()) {
