@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockManager2.java,v 1.1 2005/01/07 13:32:33 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2005/01/07 13:32:33 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockManager2.java,v 1.2 2005/01/07 23:24:03 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2005/01/07 23:24:03 $
  *
  * ====================================================================
  *
@@ -29,7 +29,7 @@ import java.util.Set;
  * Extended version of a lock manager that also has global knowledge or all locks and should be
  * used as a delegate for all locking requests. This allows for things like deadlock detection.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see MultiLevelLock
  * @see LockManager
  * @see GenericLockManager
@@ -104,6 +104,41 @@ public interface LockManager2 {
      */
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant,
             long timeoutMSecs) throws LockException;
+
+    /**
+     * Most flexible way to acquire a lock on a resource. <br>
+     * <br>
+     * This method blocks and waits for the lock in case it is not avaiable. If
+     * there is a timeout or a deadlock or the thread is interrupted a
+     * LockException is thrown.
+     * 
+     * @param ownerId
+     *            a unique id identifying the entity that wants to acquire this
+     *            lock
+     * @param resourceId
+     *            the resource to get the level for
+     * @param targetLockLevel
+     *            the lock level to acquire
+     * @param compatibility
+     *            {@link GenericLock#COMPATIBILITY_NONE}if no additional compatibility is
+     *            desired (same as reentrant set to false) ,
+     *            {@link GenericLock#COMPATIBILITY_REENTRANT}if lock level by the same
+     *            owner shall not affect compatibility (same as reentrant set to
+     *            true), or {@link GenericLock#COMPATIBILITY_SUPPORT}if lock levels that
+     *            are the same as the desired shall not affect compatibility, or
+     *            finally {@link GenericLock#COMPATIBILITY_REENTRANT_AND_SUPPORT}which is
+     *            a combination of reentrant and support
+     * @param preferred
+     *            in case this lock request is incompatible with existing ones
+     *            and we wait, it shall be granted before other waiting requests
+     *            that are not preferred
+     * @param timeoutMSecs
+     *            specifies the maximum wait time in milliseconds
+     * @throws LockException
+     *             will be thrown when the lock can not be acquired
+     */
+    public void lock(Object ownerId, Object resourceId, int targetLockLevel, int compatibility,
+            boolean preferred, long timeoutMSecs) throws LockException;
 
     /**
      * Gets the lock level held by certain owner on a certain resource.

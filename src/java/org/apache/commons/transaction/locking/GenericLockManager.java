@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.13 2005/01/07 13:52:42 ozeigermann Exp $
- * $Revision: 1.13 $
- * $Date: 2005/01/07 13:52:42 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.14 2005/01/07 23:24:03 ozeigermann Exp $
+ * $Revision: 1.14 $
+ * $Date: 2005/01/07 23:24:03 $
  *
  * ====================================================================
  *
@@ -41,7 +41,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <li>global transaction timeouts that actively revok granted rights from transactions
  * </ul>
  * 
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class GenericLockManager implements LockManager, LockManager2 {
 
@@ -157,7 +157,15 @@ public class GenericLockManager implements LockManager, LockManager2 {
      */
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant,
             long timeoutMSecs) throws LockException {
+        lock(ownerId, resourceId, targetLockLevel, reentrant ? GenericLock.COMPATIBILITY_REENTRANT
+                : GenericLock.COMPATIBILITY_NONE, false, globalTimeoutMSecs);
+    }
 
+    /**
+     * @see LockManager2#lock(Object, Object, int, int, boolean, long)
+     */
+    public void lock(Object ownerId, Object resourceId, int targetLockLevel, int compatibility,
+            boolean preferred, long timeoutMSecs) throws LockException {
         timeoutCheck(ownerId);
         
         long now = System.currentTimeMillis();
@@ -189,7 +197,8 @@ public class GenericLockManager implements LockManager, LockManager2 {
             // if not we still can check what the reason for this is
             if (checkThreshhold != -1 && timeoutMSecs > checkThreshhold) {
                 acquired = lock
-                        .acquire(ownerId, targetLockLevel, true, reentrant, checkThreshhold);
+                        .acquire(ownerId, targetLockLevel, true, compatibility,
+                                preferred, checkThreshhold);
                 if (acquired) {
                     addOwner(ownerId, lock);
                     return;
@@ -211,12 +220,10 @@ public class GenericLockManager implements LockManager, LockManager2 {
                     // have a deadlock
     
                     Set conflicts = lock.getConflictingOwners(ownerId, targetLockLevel,
-                            reentrant ? GenericLock.COMPATIBILITY_REENTRANT
-                                    : GenericLock.COMPATIBILITY_NONE);
+                            compatibility);
 
                     boolean deadlock = wouldDeadlock(ownerId, lock, targetLockLevel,
-                            reentrant ? GenericLock.COMPATIBILITY_REENTRANT
-                                    : GenericLock.COMPATIBILITY_NONE, conflicts);
+                            compatibility, conflicts);
                     if (deadlock) {
                         throw new LockException("Lock would cause deadlock",
                                 LockException.CODE_DEADLOCK_VICTIM, resourceId);
@@ -233,8 +240,8 @@ public class GenericLockManager implements LockManager, LockManager2 {
                         timeoutMSecs = waitEnd - now;
                     }
             
-                    acquired = lock
-                            .acquire(ownerId, targetLockLevel, true, reentrant, timeoutMSecs);
+                    acquired = lock.acquire(ownerId, targetLockLevel, true, compatibility,
+                            preferred, timeoutMSecs);
                     
                 }
             }
@@ -481,4 +488,5 @@ public class GenericLockManager implements LockManager, LockManager2 {
                     LockException.CODE_TIMED_OUT, null);
         }
     }
+
 }
