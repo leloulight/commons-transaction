@@ -20,7 +20,7 @@
   <property name="compile.deprecation" value="true" />
   <property name="compile.optimize" value="true" />
 
-  <property name="version" value="1.1b1-pre"/>
+  <property name="version" value="1.1b1"/>
   <property name="name" value="commons-transaction" />
   <property name="title" value="Commons Transaction" />
   <property name="package" value="org.apache.commons.transaction" />
@@ -314,7 +314,10 @@
     <!-- =================================================================== -->
     <!-- Build documentation                                                 -->
     <!-- =================================================================== -->
-    <target name="doc" depends="prepare,javadocs" description="Generate documentation">
+    <target name="doc" depends="prepare,javadocs,xdocs"
+    description="Generate full documentation" />
+
+    <target name="xdocs" depends="prepare" description="Generate documentation">
         <style basedir="xdocs" destdir="${build.doc}" extension=".html" style="xdocs/style/basic.xsl" includes="*.xml"/>
         <style basedir="xdocs/file" destdir="${build.doc}/file" extension=".html" style="xdocs/style/basic.xsl" includes="*.xml"/>
         <style basedir="xdocs/locks" destdir="${build.doc}/locks" extension=".html" style="xdocs/style/basic.xsl" includes="*.xml"/>
