@@ -5,12 +5,12 @@
   <name>Transaction</name>
   <id>commons-transaction</id>
   <logo>/images/transaction-logo-white.png</logo>
-  <url>http://jakarta.apache.org/commons/sandbox/transaction/</url>
+  <url>http://jakarta.apache.org/commons/transaction/</url>
   <inceptionYear>2004</inceptionYear>
   <shortDescription>Commons Transaction</shortDescription>
   <description>Commons Transaction</description>
 
-  <currentVersion>0.1-dev</currentVersion>
+  <currentVersion>1.0rc1</currentVersion>
 
   <url>http://jakarta.apache.org/commons/${pom.artifactId.substring(8)}/</url>
   <package>org.apache.commons.${pom.artifactId.substring(8)}</package>
