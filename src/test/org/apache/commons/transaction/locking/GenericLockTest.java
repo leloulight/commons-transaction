@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.9 2004/12/28 21:11:12 ozeigermann Exp $
- * $Revision: 1.9 $
- * $Date: 2004/12/28 21:11:12 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.10 2005/01/07 12:41:58 ozeigermann Exp $
+ * $Revision: 1.10 $
+ * $Date: 2005/01/07 12:41:58 $
  *
  * ====================================================================
  *
@@ -29,15 +29,15 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.apache.commons.transaction.util.SequenceBarrier;
 import org.apache.commons.transaction.util.LoggerFacade;
 import org.apache.commons.transaction.util.PrintWriterLogger;
 import org.apache.commons.transaction.util.RendezvousBarrier;
+import org.apache.commons.transaction.util.TurnBarrier;
 
 /**
  * Tests for generic locks. 
  *
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class GenericLockTest extends TestCase {
 
@@ -268,21 +268,21 @@ public class GenericLockTest extends TestCase {
 
         final RendezvousBarrier restart = new RendezvousBarrier("restart", 3, TIMEOUT, sLogger);
 
-        final SequenceBarrier cb = new SequenceBarrier("cb1", TIMEOUT, sLogger);
+        final TurnBarrier cb = new TurnBarrier("cb1", TIMEOUT, sLogger, 1);
 
         for (int i = 0; i < CONCURRENT_TESTS; i++) {
             
-//            System.out.print(".");
+            System.out.print(".");
 
             Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        cb.count(2);
+                        cb.waitForTurn(2);
                         manager.upgradeLock(owner2, res1);
-                        cb.count(3);
-                        cb.count(6);
+                        cb.signalTurn(3);
+                        cb.waitForTurn(5);
                         synchronized (manager.getLock(res1)) {
-                            cb.count(7);
+                            cb.signalTurn(6);
                             manager.writeLock(owner2, res1);
                         }
                         // we must always be first as we will be preferred over
@@ -292,9 +292,7 @@ public class GenericLockTest extends TestCase {
                             if (first == null)
                                 first = owner2;
                         }
-                        cb.count(12);
                         manager.releaseAll(owner2);
-                        cb.count(13);
                         synchronized (restart) {
                             restart.meet();
                             restart.reset();
@@ -315,9 +313,9 @@ public class GenericLockTest extends TestCase {
                         // next to get the lock as it is preferred over the main
                         // thread
                         // that only waits for a read lock
-                        cb.count(8);
+                        cb.waitForTurn(6);
                         synchronized (manager.getLock(res1)) {
-                            cb.count(9);
+                            cb.signalTurn(7);
                             manager.readLock(owner3, res1);
                         }
                         synchronized (this) {
@@ -336,18 +334,17 @@ public class GenericLockTest extends TestCase {
 
             t2.start();
 
-            cb.count(0);
+            cb.waitForTurn(1);
             manager.readLock(owner1, res1);
-            cb.count(1);
-            cb.count(4);
+            cb.signalTurn(2);
+            cb.waitForTurn(3);
             manager.release(owner1, res1);
             manager.readLock(owner1, res1);
-            cb.count(5);
-            cb.count(10);
+            cb.signalTurn(5);
+            cb.waitForTurn(7);
             synchronized (manager.getLock(res1)) {
                 manager.releaseAll(owner1);
             }
-            cb.count(11);
             synchronized (restart) {
                 restart.meet();
                 restart.reset();
@@ -385,19 +382,6 @@ public class GenericLockTest extends TestCase {
      * 8                                released   or   released
      * 
      * 
-     * In SequenceBarrier notation this looks like
-     * 
-     *                  Owner           Owner           Owner
-     *                  #1              #2              #3
-     *                  0read1
-     *                                  2(write3)
-     *                                                  4(write5)
-     *                  6(release)7
-     *                                  8release9       8release9
-     * 
-     * Round brackets mean atomic execution
-     * 
-     * 
      */
     public void testPreference() throws Throwable {
 
@@ -413,24 +397,22 @@ public class GenericLockTest extends TestCase {
 
         final RendezvousBarrier restart = new RendezvousBarrier("restart", 3, TIMEOUT, sLogger);
 
-        final SequenceBarrier cb = new SequenceBarrier("cb1", TIMEOUT, sLogger);
+        final TurnBarrier cb = new TurnBarrier("cb1", TIMEOUT, sLogger, 1);
 
         for (int i = 0; i < CONCURRENT_TESTS; i++) {
             
-//            System.out.print(".");
+            System.out.print(".");
 
             Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        cb.count(2);
+                        cb.waitForTurn(2);
                         synchronized (lock) {
-                            cb.count(3);
+                            cb.signalTurn(3);
                             lock.acquire(owner2, ReadWriteLock.WRITE_LOCK, true,
                                     GenericLock.COMPATIBILITY_REENTRANT, true, TIMEOUT);
                         }
-                        cb.count(8);
                         lock.release(owner2);
-                        cb.count(9);
                         synchronized (restart) {
                             restart.meet();
                             restart.reset();
@@ -445,15 +427,13 @@ public class GenericLockTest extends TestCase {
             Thread t2 = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        cb.count(4);
+                        cb.waitForTurn(3);
                         synchronized (lock) {
-                            cb.count(5);
+                            cb.signalTurn(4);
                             lock.acquire(owner3, ReadWriteLock.WRITE_LOCK, true,
                                     GenericLock.COMPATIBILITY_REENTRANT, true, TIMEOUT);
                         }
-                        cb.count(8);
                         lock.release(owner3);
-                        cb.count(9);
                         synchronized (restart) {
                             restart.meet();
                             restart.reset();
@@ -465,14 +445,13 @@ public class GenericLockTest extends TestCase {
 
             t2.start();
 
-            cb.count(0);
+            cb.waitForTurn(1);
             lock.acquireRead(owner1, TIMEOUT);
-            cb.count(1);
-            cb.count(6);
+            cb.signalTurn(2);
+            cb.waitForTurn(4);
             synchronized (lock) {
                 lock.release(owner1);
             }
-            cb.count(7);
             synchronized (restart) {
                 restart.meet();
                 restart.reset();
@@ -496,7 +475,7 @@ public class GenericLockTest extends TestCase {
 
         final RendezvousBarrier restart = new RendezvousBarrier("restart", 2, TIMEOUT, sLogger);
 
-        final SequenceBarrier cb = new SequenceBarrier("cb1", TIMEOUT, sLogger);
+        final TurnBarrier cb = new TurnBarrier("cb1", TIMEOUT, sLogger, 1);
 
         for (int i = 0; i < CONCURRENT_TESTS; i++) {
             
@@ -505,9 +484,9 @@ public class GenericLockTest extends TestCase {
             Thread t1 = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        cb.count(2);
+                        cb.waitForTurn(2);
                         manager.lock(owner2, res1, 1, true);
-                        cb.count(3);
+                        cb.signalTurn(3);
                         manager.releaseAll(owner2);
                         synchronized (restart) {
                             restart.meet();
@@ -520,11 +499,11 @@ public class GenericLockTest extends TestCase {
 
             t1.start();
 
-            cb.count(0);
-            manager.setGlobalTimeout(owner1, 500);
+            cb.waitForTurn(1);
             manager.lock(owner1, res1, 1, true);
-            cb.count(1);
-            cb.count(4);
+            manager.setGlobalTimeout(owner1, 500);
+            cb.signalTurn(2);
+            cb.waitForTurn(3);
             boolean failed = false;
             try {
                 manager.tryLock(owner1, res1, 1, true);
