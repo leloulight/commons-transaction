@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.7 2004/12/19 03:07:23 ozeigermann Exp $
- * $Revision: 1.7 $
- * $Date: 2004/12/19 03:07:23 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.8 2004/12/19 10:35:55 ozeigermann Exp $
+ * $Revision: 1.8 $
+ * $Date: 2004/12/19 10:35:55 $
  *
  * ====================================================================
  *
@@ -37,7 +37,7 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
 /**
  * Tests for generic locks. 
  *
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class GenericLockTest extends TestCase {
 
@@ -546,6 +546,166 @@ public class GenericLockTest extends TestCase {
             }
 
             cb.reset();
+        }
+
+    }
+
+    public void testStress() throws Throwable {
+
+        sLogger.logInfo("\n\nStress checking locks\n\n");
+        
+        final String owner1 = "owner1";
+        final String owner2 = "owner2";
+        final String owner3 = "owner3";
+        final String owner4 = "owner4";
+        final String owner5 = "owner5";
+        final String owner6 = "owner6";
+        final String owner7 = "owner7";
+        final String owner8 = "owner8";
+        final String owner9 = "owner9";
+        final String owner10 = "owner10";
+
+        final String res1 = "res1";
+        final String res2 = "res2";
+        final String res3 = "res3";
+
+        // choose low timeout so sometimes an owner times out
+        final ReadWriteUpgradeLockManager manager = new ReadWriteUpgradeLockManager(sLogger, 100);
+
+        final RendezvousBarrier restart = new RendezvousBarrier("restart", 5, TIMEOUT, sLogger);
+        final RendezvousBarrier start = new RendezvousBarrier("start", 5, TIMEOUT, sLogger);
+
+        for (int i = 0; i < CONCURRENT_TESTS; i++) {
+            
+            System.out.print(".");
+
+            Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        try {
+                            synchronized (start) {
+                                start.meet();
+                                start.reset();
+                            }
+                            manager.readLock(owner1, res1);
+                            manager.readLock(owner1, res2);
+                            manager.upgradeLock(owner1, res3);
+                            manager.writeLock(owner1, res3);
+                        } catch (LockException ie) {
+                        } finally {
+                            manager.releaseAll(owner1);
+                            synchronized (restart) {
+                                restart.meet();
+                                restart.reset();
+                            }
+                        }
+                    } catch (InterruptedException ie) {
+                    }
+                }
+            }, "Thread #1");
+            t1.start();
+
+            Thread t2 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        try {
+                            synchronized (start) {
+                                start.meet();
+                                start.reset();
+                            }
+                            manager.readLock(owner2, res1);
+                            manager.readLock(owner2, res2);
+                            manager.upgradeLock(owner2, res3);
+                            manager.writeLock(owner2, res3);
+                        } catch (LockException ie) {
+                        } finally {
+                            manager.releaseAll(owner2);
+                            synchronized (restart) {
+                                restart.meet();
+                                restart.reset();
+                            }
+                        }
+                    } catch (InterruptedException ie) {
+                    }
+                }
+            }, "Thread #2");
+            t2.start();
+
+            Thread t3 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        try {
+                            synchronized (start) {
+                                start.meet();
+                                start.reset();
+                            }
+                            manager.readLock(owner3, res1);
+                            manager.readLock(owner3, res2);
+                            manager.upgradeLock(owner3, res3);
+                            manager.writeLock(owner3, res3);
+                        } catch (LockException ie) {
+                        } finally {
+                            manager.releaseAll(owner3);
+                            synchronized (restart) {
+                                restart.meet();
+                                restart.reset();
+                            }
+                        }
+                    } catch (InterruptedException ie) {
+                    }
+                }
+            }, "Thread #3");
+            t3.start();
+
+            Thread t4 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        try {
+                            synchronized (start) {
+                                start.meet();
+                                start.reset();
+                            }
+                            manager.readLock(owner4, res1);
+                            manager.readLock(owner4, res2);
+                            manager.upgradeLock(owner4, res3);
+                            manager.writeLock(owner4, res3);
+                        } catch (LockException ie) {
+                        } finally {
+                            manager.releaseAll(owner4);
+                            synchronized (restart) {
+                                restart.meet();
+                                restart.reset();
+                            }
+                        }
+                    } catch (InterruptedException ie) {
+                    }
+                }
+            }, "Thread #4");
+            t4.start();
+
+            try {
+                try {
+                    synchronized (start) {
+                        start.meet();
+                        start.reset();
+                    }
+                    manager.readLock("reader", res1);
+                    manager.readLock("reader", res2);
+                    manager.readLock("reader", res3);
+
+                } catch (LockException ie) {
+                } finally {
+                    manager.releaseAll("reader");
+                    try {
+                        synchronized (restart) {
+                            restart.meet();
+                            restart.reset();
+                        }
+                    } catch (InterruptedException ie) {
+                    }
+                }
+            } catch (InterruptedException ie) {
+            }
         }
 
     }
