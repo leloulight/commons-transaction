@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/PessimisticMapWrapper.java,v 1.2 2004/12/14 12:12:46 ozeigermann Exp $
  * $Revision: 1.2 $
- * $Date: 2004/12/14 12:12:46 $
+ * $Date$
  *
  * ====================================================================
  *
@@ -64,6 +64,8 @@ public class PessimisticMapWrapper extends TransactionalMapWrapper {
      * data will be instances of {@link java.util.HashMap} and {@link java.util.HashSet}. 
      * 
      * @param wrapped map to be wrapped
+     * @param logger
+     *            generic logger used for all kinds of logging
      */
     public PessimisticMapWrapper(Map wrapped, LoggerFacade logger) {
         this(wrapped, new HashMapFactory(), new HashSetFactory(), logger);
@@ -76,6 +78,8 @@ public class PessimisticMapWrapper extends TransactionalMapWrapper {
      * @param wrapped map to be wrapped
      * @param mapFactory factory for temporary maps
      * @param setFactory factory for temporary sets
+     * @param logger
+     *            generic logger used for all kinds of logging
      */
     public PessimisticMapWrapper(Map wrapped, MapFactory mapFactory, SetFactory setFactory, LoggerFacade logger) {
         super(wrapped, mapFactory, setFactory);
