@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteLock.java,v 1.1 2004/11/18 23:27:17 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:17 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteLock.java,v 1.2 2004/12/13 10:51:40 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/12/13 10:51:40 $
  *
  * ====================================================================
  *
@@ -26,7 +26,7 @@ package org.apache.commons.transaction.locking;
 import org.apache.commons.transaction.util.LoggerFacade;
 
 /**
- * Conveience implementation of a read/write lock based on {@link GenericLock}.
+ * Convenience implementation of a read/write lock based on {@link GenericLock}.
  * <br>
  * <br>
  * Reads are shared which means there can be any number of concurrent read
@@ -42,7 +42,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * again you will not be blocked by this first lock, while others of course will be. This is the
  * natural way you already know from Java monitors and synchronized blocks.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @see GenericLock
  */
 public class ReadWriteLock extends GenericLock {
