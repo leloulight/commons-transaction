@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.6 2004/12/18 23:15:08 ozeigermann Exp $
- * $Revision: 1.6 $
- * $Date: 2004/12/18 23:15:08 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.7 2004/12/19 03:07:23 ozeigermann Exp $
+ * $Revision: 1.7 $
+ * $Date: 2004/12/19 03:07:23 $
  *
  * ====================================================================
  *
@@ -37,7 +37,7 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
 /**
  * Tests for generic locks. 
  *
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class GenericLockTest extends TestCase {
 
@@ -49,7 +49,7 @@ public class GenericLockTest extends TestCase {
     
     private static final int CONCURRENT_TESTS = 25;
     
-    protected static final long TIMEOUT = Long.MAX_VALUE;
+    protected static final long TIMEOUT = 1000000;
     
     private static int deadlockCnt = 0;
     private static String first = null;
@@ -168,7 +168,7 @@ public class GenericLockTest extends TestCase {
 
         for (int i = 0; i < CONCURRENT_TESTS; i++) {
 
-//            System.out.print(".");
+           System.out.print(".");
             
             final RendezvousBarrier deadlockBarrier1 = new RendezvousBarrier("deadlock1" + i,
                     TIMEOUT, sLogger);
@@ -224,7 +224,7 @@ public class GenericLockTest extends TestCase {
                 }
             }
 
-            assertEquals(deadlockCnt, 1);
+            assertEquals(1, deadlockCnt);
             deadlockCnt = 0;
         }
     }
@@ -473,6 +473,73 @@ public class GenericLockTest extends TestCase {
                 lock.release(owner1);
             }
             cb.count(7);
+            synchronized (restart) {
+                restart.meet();
+                restart.reset();
+            }
+
+            cb.reset();
+        }
+
+    }
+    
+    public void testGlobalTimeout() throws Throwable {
+
+        sLogger.logInfo("\n\nChecking global timeouts\n\n");
+        
+        final String owner1 = "owner1";
+        final String owner2 = "owner2";
+
+        final String res1 = "res1";
+
+        final GenericLockManager manager = new GenericLockManager(1, sLogger, TIMEOUT, -1);
+
+        final RendezvousBarrier restart = new RendezvousBarrier("restart", 2, TIMEOUT, sLogger);
+
+        final CounterBarrier cb = new CounterBarrier("cb1", TIMEOUT, sLogger);
+
+        for (int i = 0; i < CONCURRENT_TESTS; i++) {
+            
+            System.out.print(".");
+
+            Thread t1 = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        cb.count(2);
+                        manager.lock(owner2, res1, 1, true);
+                        cb.count(3);
+                        manager.releaseAll(owner2);
+                        synchronized (restart) {
+                            restart.meet();
+                            restart.reset();
+                        }
+                    } catch (InterruptedException ie) {
+                    }
+                }
+            }, "Thread #1");
+
+            t1.start();
+
+            cb.count(0);
+            manager.setGlobalTimeout(owner1, 500);
+            manager.lock(owner1, res1, 1, true);
+            cb.count(1);
+            cb.count(4);
+            boolean failed = false;
+            try {
+                manager.tryLock(owner1, res1, 1, true);
+            } catch (LockException le) {
+                failed = true;
+            }
+            assertTrue(failed);
+            manager.releaseAll(owner1);
+            failed = false;
+            try {
+                manager.tryLock(owner1, res1, 1, true);
+            } catch (LockException le) {
+                failed = true;
+            }
+            assertFalse(failed);
             synchronized (restart) {
                 restart.meet();
                 restart.reset();
