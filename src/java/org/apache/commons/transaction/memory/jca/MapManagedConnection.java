@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/jca/MapManagedConnection.java,v 1.1 2004/11/18 23:27:17 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:17 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -43,7 +43,7 @@ import org.apache.commons.transaction.memory.TransactionalMapWrapper;
 
 /**
  *   
- * @version $Revision: 1.1 $
+ * @version $Revision$
  * 
  */
 public class MapManagedConnection implements ManagedConnection {

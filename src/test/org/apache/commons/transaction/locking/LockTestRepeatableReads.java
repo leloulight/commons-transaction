@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.12 2005/01/13 16:44:03 ozeigermann Exp $
- * $Revision: 1.12 $
- * $Date: 2005-01-29 07:43:19 +0100 (Sa, 29 Jan 2005) $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -33,7 +33,7 @@ import org.apache.commons.transaction.util.PrintWriterLogger;
 /**
  * Tests for repeatable read in locks as investigated for OJB. 
  *
- * @version $Revision: 1.12 $
+ * @version $Revision$
  * @author Armin Waibel
  */
 public class LockTestRepeatableReads extends TestCase

@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/xa/AbstractXAResource.java,v 1.2 2004/11/29 18:28:17 luetzkendorf Exp $
- * $Revision: 1.2 $
- * $Date: 2004/11/29 18:28:17 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *

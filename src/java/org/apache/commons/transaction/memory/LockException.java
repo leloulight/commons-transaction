@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/LockException.java,v 1.4 2004/12/16 17:39:14 ozeigermann Exp $
- * $Revision: 1.4 $
- * $Date: 2004/12/16 17:39:14 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -27,7 +27,7 @@ package org.apache.commons.transaction.memory;
 /**
  * Exception displaying a lock problem in pessimistic transactions.
  * 
- * @version $Revision: 1.4 $
+ * @version $Revision$
  * @see OptimisticMapWrapper
  * @see org.apache.commons.transaction.locking.LockException
  * @deprecated no longer used as it has been replaced by the more general

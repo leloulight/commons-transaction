@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/ResourceManager.java,v 1.3 2004/12/16 17:33:53 ozeigermann Exp $
- * $Revision: 1.3 $
- * $Date: 2004/12/16 17:33:53 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -45,7 +45,7 @@ import javax.transaction.Status;
  * <li>for reading and writing of resources
  * </ul> 
  *  
- * @version $Revision: 1.3 $
+ * @version $Revision$
  *
  */
 public interface ResourceManager extends Status {

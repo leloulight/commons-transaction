@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/jca/MapLocalTransaction.java,v 1.2 2004/11/19 23:41:29 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2004/11/19 23:41:29 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -29,7 +29,7 @@ import org.apache.commons.transaction.memory.TransactionalMapWrapper;
 
 /**
  * 
- * @version $Revision: 1.2 $
+ * @version $Revision$
  * 
  */
 public class MapLocalTransaction implements javax.resource.spi.LocalTransaction, javax.resource.cci.LocalTransaction {

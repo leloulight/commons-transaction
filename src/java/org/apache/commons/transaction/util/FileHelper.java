@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/FileHelper.java,v 1.2 2004/11/19 17:42:10 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2004/11/19 17:42:10 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -34,7 +34,7 @@ import java.io.OutputStream;
  * Helper methods for file manipulation. 
  * All methods are <em>thread safe</em>.
  * 
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public final class FileHelper {
 

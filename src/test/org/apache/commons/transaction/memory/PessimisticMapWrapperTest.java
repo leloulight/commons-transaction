@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/memory/PessimisticMapWrapperTest.java,v 1.3 2005/01/13 01:34:25 ozeigermann Exp $
- * $Revision: 1.3 $
- * $Date: 2005/01/13 01:34:25 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -37,7 +37,7 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
 /**
  * Tests for map wrapper. 
  *
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class PessimisticMapWrapperTest extends MapWrapperTest {
 

@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/TransactionalMapWrapper.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:18 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -48,7 +48,7 @@ import javax.transaction.Status;
  * <em>Note:</em> This wrapper guarantees isolation level <code>READ COMMITTED</code> only. I.e. as soon a value
  * is committed in one transaction it will be immediately visible in all other concurrent transactions.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision$
  * @see OptimisticMapWrapper
  * @see PessimisticMapWrapper
  */

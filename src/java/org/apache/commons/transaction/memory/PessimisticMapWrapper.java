@@ -1,6 +1,6 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/PessimisticMapWrapper.java,v 1.2 2004/12/14 12:12:46 ozeigermann Exp $
- * $Revision: 1.2 $
+ * $Revision$
  * $Date$
  *
  * ====================================================================
@@ -44,7 +44,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <br>
  * <em>Note:</em> This wrapper guarantees isolation level <code>SERIALIZABLE</code>.
  * 
- * @version $Revision: 1.2 $
+ * @version $Revision$
  * @see TransactionalMapWrapper
  * @see OptimisticMapWrapper
  */

@@ -1,6 +1,6 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.12 2005/01/13 16:44:03 ozeigermann Exp $
- * $Revision: 1.12 $
+ * $Revision$
  * $Date$
  *
  * ====================================================================
@@ -37,7 +37,7 @@ import org.apache.commons.transaction.util.TurnBarrier;
 /**
  * Tests for generic locks. 
  *
- * @version $Revision: 1.12 $
+ * @version $Revision$
  */
 public class GenericLockTest extends TestCase {
 

@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/ResourceManagerException.java,v 1.1 2004/11/18 23:27:19 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:19 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -29,7 +29,7 @@ import java.io.StringWriter;
 /**
  * Signals any kind of error or failure state in a {@link ResourceManager}.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision$
  *
  */
 public class ResourceManagerException extends Exception implements ResourceManagerErrorCodes {

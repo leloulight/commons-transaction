@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/LoggerFacade.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:18 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -27,7 +27,7 @@ package org.apache.commons.transaction.util;
 /**
  * Facade for all kinds of logging engines.
  *   
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public interface LoggerFacade {
 

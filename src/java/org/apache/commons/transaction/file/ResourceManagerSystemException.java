@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/ResourceManagerSystemException.java,v 1.1 2004/11/18 23:27:19 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:19 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -26,7 +26,7 @@ package org.apache.commons.transaction.file;
 /**
  * Signals an internal system error in a {@link ResourceManager}.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision$
  *
  */
 public class ResourceManagerSystemException extends ResourceManagerException {

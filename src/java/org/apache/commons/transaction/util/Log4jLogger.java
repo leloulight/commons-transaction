@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/Log4jLogger.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:18 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -28,7 +28,7 @@ import org.apache.log4j.Logger;
 /**
  * Default logger implementation. Uses log4j logging.
  *
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class Log4jLogger implements LoggerFacade {
     

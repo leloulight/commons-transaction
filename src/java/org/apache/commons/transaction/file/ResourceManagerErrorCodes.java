@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/ResourceManagerErrorCodes.java,v 1.2 2004/12/14 12:12:46 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2004/12/14 12:12:46 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -26,7 +26,7 @@ package org.apache.commons.transaction.file;
 /**
  * Error codes for resource managers.
  * 
- * @version $Revision: 1.2 $
+ * @version $Revision$
  * @see ResourceManager
  * @see ResourceManagerException
  * @see ResourceManagerSystemException

@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/LockManager.java,v 1.4 2005/01/07 13:32:33 ozeigermann Exp $
- * $Revision: 1.4 $
- * $Date: 2005/01/07 13:32:33 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -30,7 +30,7 @@ package org.apache.commons.transaction.locking;
  * accessing entity to have influence on this lock via different lock levels that may be 
  * provided by the according implementation of {@link MultiLevelLock}. 
  * 
- * @version $Revision: 1.4 $
+ * @version $Revision$
  * @see MultiLevelLock
  */
 public interface LockManager {

@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/Jdk14Logger.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:18 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 /**
  * Default logger implementation. Uses java.util.logging implementation provided by Java 1.4.
  *
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class Jdk14Logger implements LoggerFacade {
 

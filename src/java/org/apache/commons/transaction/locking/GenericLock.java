@@ -1,6 +1,6 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.14 2005/01/13 23:12:44 ozeigermann Exp $
- * $Revision: 1.14 $
+ * $Revision$
  * $Date$
  *
  * ====================================================================
@@ -122,7 +122,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * </ul>
  * </p>
  * 
- * @version $Revision: 1.14 $
+ * @version $Revision$
  */
 public class GenericLock implements MultiLevelLock2 {
 

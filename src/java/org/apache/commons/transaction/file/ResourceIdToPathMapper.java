@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/ResourceIdToPathMapper.java,v 1.2 2005/01/09 15:12:12 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2005/01/09 15:12:12 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *

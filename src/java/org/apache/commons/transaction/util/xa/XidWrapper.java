@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/xa/XidWrapper.java,v 1.3 2005/01/05 18:56:16 ozeigermann Exp $
- * $Revision: 1.3 $
- * $Date: 2005/01/05 18:56:16 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -32,7 +32,7 @@ import java.lang.String;
  * Wraps an <code>Xid</code> to guarantee methods for equality and hashcode are
  * implemented correctly. This is escpecially necessary when the <code>Xid</code> is used as a key in a <code>HashMap</code>.
  *   
- * @version $Revision: 1.3 $
+ * @version $Revision$
  * 
  */
 public class XidWrapper implements Xid {

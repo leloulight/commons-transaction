@@ -1,6 +1,6 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/OptimisticMapWrapper.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision: 1.1 $
+ * $Revision$
  * $Date$
  *
  * ====================================================================
@@ -51,7 +51,7 @@ import org.apache.commons.transaction.util.PrintWriterLogger;
  * <br>
  * <em>Caution:</em> This implementation might be slow when large amounts of data is changed in a transaction as much references will need to be copied around.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision$
  * @see TransactionalMapWrapper
  * @see PessimisticMapWrapper
  */

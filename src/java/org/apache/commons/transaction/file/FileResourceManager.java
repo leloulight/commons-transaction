@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileResourceManager.java,v 1.6 2005/01/07 13:32:33 ozeigermann Exp $
- * $Revision: 1.6 $
- * $Date: 2005/01/07 13:32:33 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -115,7 +115,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <em>Special Caution</em>: Be very careful not to have two instances of
  * <code>FileResourceManager</code> working in the same store and/or working dir.
  *   
- * @version $Revision: 1.6 $
+ * @version $Revision$
  */
 public class FileResourceManager implements ResourceManager, ResourceManagerErrorCodes {
 

@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/HashSetFactory.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:18 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -29,7 +29,7 @@ import java.util.Set;
 /**
  * Default set factory implementation creating {@link HashSet}s.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class HashSetFactory implements SetFactory {
 

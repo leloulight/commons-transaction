@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileSequence.java,v 1.1 2004/11/18 23:27:19 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:19 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -43,7 +43,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * Fail-Safe sequence store implementation using the file system. Works by versioning
  * values of sequences and throwing away all versions, but the current and the previous one.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class FileSequence {
 

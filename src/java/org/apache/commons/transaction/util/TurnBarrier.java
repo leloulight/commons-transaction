@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/TurnBarrier.java,v 1.1 2005/01/07 12:41:58 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2005/01/07 12:41:58 $
+ * $Revision$
+ * $Date$
  *
  * ====================================================================
  *
@@ -29,7 +29,7 @@ package org.apache.commons.transaction.util;
  * different threads. The idea is to have an ordered sequence of steps where step n can not be 
  * executed before n-1.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class TurnBarrier {
 
