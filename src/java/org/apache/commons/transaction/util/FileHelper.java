@@ -1,11 +1,11 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/FileHelper.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:18 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/FileHelper.java,v 1.2 2004/11/19 17:42:10 ozeigermann Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/11/19 17:42:10 $
  *
  * ====================================================================
  *
- * Copyright 1999-2002 The Apache Software Foundation 
+ * Copyright 2004 The Apache Software Foundation 
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import java.io.OutputStream;
  * Helper methods for file manipulation. 
  * All methods are <em>thread safe</em>.
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public final class FileHelper {
 
@@ -100,54 +100,106 @@ public final class FileHelper {
     }
 
     /**
-     * Moves one directory to another. Existing files will be replaced.
+     * Moves one directory or file to another. Existing files will be replaced.
      * 
-     * @param sourceDir directory to move from
-     * @param targetDir directory to move to
+     * @param source file to move from
+     * @param target file to move to
      * @throws IOException if an I/O error occurs (may result in partially done work)  
      */
-    public static void moveRec(File sourceDir, File targetDir) throws IOException {
+    public static void moveRec(File source, File target) throws IOException {
         byte[] sharedBuffer = new byte[BUF_SIZE];
-        moveRec(sourceDir, targetDir, sharedBuffer);
+        moveRec(source, target, sharedBuffer);
     }
 
-    static void moveRec(File sourceDir, File targetDir, byte[] sharedBuffer) throws IOException {
-        if (sourceDir.isDirectory() && targetDir.isDirectory()) {
-            File[] files = sourceDir.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                File file = files[i];
-                File targetFile = new File(targetDir, file.getName());
-                if (file.isFile()) {
-                    if (targetFile.exists()) {
-                        targetFile.delete();
+    static void moveRec(File source, File target, byte[] sharedBuffer) throws IOException {
+        if (source.isDirectory()) {
+            if (!target.exists()) {
+                target.mkdirs();
+            }
+            if (target.isDirectory()) {
+
+                File[] files = source.listFiles();
+                for (int i = 0; i < files.length; i++) {
+                    File file = files[i];
+                    File targetFile = new File(target, file.getName());
+                    if (file.isFile()) {
+                        if (targetFile.exists()) {
+                            targetFile.delete();
+                        }
+                        if (!file.renameTo(targetFile)) {
+                            copy(file, targetFile, sharedBuffer);
+                            file.delete();
+                        }
+                    } else {
+                        targetFile.mkdirs();
+                        moveRec(file, targetFile);
                     }
-                    if (!file.renameTo(targetFile)) {
+                }
+                source.delete();
+            }
+        } else {
+            if (!target.isDirectory()) {
+                copy(source, target, sharedBuffer);
+                source.delete();
+            }
+        }
+    }
+
+    /**
+     * Copies one directory or file to another. Existing files will be replaced.
+     * 
+     * @param source directory or file to copy from
+     * @param target directory or file to copy to
+     * @throws IOException if an I/O error occurs (may result in partially done work)  
+     */
+    public static void copyRec(File source, File target) throws IOException {
+        byte[] sharedBuffer = new byte[BUF_SIZE];
+        copyRec(source, target, sharedBuffer);
+    }
+
+    static void copyRec(File source, File target, byte[] sharedBuffer) throws IOException {
+        if (source.isDirectory()) {
+            if (!target.exists()) {
+                target.mkdirs();
+            }
+            if (target.isDirectory()) {
+
+                File[] files = source.listFiles();
+                for (int i = 0; i < files.length; i++) {
+                    File file = files[i];
+                    File targetFile = new File(target, file.getName());
+                    if (file.isFile()) {
+                        if (targetFile.exists()) {
+                            targetFile.delete();
+                        }
                         copy(file, targetFile, sharedBuffer);
-                        file.delete();
+                    } else {
+                        targetFile.mkdirs();
+                        copyRec(file, targetFile);
                     }
-                } else {
-                    targetFile.mkdirs();
-                    moveRec(file, targetFile);
                 }
             }
-            sourceDir.delete();
         } else {
-            throw new IOException(
-                "sourceDir '"
-                    + sourceDir.getCanonicalPath()
-                    + "' and targetDir '"
-                    + targetDir.getCanonicalPath()
-                    + "' must be directories and exist to perform a move");
+            if (!target.isDirectory()) {
+                if (!target.exists()) {
+                    target.getParentFile().mkdirs();
+                    target.createNewFile();
+                }
+                copy(source, target, sharedBuffer);
+            }
         }
     }
 
     /**
      * Copies one file to another using {@link #copy(InputStream, OutputStream)}.
      * 
-     * @param input source file
-     * @param output destination file
+     * @param input
+     *            source file
+     * @param output
+     *            destination file
      * @return the number of bytes copied
-     * @throws IOException if an I/O error occurs (may result in partially done work)  
+     * @throws IOException
+     *             if an I/O error occurs (may result in partially done work)
      * @see #copy(InputStream, OutputStream)
      */
     public static long copy(File input, File output) throws IOException {
