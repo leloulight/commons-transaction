@@ -380,6 +380,9 @@
       <fileset dir="${build.dir}">
         <include name="doc/**"/>
       </fileset>
+      <fileset dir="${basedir}">
+        <include name="lib/**"/>
+      </fileset>
     </copy>
   </target>
   
@@ -407,6 +410,10 @@
         <include name="src/**"/>
         <include name="xdocs/**"/>
         <include name="example/**"/>
+        <include name="lib/**"/>
+      </fileset>
+      <fileset dir="${basedir}">
+        <include name="lib/**"/>
       </fileset>
     </copy>
   </target>
