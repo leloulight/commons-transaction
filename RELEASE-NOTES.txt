@@ -1,8 +1,8 @@
-Jakarta Commons Transaction Release 1.1 beta2 pre
--------------------------------------------------
+Jakarta Commons Transaction Release 1.1 beta2
+---------------------------------------------
 
-RELEASE NUMBER: 1.1b2pre
-RELEASE TAG / BRANCH: none yet / none yet
+RELEASE NUMBER: 1.1b2
+RELEASE TAG / BRANCH: TRANSACTION_1_1_B2_RELEASE / none yet
 
 DESCRIPTION
 -----------
