@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileResourceManager.java,v 1.1 2004/11/18 23:27:19 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:19 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/FileResourceManager.java,v 1.2 2004/11/29 18:28:17 luetzkendorf Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/11/29 18:28:17 $
  *
  * ====================================================================
  *
@@ -115,7 +115,7 @@ import org.apache.commons.codec.binary.Base64;
  * <em>Special Caution</em>: Be very careful not to have two instances of
  * <code>FileResourceManager</code> working in the same store and/or working dir.
  *   
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class FileResourceManager implements ResourceManager, ResourceManagerErrorCodes {
 
@@ -342,7 +342,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         if (context == null) {
             msecs = getDefaultTransactionTimeout();
         } else {
-            msecs = ((TransactionContext) context).timeoutMSecs;
+            msecs = context.timeoutMSecs;
         }
         return msecs;
     }
@@ -351,7 +351,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         assureRMReady();
         TransactionContext context = getContext(txId);
         if (context != null) {
-            ((TransactionContext) context).timeoutMSecs = mSecs;
+            context.timeoutMSecs = mSecs;
         } else {
             throw new ResourceManagerException(ERR_NO_TX, txId);
         }
@@ -372,7 +372,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         TransactionContext context = getContext(txId);
         if (context != null) {
             if (level != ISOLATION_LEVEL_READ_COMMITTED || level != ISOLATION_LEVEL_REPEATABLE_READ) {
-                ((TransactionContext) context).isolationLevel = level;
+                context.isolationLevel = level;
             } else {
                 throw new ResourceManagerException(ERR_ISOLATION_LEVEL_UNSUPPORTED, txId);
             }
@@ -462,7 +462,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
     public void startTransaction(Object txId) throws ResourceManagerException {
 
-        logger.logFine("Starting Tx " + txId);
+        if (logger.isFineEnabled()) logger.logFine("Starting Tx " + txId);
 
         assureStarted(); // can only start a new transaction when not already stopping
         if (txId == null || txId.toString().length() == 0) {
@@ -526,7 +526,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                 return PREPARE_FAILURE;
             }
 
-            logger.logFine("Preparing Tx " + txId);
+            if (logger.isFineEnabled()) logger.logFine("Preparing Tx " + txId);
 
             int prepareStatus = PREPARE_FAILURE;
 
@@ -549,7 +549,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
             }
             context.status = STATUS_PREPARED;
             context.saveState();
-            logger.logFine("Prepared Tx " + txId);
+            if (logger.isFineEnabled()) logger.logFine("Prepared Tx " + txId);
 
             return prepareStatus;
         }
@@ -562,7 +562,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         synchronized (context) {
             try {
 
-                logger.logFine("Rolling back Tx " + txId);
+                if (logger.isFineEnabled()) logger.logFine("Rolling back Tx " + txId);
 
                 context.status = STATUS_ROLLING_BACK;
                 context.saveState();
@@ -572,7 +572,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                 globalTransactions.remove(txId);
                 context.cleanUp();
 
-                logger.logFine("Rolled back Tx " + txId);
+                if (logger.isFineEnabled()) logger.logFine("Rolled back Tx " + txId);
 
                 // any system or runtime exceptions or errors thrown in rollback means we are in deep trouble, set the dirty flag
             } catch (Error e) {
@@ -601,7 +601,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         synchronized (context) {
             try {
 
-                logger.logFine("Committing Tx " + txId);
+                if (logger.isFineEnabled()) logger.logFine("Committing Tx " + txId);
 
                 context.status = STATUS_COMMITTING;
                 context.saveState();
@@ -611,7 +611,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                 globalTransactions.remove(txId);
                 context.cleanUp();
 
-                logger.logFine("Committed Tx " + txId);
+                if (logger.isFineEnabled()) logger.logFine("Committed Tx " + txId);
 
                 // any system or runtime exceptions or errors thrown in rollback means we are in deep trouble, set the dirty flag
             } catch (Error e) {
@@ -641,7 +641,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         TransactionContext context;
         synchronized (globalTransactions) {
             txId = generatedUniqueTxId();
-            logger.logFiner("Creating temporary light weight tx " + txId + " to check for exists");
+            if (logger.isFinerEnabled())
+                logger.logFiner("Creating temporary light weight tx " + txId + " to check for exists");
             context = new TransactionContext(txId);
             context.isLightWeight = true;
             // XXX higher isolation might be needed to make sure upgrade to commit lock always works
@@ -654,7 +655,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
         context.freeLocks();
         globalTransactions.remove(txId);
-        logger.logFiner("Removing temporary light weight tx " + txId);
+        if (logger.isFinerEnabled())
+            logger.logFiner("Removing temporary light weight tx " + txId);
 
         return exists;
     }
@@ -670,7 +672,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
     public void deleteResource(Object txId, Object resourceId, boolean assureOnly) throws ResourceManagerException {
 
-        logger.logFine(txId + " deleting " + resourceId);
+        if (logger.isFineEnabled()) logger.logFine(txId + " deleting " + resourceId);
 
         assureLock(resourceId, txId, false);
 
@@ -707,7 +709,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
     public void createResource(Object txId, Object resourceId, boolean assureOnly) throws ResourceManagerException {
 
-        logger.logFine(txId + " creating " + resourceId);
+        if (logger.isFineEnabled()) logger.logFine(txId + " creating " + resourceId);
 
         assureLock(resourceId, txId, false);
 
@@ -749,7 +751,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         Object txId;
         synchronized (globalTransactions) {
             txId = generatedUniqueTxId();
-            logger.logFiner("Creating temporary light weight tx " + txId + " for reading");
+            if (logger.isFinerEnabled())
+                logger.logFiner("Creating temporary light weight tx " + txId + " for reading");
             TransactionContext context = new TransactionContext(txId);
             context.isLightWeight = true;
             // XXX higher isolation might be needed to make sure upgrade to commit lock always works
@@ -764,7 +767,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
     public InputStream readResource(Object txId, Object resourceId) throws ResourceManagerException {
 
-        logger.logFine(txId + " reading " + resourceId);
+        if (logger.isFineEnabled()) logger.logFine(txId + " reading " + resourceId);
 
         assureLock(resourceId, txId, true);
 
@@ -785,7 +788,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
     public OutputStream writeResource(Object txId, Object resourceId) throws ResourceManagerException {
 
-        logger.logFine(txId + " writing " + resourceId);
+        if (logger.isFineEnabled()) logger.logFine(txId + " writing " + resourceId);
 
         assureLock(resourceId, txId, false);
 
@@ -1097,7 +1100,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
      */
 
     protected void registerOpenResource(Object openResource) {
-        logger.logFiner("Registering open resource " + openResource);
+        if (logger.isFinerEnabled())
+            logger.logFiner("Registering open resource " + openResource);
         globalOpenResources.add(openResource);
     }
 
@@ -1114,7 +1118,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     }
 
     protected void closeOpenResource(Object openResource) {
-        logger.logFiner("Releasing resource " + openResource);
+        if (logger.isFinerEnabled()) logger.logFiner("Releasing resource " + openResource);
         globalOpenResources.remove(openResource);
         if (openResource instanceof InputStream) {
             InputStream is = (InputStream) openResource;
@@ -1556,18 +1560,21 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                 }
                 synchronized (context) {
                     if (context.isLightWeight) {
-                        logger.logFiner("Upon close of resource removing temporary light weight tx " + txId);
+                        if (logger.isFinerEnabled())
+                            logger.logFiner("Upon close of resource removing temporary light weight tx " + txId);
                         context.freeLocks();
                         globalTransactions.remove(txId);
                     } else {
                         // release access lock in order to allow other transactions to commit
                         MultiLevelLock lock = lockManager.atomicGetOrCreateLock(resourceId);
                         if (lock.getLockLevel(txId) == LOCK_ACCESS) {
-                            logger.logFiner(
-                                "Upon close of resource releasing access lock for tx "
-                                    + txId
-                                    + " on resource at "
-                                    + resourceId);
+                            if (logger.isFinerEnabled()) {
+	                            logger.logFiner(
+	                                "Upon close of resource releasing access lock for tx "
+	                                    + txId
+	                                    + " on resource at "
+	                                    + resourceId);
+                            }
                             lock.release(txId);
                         }
                     }

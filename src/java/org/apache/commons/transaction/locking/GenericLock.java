@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.1 2004/11/18 23:27:17 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:17 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.2 2004/11/29 18:28:17 luetzkendorf Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/11/29 18:28:17 $
  *
  * ====================================================================
  *
@@ -100,7 +100,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * forgets to release a lock or is not able to do so due to error states or abnormal termination.  
  * </ul>
  * 
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class GenericLock implements MultiLevelLock {
 
@@ -195,23 +195,27 @@ public class GenericLock implements MultiLevelLock {
         long timeoutMSecs)
         throws InterruptedException {
 
-        logger.logFiner(
-            ownerId.toString()
-                + " trying to acquire lock for "
-                + resourceId.toString()
-                + " at level "
-                + targetLockLevel
-                + " at "
-                + System.currentTimeMillis());
+        if (logger.isFinerEnabled()) {
+	        logger.logFiner(
+	            ownerId.toString()
+	                + " trying to acquire lock for "
+	                + resourceId.toString()
+	                + " at level "
+	                + targetLockLevel
+	                + " at "
+	                + System.currentTimeMillis());
+        }
 
         if (tryLock(ownerId, targetLockLevel, compatibility)) {
-
-            logger.logFiner(
-                ownerId.toString()
-                    + " actually acquired lock for "
-                    + resourceId.toString()
-                    + " at "
-                    + System.currentTimeMillis());
+            
+            if (logger.isFinerEnabled()) {
+	            logger.logFiner(
+	                ownerId.toString()
+	                    + " actually acquired lock for "
+	                    + resourceId.toString()
+	                    + " at "
+	                    + System.currentTimeMillis());
+            }
 
             return true;
         } else {
@@ -223,24 +227,28 @@ public class GenericLock implements MultiLevelLock {
                     remaining > 0;
                     remaining = timeoutMSecs - (System.currentTimeMillis() - started)) {
 
-                    logger.logFiner(
-                        ownerId.toString()
-                            + " waiting on "
-                            + resourceId.toString()
-                            + " for msecs "
-                            + timeoutMSecs
-                            + " at "
-                            + System.currentTimeMillis());
+                    if (logger.isFinerEnabled()) {
+	                    logger.logFiner(
+	                        ownerId.toString()
+	                            + " waiting on "
+	                            + resourceId.toString()
+	                            + " for msecs "
+	                            + timeoutMSecs
+	                            + " at "
+	                            + System.currentTimeMillis());
+                    }
 
                     wait(remaining);
                     if (tryLock(ownerId, targetLockLevel, compatibility)) {
 
-                        logger.logFiner(
-                            ownerId.toString()
-                                + " waiting on "
-                                + resourceId.toString()
-                                + " eventually got the lock at "
-                                + System.currentTimeMillis());
+                        if (logger.isFinerEnabled()) {
+	                        logger.logFiner(
+	                            ownerId.toString()
+	                                + " waiting on "
+	                                + resourceId.toString()
+	                                + " eventually got the lock at "
+	                                + System.currentTimeMillis());
+                        }
 
                         return true;
                     }
@@ -255,12 +263,14 @@ public class GenericLock implements MultiLevelLock {
      */
     public synchronized void release(Object ownerId) {
         if (owners.remove(ownerId) != null) {
-            logger.logFiner(
-                ownerId.toString()
-                    + " releasing lock for "
-                    + resourceId.toString()
-                    + " at "
-                    + System.currentTimeMillis());
+            if (logger.isFinerEnabled()) {
+	            logger.logFiner(
+	                ownerId.toString()
+	                    + " releasing lock for "
+	                    + resourceId.toString()
+	                    + " at "
+	                    + System.currentTimeMillis());
+            }
             notifyAll();
         }
     }
@@ -351,26 +361,30 @@ public class GenericLock implements MultiLevelLock {
         // be sure there exists at most one lock per owner
         if (lock != null) {
 
-            logger.logFinest(
-                ownerId.toString()
-                    + " upgrading lock for "
-                    + resourceId.toString()
-                    + " to level "
-                    + targetLockLevel
-                    + " at "
-                    + System.currentTimeMillis());
+            if (logger.isFinestEnabled()) {
+	            logger.logFinest(
+	                ownerId.toString()
+	                    + " upgrading lock for "
+	                    + resourceId.toString()
+	                    + " to level "
+	                    + targetLockLevel
+	                    + " at "
+	                    + System.currentTimeMillis());
+            }
 
             lock.lockLevel = targetLockLevel;
         } else {
 
-            logger.logFinest(
-                ownerId.toString()
-                    + " getting new lock for "
-                    + resourceId.toString()
-                    + " at level "
-                    + targetLockLevel
-                    + " at "
-                    + System.currentTimeMillis());
+            if (logger.isFinestEnabled()) {
+	            logger.logFinest(
+	                ownerId.toString()
+	                    + " getting new lock for "
+	                    + resourceId.toString()
+	                    + " at level "
+	                    + targetLockLevel
+	                    + " at "
+	                    + System.currentTimeMillis());
+            }
 
             owners.put(ownerId, new LockOwner(ownerId, targetLockLevel));
         }

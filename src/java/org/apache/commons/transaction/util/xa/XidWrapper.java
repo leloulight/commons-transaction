@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/xa/XidWrapper.java,v 1.1 2004/11/18 23:27:19 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:19 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/xa/XidWrapper.java,v 1.2 2004/11/29 18:28:17 luetzkendorf Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/11/29 18:28:17 $
  *
  * ====================================================================
  *
@@ -32,7 +32,7 @@ import java.lang.String;
  * Wraps an <code>Xid</code> to guarantee methods for equality and hashcode are
  * implemented correctly. This is escpecially necessary when the <code>Xid</code> is used as a key in a <code>HashMap</code>.
  *   
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * 
  */
 public class XidWrapper implements Xid {
@@ -52,10 +52,13 @@ public class XidWrapper implements Xid {
     private XidWrapper(Xid xid, boolean includeBranch) {
         this.xid = xid;
         // do calculations once for performance
-        asString =
-            new String(xid.getGlobalTransactionId())
-                + (includeBranch ? "-" + new String(xid.getBranchQualifier()) : "");
+        StringBuffer b = new StringBuffer(64);
+        b.append(xid.getGlobalTransactionId());
+        if (includeBranch) {
+            b.append("-").append(xid.getBranchQualifier());
+        }
 
+        asString = b.toString();
         hashCode = asString.hashCode();
     }
 

@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/xa/AbstractXAResource.java,v 1.1 2004/11/18 23:27:19 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:19 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/xa/AbstractXAResource.java,v 1.2 2004/11/29 18:28:17 luetzkendorf Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/11/29 18:28:17 $
  *
  * ====================================================================
  *
@@ -53,7 +53,9 @@ public abstract class AbstractXAResource implements XAResource, Status {
     protected abstract boolean includeBranchInXid();
     
     public void forget(Xid xid) throws XAException {
-        getLoggerFacade().logFine("Forgetting transaction branch " + xid);
+        if (getLoggerFacade().isFineEnabled()) {
+            getLoggerFacade().logFine("Forgetting transaction branch " + xid);
+        }
         TransactionalResource ts = getTransactionalResource(xid);
         if (ts == null) {
             throw new XAException(XAException.XAER_NOTA);
@@ -69,7 +71,9 @@ public abstract class AbstractXAResource implements XAResource, Status {
             throw new XAException(XAException.XAER_NOTA);
         }
 
-        getLoggerFacade().logFine("Committing transaction branch " + ts);
+        if (getLoggerFacade().isFineEnabled()) {
+            getLoggerFacade().logFine("Committing transaction branch " + ts);
+        }
 
         if (ts.getStatus() == STATUS_MARKED_ROLLBACK) {
             throw new XAException(XAException.XA_RBROLLBACK);
@@ -94,7 +98,9 @@ public abstract class AbstractXAResource implements XAResource, Status {
             throw new XAException(XAException.XAER_NOTA);
         }
 
-        getLoggerFacade().logFine("Rolling back transaction branch " + ts);
+        if (getLoggerFacade().isFineEnabled()) {
+            getLoggerFacade().logFine("Rolling back transaction branch " + ts);
+        }
 
         ts.rollback();
         setCurrentlyActiveTransactionalResource(null);
@@ -108,7 +114,9 @@ public abstract class AbstractXAResource implements XAResource, Status {
             throw new XAException(XAException.XAER_NOTA);
         }
 
-        getLoggerFacade().logFine("Preparing transaction branch " + ts);
+        if (getLoggerFacade().isFineEnabled()) {
+            getLoggerFacade().logFine("Preparing transaction branch " + ts);
+        }
 
         if (ts.getStatus() == STATUS_MARKED_ROLLBACK) {
             throw new XAException(XAException.XA_RBROLLBACK);
@@ -127,12 +135,13 @@ public abstract class AbstractXAResource implements XAResource, Status {
         if (getCurrentlyActiveTransactionalResource() == null) {
             throw new XAException(XAException.XAER_INVAL);
         }
-        getLoggerFacade().logFine(
-            "Thread "
-                + Thread.currentThread()
-                + (flags == TMSUSPEND ? " suspends" : flags == TMFAIL ? " fails" : " ends")
-                + " work on behalf of transaction branch "
-                + ts);
+        if (getLoggerFacade().isFineEnabled()) {
+	        getLoggerFacade().logFine(new StringBuffer(128)
+	            .append("Thread ").append(Thread.currentThread())
+	            .append(flags == TMSUSPEND ? " suspends" : flags == TMFAIL ? " fails" : " ends")
+	            .append(" work on behalf of transaction branch ")
+	            .append(ts).toString());
+        }
 
         switch (flags) {
             case TMSUSPEND :
@@ -153,13 +162,14 @@ public abstract class AbstractXAResource implements XAResource, Status {
         if (getCurrentlyActiveTransactionalResource() != null) {
             throw new XAException(XAException.XAER_INVAL);
         }
-        getLoggerFacade().logFine(
-            "Thread "
-                + Thread.currentThread()
-                + (flags == TMNOFLAGS ? " starts" : flags == TMJOIN ? " joins" : " resumes")
-                + " work on behalf of transaction branch "
-                + xid);
-
+        if (getLoggerFacade().isFineEnabled()) {
+            getLoggerFacade().logFine(new StringBuffer(128)
+                    .append("Thread ").append(Thread.currentThread())
+                    .append(flags == TMNOFLAGS ? " starts" : flags == TMJOIN ? " joins" : " resumes")
+                    .append(" work on behalf of transaction branch ")
+                    .append(xid).toString());
+        }
+        
         TransactionalResource ts;
         switch (flags) {
             // a new transaction

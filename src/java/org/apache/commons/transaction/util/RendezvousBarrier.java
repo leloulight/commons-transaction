@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/RendezvousBarrier.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:18 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/RendezvousBarrier.java,v 1.2 2004/11/29 18:28:17 luetzkendorf Exp $
+ * $Revision: 1.2 $
+ * $Date: 2004/11/29 18:28:17 $
  *
  * ====================================================================
  *
@@ -27,7 +27,7 @@ package org.apache.commons.transaction.util;
  * Simple barrier that blocks until all parties have either called or have arrived at the meeting point. 
  * Very useful for testing or other purposes that require to make concurrent settings deterministic.
  *
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class RendezvousBarrier {
 
@@ -61,7 +61,8 @@ public class RendezvousBarrier {
     public synchronized void call() {
         count++;
         if (count >= parties) {
-            logger.logFine("Thread " + Thread.currentThread().getName() + " by CALL COMPLETING barrier " + name);
+            if (logger.isFineEnabled()) 
+                logger.logFine("Thread " + Thread.currentThread().getName() + " by CALL COMPLETING barrier " + name);
             notifyAll();
         }
     }
@@ -76,26 +77,31 @@ public class RendezvousBarrier {
     public synchronized void meet() throws InterruptedException {
         count++;
         if (count >= parties) {
-            logger.logFine("Thread " + Thread.currentThread().getName() + " by MEET COMPLETING barrier " + name);
+            if (logger.isFineEnabled()) 
+                logger.logFine("Thread " + Thread.currentThread().getName() + " by MEET COMPLETING barrier " + name);
             notifyAll();
         } else {
-            logger.logFine(
-                "At barrier "
-                    + name
-                    + " thread "
-                    + Thread.currentThread().getName()
-                    + " WAITING for "
-                    + (parties - count)
-                    + " of "
-                    + parties
-                    + " parties");
+            if (logger.isFineEnabled()) {
+	            logger.logFine(
+	                "At barrier "
+	                    + name
+	                    + " thread "
+	                    + Thread.currentThread().getName()
+	                    + " WAITING for "
+	                    + (parties - count)
+	                    + " of "
+	                    + parties
+	                    + " parties");
+            }
             wait(timeout);
             if (count == 0) {
                 // means the barrier has been reset
             } else if (count >= parties) {
-                logger.logFine("Thread " + Thread.currentThread().getName() + " CONTINUING at barrier " + name);
+                if (logger.isFineEnabled()) 
+                    logger.logFine("Thread " + Thread.currentThread().getName() + " CONTINUING at barrier " + name);
             } else {
-                logger.logFine("Thread " + Thread.currentThread().getName() + " FAILING at barrier " + name);
+                if (logger.isFineEnabled()) 
+                    logger.logFine("Thread " + Thread.currentThread().getName() + " FAILING at barrier " + name);
                 notifyAll();
             }
         }
@@ -105,7 +111,7 @@ public class RendezvousBarrier {
      * Releases all waiting threads and resets the number of parties already arrived. 
      */
     public synchronized void reset() {
-        logger.logFine("Resetting barrier " + name);
+        if (logger.isFineEnabled()) logger.logFine("Resetting barrier " + name);
         count = 0;
         notifyAll();
     }
