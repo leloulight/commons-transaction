@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.9 2005/01/07 23:33:24 ozeigermann Exp $
- * $Revision: 1.9 $
- * $Date: 2005/01/07 23:33:24 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.10 2005/01/08 18:53:18 ozeigermann Exp $
+ * $Revision: 1.10 $
+ * $Date: 2005/01/08 18:53:18 $
  *
  * ====================================================================
  *
@@ -23,9 +23,13 @@
 
 package org.apache.commons.transaction.locking;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -118,7 +122,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * </ul>
  * </p>
  * 
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class GenericLock implements MultiLevelLock {
 
@@ -128,7 +132,15 @@ public class GenericLock implements MultiLevelLock {
     public static final int COMPATIBILITY_REENTRANT_AND_SUPPORT = 3;
     
     protected Object resourceId;
-    protected Map owners = new HashMap();
+    // XXX needs to be synchronized to allow for unsynchronized access for deadlock detection
+    // in getConflictingOwners to avoid deadlocks between lock to acquire and lock to check for
+    // deadlocks
+    protected Map owners = Collections.synchronizedMap(new HashMap());
+    // XXX needs to be synchronized to allow for unsynchronized access for deadlock detection
+    // in getConflictingWaiters to avoid deadlocks between lock to acquire and lock to check for
+    // deadlocks
+    // Note: having this as a list allows for fair mechanisms in sub classes
+    protected List waitingOwners = Collections.synchronizedList(new ArrayList());
     private int maxLockLevel;
     protected LoggerFacade logger;
     protected int waiters = 0;
@@ -283,8 +295,10 @@ public class GenericLock implements MultiLevelLock {
 	                            + System.currentTimeMillis());
                     }
 
+                    LockOwner waitingOwner = new LockOwner(ownerId, targetLockLevel, compatibility,
+                            preferred);
                     try {
-                        waiters++;
+                        registerWaiter(waitingOwner);
                         if (preferred) {
                             // while waiting we already make our claim we are next
                             LockOwner oldLock = null;
@@ -293,7 +307,8 @@ public class GenericLock implements MultiLevelLock {
                                 oldLock = (LockOwner) owners.get(ownerId);
                                 // this creates a new owner, so we do not need to
                                 // copy the old one
-                                setLockLevel(ownerId, null, targetLockLevel, preferred);
+                                setLockLevel(ownerId, null, targetLockLevel, compatibility,
+                                        preferred);
     
                                 // finally wait
                                 wait(remaining);
@@ -315,7 +330,7 @@ public class GenericLock implements MultiLevelLock {
                             wait(remaining);
                         }
                     } finally {
-                        waiters--;
+                        unregisterWaiter(waitingOwner);
                     }
                     
                     if (tryLock(ownerId, targetLockLevel, compatibility, preferred)) {
@@ -337,6 +352,21 @@ public class GenericLock implements MultiLevelLock {
         }
     }
 
+    protected void registerWaiter(LockOwner waitingOwner) {
+        synchronized (waitingOwners) {
+            unregisterWaiter(waitingOwner);
+            waiters++;
+            waitingOwners.add(waitingOwner);
+        }
+    }
+
+    protected void unregisterWaiter(LockOwner waitingOwner) {
+        synchronized (waitingOwners) {
+            if (waitingOwners.remove(waitingOwner))
+                waiters--;
+        }
+    }
+    
     /**
      * @see org.apache.commons.transaction.locking.MultiLevelLock#release(Object)
      */
@@ -357,7 +387,7 @@ public class GenericLock implements MultiLevelLock {
     /**
      * @see org.apache.commons.transaction.locking.MultiLevelLock#getLockLevel(Object)
      */
-    public synchronized int getLockLevel(Object ownerId) {
+    public int getLockLevel(Object ownerId) {
         LockOwner owner = (LockOwner) owners.get(ownerId);
         if (owner == null) {
             return 0;
@@ -406,12 +436,18 @@ public class GenericLock implements MultiLevelLock {
 
         for (Iterator it = owners.values().iterator(); it.hasNext();) {
             LockOwner owner = (LockOwner) it.next();
-            buf.append("- ").append(owner.ownerId.toString()).append(": ").append(owner.lockLevel)
-                    .append(owner.intention ? " intention" : " acquired").append("\n");
+            buf.append("- ").append(owner.toString()).append("\n");
         }
-        buf.append(waiters).append(" waiting\n");
-        return buf.toString();
 
+        if (waiters != 0) {
+            buf.append(waiters).append(" waiting:\n");
+            for (Iterator it = waitingOwners.iterator(); it.hasNext();) {
+                LockOwner owner = (LockOwner) it.next();
+                buf.append("- ").append(owner.toString()).append("\n");
+            }
+        }
+        
+        return buf.toString();
     }
 
     protected synchronized LockOwner getMaxLevelOwner() {
@@ -443,10 +479,9 @@ public class GenericLock implements MultiLevelLock {
     }
     
     protected synchronized void setLockLevel(Object ownerId, LockOwner lock, int targetLockLevel,
-            boolean intention) {
+            int compatibility, boolean intention) {
         // be sure there exists at most one lock per owner
         if (lock != null) {
-
             if (logger.isFinestEnabled()) {
 	            logger.logFinest(
 	                ownerId.toString()
@@ -457,11 +492,7 @@ public class GenericLock implements MultiLevelLock {
 	                    + " at "
 	                    + System.currentTimeMillis());
             }
-
-            lock.lockLevel = targetLockLevel;
-            lock.intention = intention;
         } else {
-
             if (logger.isFinestEnabled()) {
 	            logger.logFinest(
 	                ownerId.toString()
@@ -472,9 +503,8 @@ public class GenericLock implements MultiLevelLock {
 	                    + " at "
 	                    + System.currentTimeMillis());
             }
-
-            owners.put(ownerId, new LockOwner(ownerId, targetLockLevel, intention));
         }
+        owners.put(ownerId, new LockOwner(ownerId, targetLockLevel, compatibility, intention));
     }
 
     protected synchronized boolean tryLock(Object ownerId, int targetLockLevel, int compatibility,
@@ -509,6 +539,7 @@ public class GenericLock implements MultiLevelLock {
             highestOwner = getMaxLevelOwner();
         }
 
+        int i;
         // what is our current lock level?
         int currentLockLevel;
         if (highestOwner != null) {
@@ -520,7 +551,7 @@ public class GenericLock implements MultiLevelLock {
         // we are only allowed to acquire our locks if we do not compromise locks of any other lock owner
         if (isCompatible(targetLockLevel, currentLockLevel)) {
             // if we really have the lock, it no longer is an intention
-            setLockLevel(ownerId, myLock, targetLockLevel, false);
+            setLockLevel(ownerId, myLock, targetLockLevel, compatibility, false);
             return true;
         } else {
             return false;
@@ -531,35 +562,60 @@ public class GenericLock implements MultiLevelLock {
         return (targetLockLevel <= getLevelMaxLock() - currentLockLevel);
     }
     
-    protected synchronized Set getConflictingOwners(Object ownerId, int targetLockLevel,
-            int compatibility) {
+    protected Set getConflictingOwners(Object ownerId, int targetLockLevel, int compatibility) {
 
         LockOwner myLock = (LockOwner) owners.get(ownerId);
         if (myLock != null && targetLockLevel <= myLock.lockLevel) {
             // shortcut as we already have the lock
             return null;
         }
+        
+        LockOwner testLock = new LockOwner(ownerId, targetLockLevel, compatibility, false);
+        List ownersCopy;
+        synchronized (owners) {
+            ownersCopy = new ArrayList(owners.values());
+        }
+        return getConflictingOwners(testLock, ownersCopy);
+        
+    }
 
+    protected Collection getConflictingWaiters(Object ownerId) {
+        LockOwner owner = (LockOwner) owners.get(ownerId);
+        if (owner != null) {
+            List waiterCopy;
+            synchronized (waitingOwners) {
+                waiterCopy = new ArrayList(waitingOwners);
+            }
+            Collection conflicts = getConflictingOwners(owner, waiterCopy);
+            return conflicts;
+        }
+        return null;
+    }
+    
+    protected Set getConflictingOwners(LockOwner myOwner, Collection ownersToTest) {
+
+        if (myOwner == null) return null;
+        
         Set conflicts = new HashSet();
 
         // check if any locks conflict with ours
-        for (Iterator it = owners.values().iterator(); it.hasNext();) {
+        for (Iterator it = ownersToTest.iterator(); it.hasNext();) {
             LockOwner owner = (LockOwner) it.next();
             
             // we do not interfere with ourselves, except when explicitely said so
-            if ((compatibility == COMPATIBILITY_REENTRANT || compatibility == COMPATIBILITY_REENTRANT_AND_SUPPORT)
-                    && owner.ownerId.equals(ownerId))
+            if ((myOwner.compatibility == COMPATIBILITY_REENTRANT || myOwner.compatibility == COMPATIBILITY_REENTRANT_AND_SUPPORT)
+                    && owner.ownerId.equals(myOwner.ownerId))
                 continue;
             
             // otherwise find out the lock level of the owner and see if we conflict with it
             int onwerLockLevel = owner.lockLevel;
            
-            if (compatibility == COMPATIBILITY_SUPPORT
-                    || compatibility == COMPATIBILITY_REENTRANT_AND_SUPPORT
-                    && targetLockLevel == onwerLockLevel)
+            if (myOwner.compatibility == COMPATIBILITY_SUPPORT
+                    || myOwner.compatibility == COMPATIBILITY_REENTRANT_AND_SUPPORT
+                    && myOwner.lockLevel == onwerLockLevel)
                 continue;
             
-            if (!isCompatible(targetLockLevel, onwerLockLevel)) {
+            if (!isCompatible(myOwner.lockLevel, onwerLockLevel)) {
                 conflicts.add(owner.ownerId);
             }
         }
@@ -567,18 +623,34 @@ public class GenericLock implements MultiLevelLock {
     }
 
     protected static class LockOwner {
-        public Object ownerId;
-        public int lockLevel;
-        public boolean intention;
+        public final Object ownerId;
+        public final int lockLevel;
+        public final boolean intention;
+        public final int compatibility;
 
-        public LockOwner(Object ownerId, int lockLevel, boolean intention) {
+        public LockOwner(Object ownerId, int lockLevel, int compatibility, boolean intention) {
             this.ownerId = ownerId;
             this.lockLevel = lockLevel;
             this.intention = intention;
+            this.compatibility = compatibility;
         }
 
-        public LockOwner(Object ownerId, int lockLevel) {
-            this(ownerId, lockLevel, false);
+        public String toString() {
+            StringBuffer buf = new StringBuffer();
+            buf.append(ownerId.toString()).append(": level ").append(lockLevel).append(", complevel ")
+                    .append(compatibility).append(intention ? ", intention/preferred" : "");
+            return buf.toString();
+        }
+        
+        public boolean equals(Object o) {
+            if (o instanceof LockOwner) {
+                return ((LockOwner)o).ownerId.equals(ownerId);
+            }
+            return false;
+        }
+        
+        public int hashCode() {
+            return ownerId.hashCode();
         }
     }
 
