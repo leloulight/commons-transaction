@@ -1,0 +1,318 @@
+<?xml version="1.0"?>
+
+<document>
+
+ <properties>
+  <title>Comparision of transactional map wrappers</title>
+  <author email="commons-dev@jakarta.apache.org">Commons Documentation Team</author>
+ </properties>
+
+ <body>
+
+<section name="Comparision of transactional map wrappers">
+<p>
+</p>
+
+<table summary="" border="1" frame="HSIDES" rules="GROUPS" width="100%" cellpadding="3" cellspacing="0" dir="ltr" title="">
+
+<thead>
+<tr>
+<th align="left" valign="bottom" scope="col"></th>
+<th align="left" valign="bottom" scope="col"> <font face="Arial,
+Helvetica, sans-serif"><strong><a href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/memory/TransactionalMapWrapper.html">TransactionalMapWrapper</a></strong></font></th>
+<th align="left" valign="bottom" scope="col"> <font face="Arial, Helvetica, sans-serif"><strong><a href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/memory/OptimisticMapWrapper.html">OptimisticMapWrapper</a></strong></font></th>
+<th align="left" valign="bottom" scope="col"> <font face="Arial, Helvetica, sans-serif"><strong><a href="http://jakarta.apache.org/commons/sandbox/transaction/apidocs/org/apache/commons/transaction/memory/PessimisticMapWrapper.html">PessimisticMapWrapper</a></strong></font></th>
+</tr>
+</thead>
+
+<tbody>
+<tr align="left" valign="top">
+<td> 
+
+<p>Lost update</p>
+
+</td>
+<td> 
+
+<p>Possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Dirty write</p>
+
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Dirty read</p>
+</td>
+<td> 
+
+
+<p>Not possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Lost update</p>
+
+</td>
+<td> 
+
+<p>Possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Nonrepeatable read</p>
+</td>
+<td> 
+
+<p>Possible</p>
+
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Phantoms</p>
+</td>
+<td> 
+
+<p>Possible</p>
+</td>
+<td> 
+
+
+<p>Not possible</p>
+</td>
+<td> 
+
+
+<p>Not possible</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Read Skew</p>
+
+</td>
+<td> 
+
+<p>Possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Write Skew</p>
+
+</td>
+<td> 
+
+<p>Possible</p>
+</td>
+<td> 
+
+<p>Possible</p>
+</td>
+<td> 
+
+<p>Not possible</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+
+<p>Readers block writers</p>
+</td>
+<td> 
+
+<p>No</p>
+</td>
+<td> 
+
+<p>No</p>
+</td>
+<td> 
+
+<p>Yes</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Writers block readers</p>
+
+</td>
+<td> 
+
+<p>No</p>
+</td>
+<td> 
+
+<p>No</p>
+</td>
+<td> 
+
+<p>Yes</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Writers block writers</p>
+</td>
+<td> 
+
+<p>No</p>
+
+</td>
+<td> 
+
+<p>No</p>
+
+</td>
+<td> 
+
+<p>Yes</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Might deadlock</p>
+</td>
+<td> 
+
+<p>No</p>
+
+</td>
+<td> 
+
+<p>No</p>
+
+</td>
+<td> 
+
+<p>Yes</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Commit might fail</p>
+</td>
+<td> 
+
+<p>No</p>
+
+</td>
+<td> 
+
+<p>Yes</p>
+
+</td>
+<td> 
+
+<p>No</p>
+</td>
+</tr>
+
+<tr align="left" valign="top">
+<td> 
+
+<p>Isolation Level</p>
+
+</td>
+<td> 
+
+<p>Read Committed (with lost updates possible)</p>
+</td>
+<td> 
+
+<p>Snapshot (Oracle would call it Serializable)</p>
+</td>
+<td> 
+
+<p>Serializable</p>
+</td>
+</tr>
+
+</tbody>
+</table>
+</section>
+
+</body>
+</document>
