@@ -65,6 +65,9 @@ BUGFIXES FROM 1.0 beta1
 - Fixed deadlock hazard in deadlock detection caused by interleaving access to locks set of an owner
 - Fixed timeout that in certain scenarios did not work
 - GenericLock test method released all locks held by the testing owner - fixed
+- OptimisticMapWrapper now uses a read/write lock to guarantee no other operations are being executed while
+  commiting; before it was possible that conflicts that arose during the process of 
+  committing remained undetected
 
 ENHANCEMENTS FROM 1.0 beta1
 -----------------------

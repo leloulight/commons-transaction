@@ -1,7 +1,7 @@
 /*
  * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/OptimisticMapWrapper.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
  * $Revision: 1.1 $
- * $Date: 2004/11/18 23:27:18 $
+ * $Date$
  *
  * ====================================================================
  *
@@ -23,11 +23,16 @@
 
 package org.apache.commons.transaction.memory;
 
+import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Collections;
+
+import org.apache.commons.transaction.locking.ReadWriteLock;
+import org.apache.commons.transaction.util.LoggerFacade;
+import org.apache.commons.transaction.util.PrintWriterLogger;
 
 /**
  * Wrapper that adds transactional control to all kinds of maps that implement the {@link Map} interface. By using
@@ -52,8 +57,15 @@ import java.util.Collections;
  */
 public class OptimisticMapWrapper extends TransactionalMapWrapper {
 
+    protected static final int COMMIT_TIMEOUT = 1000 * 60; // 1 minute
+    protected static final int ACCESS_TIMEOUT = 1000 * 30; // 30 seconds
+
     protected Set activeTransactions;
 
+    protected LoggerFacade logger;
+    
+    protected ReadWriteLock commitLock;
+    
     /**
      * Creates a new optimistic transactional map wrapper. Temporary maps and sets to store transactional
      * data will be instances of {@link java.util.HashMap} and {@link java.util.HashSet}. 
@@ -73,10 +85,28 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
      * @param setFactory factory for temporary sets
      */
     public OptimisticMapWrapper(Map wrapped, MapFactory mapFactory, SetFactory setFactory) {
-        super(wrapped, mapFactory, setFactory);
-        activeTransactions = Collections.synchronizedSet(new HashSet());
+        this(wrapped, mapFactory, setFactory, new PrintWriterLogger(new PrintWriter(System.out),
+                OptimisticMapWrapper.class.getName(), false));
     }
 
+    /**
+     * Creates a new optimistic transactional map wrapper. Temporary maps and sets to store transactional
+     * data will be created and disposed using {@link MapFactory} and {@link SetFactory}.
+     * 
+     * @param wrapped map to be wrapped
+     * @param mapFactory factory for temporary maps
+     * @param setFactory factory for temporary sets
+     * @param logger
+     *            generic logger used for all kinds of logging
+     */
+    public OptimisticMapWrapper(Map wrapped, MapFactory mapFactory, SetFactory setFactory, LoggerFacade logger) {
+        super(wrapped, mapFactory, setFactory);
+        activeTransactions = Collections.synchronizedSet(new HashSet());
+        this.logger = logger;
+        commitLock = new ReadWriteLock("COMMIT", logger);
+    }
+    
+    
     public void startTransaction() {
         if (getActiveTx() != null) {
             throw new IllegalStateException(
@@ -99,7 +129,7 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
 
     public void commitTransaction(boolean force) throws ConflictException {
         TxContext txContext = getActiveTx();
-
+        
         if (txContext == null) {
             throw new IllegalStateException(
                 "Active thread " + Thread.currentThread() + " not associated with a transaction!");
@@ -108,19 +138,28 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
         if (txContext.status == STATUS_MARKED_ROLLBACK) {
             throw new IllegalStateException("Active thread " + Thread.currentThread() + " is marked for rollback!");
         }
+        
+        try {
+            // in this final commit phase we need to be the only one access the map
+            // to make sure no one adds an entry after we checked for conflicts
+            commitLock.acquireWrite(txContext, COMMIT_TIMEOUT);
 
-        if (!force) {
-            Object conflictKey = checkForConflicts();
-            if (conflictKey != null) {
-                throw new ConflictException(conflictKey);
+            if (!force) {
+                Object conflictKey = checkForConflicts();
+                if (conflictKey != null) {
+                    throw new ConflictException(conflictKey);
+                }
             }
-        }
-
-        // be sure commit is atomic
-        synchronized (this) {
+    
             activeTransactions.remove(txContext);
             copyChangesToConcurrentTransactions();
             super.commitTransaction();
+            
+        } catch (InterruptedException e) {
+            // XXX a bit dirty ;)
+            throw new ConflictException(e);
+        } finally {
+            commitLock.release(txContext);
         }
     }
 
@@ -208,76 +247,139 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
         }
 
         protected Set keys() {
-            Set keySet = super.keys();
-            keySet.removeAll(externalDeletes);
-            keySet.addAll(externalAdds.keySet());
-            return keySet;
+            try {
+                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                Set keySet = super.keys();
+                keySet.removeAll(externalDeletes);
+                keySet.addAll(externalAdds.keySet());
+                return keySet;
+            } catch (InterruptedException e) {
+                return null;
+            } finally {
+                commitLock.release(this);
+            }
         }
 
         protected Object get(Object key) {
+            try {
+                commitLock.acquireRead(this, ACCESS_TIMEOUT);
 
-            if (deletes.contains(key)) {
-                // reflects that entry has been deleted in this tx 
-                return null;
-            }
-
-            Object changed = changes.get(key);
-            if (changed != null) {
-                return changed;
-            }
-
-            Object added = adds.get(key);
-            if (added != null) {
-                return added;
-            }
-
-            if (cleared) {
-                return null;
-            } else {
-                if (externalDeletes.contains(key)) {
+                if (deletes.contains(key)) {
                     // reflects that entry has been deleted in this tx 
                     return null;
                 }
-
-                changed = externalChanges.get(key);
+    
+                Object changed = changes.get(key);
                 if (changed != null) {
                     return changed;
                 }
-
-                added = externalAdds.get(key);
+    
+                Object added = adds.get(key);
                 if (added != null) {
                     return added;
                 }
+    
+                if (cleared) {
+                    return null;
+                } else {
+                    if (externalDeletes.contains(key)) {
+                        // reflects that entry has been deleted in this tx 
+                        return null;
+                    }
+    
+                    changed = externalChanges.get(key);
+                    if (changed != null) {
+                        return changed;
+                    }
+    
+                    added = externalAdds.get(key);
+                    if (added != null) {
+                        return added;
+                    }
+    
+                    // not modified in this tx
+                    return wrapped.get(key);
+                }
+            } catch (InterruptedException e) {
+                return null;
+            } finally {
+                commitLock.release(this);
+            }
+        }
 
-                // not modified in this tx
-                return wrapped.get(key);
+        protected void put(Object key, Object value) {
+            try {
+                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                super.put(key, value);
+            } catch (InterruptedException e) {
+            } finally {
+                commitLock.release(this);
+            }
+        }
+        
+        protected void remove(Object key) {
+            try {
+                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                super.remove(key);
+            } catch (InterruptedException e) {
+            } finally {
+                commitLock.release(this);
             }
         }
 
         protected int size() {
-            int size = super.size();
-
-            size -= externalDeletes.size();
-            size += externalAdds.size();
-
-            return size;
+            try {
+                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                int size = super.size();
+    
+                size -= externalDeletes.size();
+                size += externalAdds.size();
+    
+                return size;
+            } catch (InterruptedException e) {
+                return -1;
+            } finally {
+                commitLock.release(this);
+            }
         }
 
         protected void clear() {
-            super.clear();
-            externalDeletes.clear();
-            externalChanges.clear();
-            externalAdds.clear();
+            try {
+                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                super.clear();
+                externalDeletes.clear();
+                externalChanges.clear();
+                externalAdds.clear();
+            } catch (InterruptedException e) {
+            } finally {
+                commitLock.release(this);
+            }
         }
 
+        protected void merge() {
+            try {
+                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                super.merge();
+            } catch (InterruptedException e) {
+            } finally {
+                commitLock.release(this);
+            }
+        }
+        
         protected void dispose() {
-            super.dispose();
-            setFactory.disposeSet(externalDeletes);
-            externalDeletes = null;
-            mapFactory.disposeMap(externalChanges);
-            externalChanges = null;
-            mapFactory.disposeMap(externalAdds);
-            externalAdds = null;
+            try {
+                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                super.dispose();
+                setFactory.disposeSet(externalDeletes);
+                externalDeletes = null;
+                mapFactory.disposeMap(externalChanges);
+                externalChanges = null;
+                mapFactory.disposeMap(externalAdds);
+                externalAdds = null;
+            } catch (InterruptedException e) {
+            } finally {
+                commitLock.release(this);
+            }
         }
 
         protected void finalize() throws Throwable {
