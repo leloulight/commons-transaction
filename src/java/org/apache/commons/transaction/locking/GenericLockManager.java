@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.10 2004/12/23 15:42:34 ozeigermann Exp $
- * $Revision: 1.10 $
- * $Date: 2004/12/23 15:42:34 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.11 2005/01/07 12:26:14 ozeigermann Exp $
+ * $Revision: 1.11 $
+ * $Date: 2005/01/07 12:26:14 $
  *
  * ====================================================================
  *
@@ -36,7 +36,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link GenericLock}s on resources.   
  * 
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class GenericLockManager implements LockManager {
 
@@ -52,7 +52,10 @@ public class GenericLockManager implements LockManager {
     /** Maps resourceId to lock. */
     protected Map globalLocks = new HashMap();
     
-    /** Maps onwerId to global time outs. */
+    /** Maps onwerId to global effective time outs (i.e. the time the lock will time out). */
+    protected Map effectiveGlobalTimeouts = Collections.synchronizedMap(new HashMap());
+
+    /** Maps onwerId to global time outs (i.e. the miliseconds before timeout). */
     protected Map globalTimeouts = Collections.synchronizedMap(new HashMap());
 
     protected Set timedOutOwners = Collections.synchronizedSet(new HashSet());
@@ -115,7 +118,8 @@ public class GenericLockManager implements LockManager {
     public void setGlobalTimeout(Object ownerId, long timeoutMSecs) {
         long now = System.currentTimeMillis();
         long timeout = now + timeoutMSecs;
-        globalTimeouts.put(ownerId, new Long(timeout));
+        effectiveGlobalTimeouts.put(ownerId, new Long(timeout));
+        globalTimeouts.put(ownerId, new Long(timeoutMSecs));
     }
     
     /**
@@ -284,6 +288,11 @@ public class GenericLockManager implements LockManager {
         }
         // reset time out status for this owner
         timedOutOwners.remove(ownerId);
+        // and start a new time out cycle
+        Long timeOut = (Long) globalTimeouts.get(ownerId);
+        if (timeOut != null) {
+            setGlobalTimeout(ownerId, timeOut.longValue());
+        }
     }
 
     /**
@@ -367,8 +376,8 @@ public class GenericLockManager implements LockManager {
 
     protected boolean releaseTimedOutOwners() {
         boolean released = false;
-        synchronized (globalTimeouts) {
-            for (Iterator it = globalTimeouts.entrySet().iterator(); it.hasNext();) {
+        synchronized (effectiveGlobalTimeouts) {
+            for (Iterator it = effectiveGlobalTimeouts.entrySet().iterator(); it.hasNext();) {
                 Map.Entry entry = (Map.Entry) it.next();
                 Object ownerId = entry.getKey();
                 long timeout = ((Long)entry.getValue()).longValue();
@@ -384,7 +393,7 @@ public class GenericLockManager implements LockManager {
     }
     
     protected boolean timeOut(Object ownerId) {
-        Long timeout = (Long)globalTimeouts.get(ownerId);
+        Long timeout = (Long)effectiveGlobalTimeouts.get(ownerId);
         long now = System.currentTimeMillis();
         if (timeout != null && timeout.longValue() < now) {
             releaseAll(ownerId);
@@ -399,8 +408,8 @@ public class GenericLockManager implements LockManager {
         long minTimeout = -1;
         long now = System.currentTimeMillis();
         if (conflicts != null) {
-            synchronized (globalTimeouts) {
-                for (Iterator it = globalTimeouts.entrySet().iterator(); it.hasNext();) {
+            synchronized (effectiveGlobalTimeouts) {
+                for (Iterator it = effectiveGlobalTimeouts.entrySet().iterator(); it.hasNext();) {
                     Map.Entry entry = (Map.Entry) it.next();
                     Object ownerId = entry.getKey();
                     if (conflicts.contains(ownerId)) {
