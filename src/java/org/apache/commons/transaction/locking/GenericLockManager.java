@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.2 2004/12/14 12:12:46 ozeigermann Exp $
- * $Revision: 1.2 $
- * $Date: 2004/12/14 12:12:46 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.3 2004/12/14 15:23:10 ozeigermann Exp $
+ * $Revision: 1.3 $
+ * $Date: 2004/12/14 15:23:10 $
  *
  * ====================================================================
  *
@@ -36,7 +36,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link GenericLock}s on resources.   
  * 
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class GenericLockManager implements LockManager {
 
@@ -111,17 +111,37 @@ public class GenericLockManager implements LockManager {
 
         GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
 
-        boolean deadlock = wouldDeadlock(ownerId, lock, targetLockLevel,
-                reentrant ? GenericLock.COMPATIBILITY_REENTRANT : GenericLock.COMPATIBILITY_NONE);
-        if (deadlock) {
-            throw new LockException("Lock would cause deadlock",
-                    LockException.CODE_DEADLOCK_VICTIM, resourceId);
-        }
-
+        // we need to be careful that we the detected deadlock status is still valid when actually
+        // applying for the lock
+        // we have to take care that 
+        // (a) no one else acquires the lock after we have done deadlock checking as this would
+        //    invalidate our checking result
+        // (b) other threads that might concurrently apply for locks we are holding need to know
+        //    we are applying for this special lock before we check for deadlocks ourselves; this
+        //    is important as the other thread might be the one to discover the deadlock
+        
+        // (b) register us as a waiter before actually trying, so other threads take us into account
         addWaiter(lock, ownerId);
+
         try {
-            boolean acquired = lock
-                    .acquire(ownerId, targetLockLevel, true, reentrant, timeoutMSecs);
+            boolean acquired;
+            // (a) while we are checking if we can have this lock, no one else must apply for it
+            // and possibly change the data
+            synchronized (lock) {
+                
+                // TODO: detection is rather expensive, would be an idea to wait for a 
+                // short time (<5 seconds) to see if we get the lock, after that we can still check
+                // for the deadlock and if not try with the remaining timeout time
+                boolean deadlock = wouldDeadlock(ownerId, lock, targetLockLevel,
+                        reentrant ? GenericLock.COMPATIBILITY_REENTRANT : GenericLock.COMPATIBILITY_NONE);
+                if (deadlock) {
+                    throw new LockException("Lock would cause deadlock",
+                            LockException.CODE_DEADLOCK_VICTIM, resourceId);
+                }
+        
+                acquired = lock
+                        .acquire(ownerId, targetLockLevel, true, reentrant, timeoutMSecs);
+            }
             if (!acquired) {
                 throw new LockException("Lock wait timed out", LockException.CODE_TIMED_OUT,
                         resourceId);
