@@ -1,7 +1,7 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.15 2005/01/08 18:55:09 ozeigermann Exp $
- * $Revision: 1.15 $
- * $Date: 2005/01/08 18:55:09 $
+ * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLockManager.java,v 1.16 2005/01/08 19:02:34 ozeigermann Exp $
+ * $Revision: 1.16 $
+ * $Date: 2005/01/08 19:02:34 $
  *
  * ====================================================================
  *
@@ -42,7 +42,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <li>global transaction timeouts that actively revoke granted rights from transactions
  * </ul>
  * 
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  */
 public class GenericLockManager implements LockManager, LockManager2 {
 
@@ -158,15 +158,6 @@ public class GenericLockManager implements LockManager, LockManager2 {
 
         GenericLock lock = (GenericLock) atomicGetOrCreateLock(resourceId);
 
-        // we need to be careful that we the detected deadlock status is still valid when actually
-        // applying for the lock
-        // we have to take care that 
-        // (a) no one else acquires the lock after we have done deadlock checking as this would
-        //    invalidate our checking result
-        // (b) other threads that might concurrently apply for locks we are holding need to know
-        //    we are applying for this special lock before we check for deadlocks ourselves; this
-        //    is important as the other thread might be the one to discover the deadlock
-        
         GenericLock.LockOwner lockWaiter = new GenericLock.LockOwner(ownerId, targetLockLevel,
                 compatibility, preferred);
         
