@@ -5,7 +5,7 @@
   Commons Transaction build file
   ======================================================================= 
 -->
-<project name="commons-transaction" default="all" basedir=".">
+<project name="commons-transaction" default="jar" basedir=".">
 
   <!-- 
   ===================================================================
@@ -153,7 +153,7 @@
   =================================================================== 
   -->
 
-  <target name="build" depends="prepare">
+  <target name="build" depends="prepare" description="Compiles the main classes">
     <javac destdir="${build.classes}"
       target="${compile.target}"
       debug="${compile.debug}"
@@ -204,7 +204,7 @@
   Create the jar
   =================================================================== 
   -->
-  <target name="jar" depends="detect, build, build-jca">
+  <target name="jar" depends="detect, build, build-jca" description="Creates the jar">
 
     <jar jarfile="${build.lib}/${final.name}.jar" basedir="${build.classes}" >
       <include name="org/apache/**" />
@@ -332,7 +332,7 @@
     </javadoc>
   </target>
   
-  <target name="all" depends="jar, javadocs"/>
+  <target name="all" depends="jar, doc"/>
 
   <!-- 
   ===================================================================
