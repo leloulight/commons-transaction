@@ -29,7 +29,7 @@
          </p>
       </section>
       <section name="Beta Releases / Release Candidates">
-c         <p>The following beta releases / release candidates are available:</p>
+         <p>The following beta releases / release candidates are available:</p>
          <ul>
            <li><a href="http://cvs.apache.org/dist/jakarta/commons/transaction/1.1b1/">Version 1.1 beta 1 - 13 January 2004</a> / <a href="http://cvs.apache.org/viewcvs.cgi/*checkout*/jakarta-commons/transaction/RELEASE-NOTES.txt?rev=1.14">release notes</a></li>
            <li><a href="http://cvs.apache.org/dist/jakarta/commons/transaction/1.1b2/">Version 1.1 beta 2 - 5 February 2004</a> / <a href="http://svn.apache.org/repos/asf/jakarta/commons/proper/transaction/tags/TRANSACTION_1_1_B2_RELEASE/RELEASE-NOTES.txt">release notes</a></li>
@@ -38,7 +38,7 @@ c         <p>The following beta releases / release candidates are available:</p>
       <section name="Latest Sources">
          <p>
             Access to the source tree to see the latest and greatest code is possible
-            through <a href="cvs-usage.html">anonymous CVS access</a>.
+            through <a href="cvs-usage.html">anonymous SVN access</a>.
          </p>
       </section>
 
