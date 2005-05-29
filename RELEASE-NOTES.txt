@@ -1,8 +1,8 @@
-Jakarta Commons Transaction Release 1.1 rc1
+Jakarta Commons Transaction Release 1.1 final
 ---------------------------------------------
 
-RELEASE NUMBER: 1.1rc1
-RELEASE TAG / BRANCH: TRANSACTION_1_1_RC1_RELEASE / none yet
+RELEASE NUMBER: 1.1
+RELEASE TAG / BRANCH: TRANSACTION_1_1_FINAL_RELEASE / none yet
 
 DESCRIPTION
 -----------
@@ -19,13 +19,13 @@ There are implementations for:
 GENERAL RELEASE NOTES
 ---------------------
 
-This is the first release candidate of the Commons Transaction 1.1 feature release.
+This is the final version of the Commons Transaction 1.1 feature release.
 It mainly cleanes up some minor issues that come up while beta testing.
 
 Commons Transaction 1.1 aims at polishing (interface) oddities, improving
 locking and making the file store more flexible. Locking now is much more
 flexible, extensible and allows for rudimentary transaction management. There
-is a new lock manager hides locks from the user and keeps track of all of them
+is a new lock manager that hides locks from the user and keeps track of all of them
 allowing for deadlock detection and more convenient management.
 
 ENHANCEMENTS FROM 1.0
@@ -53,7 +53,7 @@ Locking:
 - Global transaction timeouts that actively revoke granted rights from transactions
 
 MINOR INCOMPATIBILITIES TO 1.0
------------------------------------------
+------------------------------
 
 - PessimisticMapWrapper now throws the more general LockException from locking package
 - Both MultiLevelLock#release and LockManager2#release now return a boolean that indicates if the lock
