@@ -25,6 +25,7 @@ package org.apache.commons.transaction.util.xa;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collections;
 
 import javax.transaction.Status;
 import javax.transaction.xa.XAException;
@@ -41,8 +42,8 @@ public abstract class AbstractXAResource implements XAResource, Status {
     // there might be at least one active transaction branch per thread
     private ThreadLocal activeTransactionBranch = new ThreadLocal();
 
-    private Map suspendedContexts = new HashMap();
-    private Map activeContexts = new HashMap();
+    private Map suspendedContexts = Collections.synchronizedMap(new HashMap());
+    private Map activeContexts = Collections.synchronizedMap(new HashMap());
 
     public abstract boolean isSameRM(XAResource xares) throws XAException;
 
