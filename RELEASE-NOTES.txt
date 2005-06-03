@@ -1,8 +1,8 @@
-Jakarta Commons Transaction Release 1.1 final
----------------------------------------------
+Jakarta Commons Transaction Release 1.1.1
+-----------------------------------------
 
-RELEASE NUMBER: 1.1
-RELEASE TAG / BRANCH: TRANSACTION_1_1_FINAL_RELEASE / none yet
+RELEASE NUMBER: 1.1.1
+RELEASE TAG / BRANCH: TRANSACTION_1_1_1_RELEASE / none yet
 
 DESCRIPTION
 -----------
@@ -19,65 +19,15 @@ There are implementations for:
 GENERAL RELEASE NOTES
 ---------------------
 
-This is the final version of the Commons Transaction 1.1 feature release.
-It mainly cleanes up some minor issues that come up while beta testing.
+This is the first bug fix/maintenance release of Commons Transaction 1.1.
 
-Commons Transaction 1.1 aims at polishing (interface) oddities, improving
-locking and making the file store more flexible. Locking now is much more
-flexible, extensible and allows for rudimentary transaction management. There
-is a new lock manager that hides locks from the user and keeps track of all of them
-allowing for deadlock detection and more convenient management.
-
-ENHANCEMENTS FROM 1.0
+ENHANCEMENTS FROM 1.1
 ---------------------
 
-Locking:
-- Extended and less excentric lock manager interface LockManager2
-- Extended multi level lock interface MultiLevelLock2
-- GenericLock and GenericLockManager now implement new interfaces as well
-- GenericLock and GenericLockManager offer much better inspection with toString
-- GenericLock offers (protected) means for waiter management and opens 
-  possibility for fair strategies to subclasses
-  
-File:
-- Confiburable resource id to path mapping
+BUGFIXES FROM 1.1
+-----------------
+- Fixed bugzilla issue 35201. Maps in AbstractXAResource now are synchronizedt to avoid problems in multi threaded scenarios
 
-NEW FEATURES FROM 1.0
----------------------
-
-Locking:
-- new ReadWriteLockManager for most intuitive read/write lock usage
-- new read/write/upgrade locking mechanism (ReadWriteUpgradeLock, ReadWriteUpgradeLockManager)
-- Deadlock detection for all lock managers, file store, and pessimistic map
-- Flexible preference locking mechanism
-- Global transaction timeouts that actively revoke granted rights from transactions
-
-MINOR INCOMPATIBILITIES TO 1.0
-------------------------------
-
-- PessimisticMapWrapper now throws the more general LockException from locking package
-- Both MultiLevelLock#release and LockManager2#release now return a boolean that indicates if the lock
-  really has been released
-
-BUGFIXES FROM 1.0 beta1
------------------------
-- Fixed deadlock hazard in deadlock detection caused by interleaving access to locks set of an owner
-- Fixed timeout that in certain scenarios did not work
-- GenericLock test method released all locks held by the testing owner - fixed
-- OptimisticMapWrapper now uses a read/write lock to guarantee no other operations are being executed while
-  commiting; before it was possible that conflicts that arose during the process of 
-  committing remained undetected
-
-ENHANCEMENTS FROM 1.0 beta1
------------------------
-- Many extensions for information about locks
-
-ENHANCEMENTS FROM 1.0 beta2
------------------------
-- Made GenericLockManager#checkLock, GenericLockManager#hasLock, GenericLockManager#release only check on existing locks
-  as creating a new lock was silly in that scenario
-- Split GenericLockManager#lock(Object ownerId, Object resourceId, int targetLockLevel, int compatibility, boolean preferred, long timeoutMSecs)
-  into two parts to make subclassing easier
 
 KNOWN ISSUES
 ------------
