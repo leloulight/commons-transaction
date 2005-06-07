@@ -67,7 +67,7 @@
       </roles>
     </developer>
     <developer>
-      <name>Stefan Lützkendorf</name>
+      <name>Stefan LÃ¼tzkendorf</name>
       <id>luetzkendorf</id>
       <email>luetzkendorf@apache.org</email>
       <organization></organization>
@@ -107,6 +107,10 @@
       <id>arminw</id>
       <email>arminw@apache.org</email>
       <timezone>+1</timezone>
+    </contributor>
+    <contributor>
+      <name>John Rousseau</name>
+      <email>JRRousseau@gmail.com</email>
     </contributor>
   </contributors>
 
