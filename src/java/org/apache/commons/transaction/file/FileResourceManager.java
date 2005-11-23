@@ -199,6 +199,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     
     protected ResourceIdToPathMapper idMapper = null;
 
+    protected int idCnt = 0;
+    
     /*
      * --- ctor and general getter / setter methods ---
      *
@@ -884,7 +886,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         String txId;
         synchronized (globalTransactions) {
             do {
-                txId = Long.toHexString(System.currentTimeMillis());
+                txId = Long.toHexString(System.currentTimeMillis()) + "-"
+                        + Integer.toHexString(idCnt);
                 // XXX busy loop
             } while (getContext(txId) != null);
         }
