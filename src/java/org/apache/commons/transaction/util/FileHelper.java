@@ -131,7 +131,9 @@ public final class FileHelper {
                             file.delete();
                         }
                     } else {
-                        targetFile.mkdirs();
+                        if (targetFile.mkdirs()) {
+                            throw new IOException("Could not create target directory: "+targetFile);
+                        }
                         moveRec(file, targetFile);
                     }
                 }
