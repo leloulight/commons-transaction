@@ -1,7 +1,7 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="ISO-8859-1" ?>
 <project>
   <pomVersion>3</pomVersion>
-  <!--extend>../commons-build/project.xml</extend-->
+  <extend>../commons-build/project.xml</extend>
   <name>Transaction</name>
   <id>commons-transaction</id>
   <logo>/images/transaction-logo-white.png</logo>
