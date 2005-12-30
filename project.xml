@@ -3,14 +3,15 @@
   <pomVersion>3</pomVersion>
   <!-- extend>../commons-build/project.xml</extend -->
   <name>Transaction</name>
-  <id>commons-transaction</id>
+  <groupId>commons-transaction</groupId>
+  <artifactId>commons-transaction</artifactId>
   <logo>/images/transaction-logo-white.png</logo>
   <url>http://jakarta.apache.org/commons/transaction/</url>
   <inceptionYear>2004</inceptionYear>
   <shortDescription>Commons Transaction</shortDescription>
   <description>Commons Transaction</description>
 
-  <currentVersion>1.1.1pre1</currentVersion>
+  <currentVersion>1.1.1-SNAPSHOT</currentVersion>
 
   <url>http://jakarta.apache.org/commons/${pom.artifactId.substring(8)}/</url>
   <package>org.apache.commons.${pom.artifactId.substring(8)}</package>
@@ -121,21 +122,32 @@
       <version>1.0-M1</version>
     </dependency>
     <dependency>
-      <id>commons-codec</id>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
       <version>1.2</version>
     </dependency>
     <dependency>
-      <id>log4j</id>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
       <version>1.2.8</version>
     </dependency>
     <dependency>
-      <id>junit</id>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
       <version>3.8.1</version>
     </dependency>
 
     <!-- these two are required by maven -->
-    <dependency><id>xml-apis</id><version>2.0.2</version></dependency>
-    <dependency><id>xerces</id><version>2.0.2</version></dependency>
+    <dependency>
+      <groupId>xml-apis</groupId>
+      <artifactId>xml-apis</artifactId>
+      <version>2.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xerces</artifactId>
+      <version>2.0.2</version>
+    </dependency>
     <!-- /these two are required by maven -->
   </dependencies>
 
