@@ -132,7 +132,7 @@ public final class FileHelper {
                         }
                     } else {
                         if (!targetFile.exists()) {
-                            if (targetFile.mkdirs()) {
+                            if (!targetFile.mkdirs()) {
                                 throw new IOException("Could not create target directory: "
                                         + targetFile);
                             }
@@ -187,8 +187,10 @@ public final class FileHelper {
         } else {
             if (!target.isDirectory()) {
                 if (!target.exists()) {
-                    target.getParentFile().mkdirs();
-                    if (target.createNewFile()) {
+                    if(!target.getParentFile().mkdirs()) {
+                        throw new IOException("Could not create target directory: " + target.getParentFile());
+                    }
+                    if (!target.createNewFile()) {
                         throw new IOException("Could not create target file: " + target);
                     }
                 }
