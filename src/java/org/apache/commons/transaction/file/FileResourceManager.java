@@ -887,7 +887,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         synchronized (globalTransactions) {
             do {
                 txId = Long.toHexString(System.currentTimeMillis()) + "-"
-                        + Integer.toHexString(idCnt);
+                        + Integer.toHexString(idCnt++);
                 // XXX busy loop
             } while (getContext(txId) != null);
         }
