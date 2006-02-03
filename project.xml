@@ -97,6 +97,16 @@
          <role>Java Developer</role>
       </roles>
     </developer>
+    <developer>
+      <name>Jörg Heinicke</name>
+      <id>joerg</id>
+      <email>joerg@apache.org</email>
+      <organization></organization>
+      <timezone>+1</timezone>
+      <roles>
+         <role>Java Developer</role>
+      </roles>
+    </developer>
   </developers>
   
   <contributors>
