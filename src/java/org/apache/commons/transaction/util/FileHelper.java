@@ -187,8 +187,9 @@ public final class FileHelper {
         } else {
             if (!target.isDirectory()) {
                 if (!target.exists()) {
-                    if(!target.getParentFile().mkdirs()) {
-                        throw new IOException("Could not create target directory: " + target.getParentFile());
+                    File dir = target.getParentFile();
+                    if(!dir.exists() && !dir.mkdirs()) {
+                        throw new IOException("Could not create target directory: " + dir);
                     }
                     if (!target.createNewFile()) {
                         throw new IOException("Could not create target file: " + target);
