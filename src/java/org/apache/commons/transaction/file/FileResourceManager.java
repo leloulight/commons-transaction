@@ -52,9 +52,9 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * A resource manager for streamable objects stored in a file system.
  * 
- * It is intended for developper and "out of the box" use. 
+ * It is intended for developer and "out of the box" use. 
  * It is <em>not</em> intended to be a real alternative for
- * a full blown DMBS (of course it can not be compared to an RDBMS at all).
+ * a full blown DMBS (of course it can not be compared to a RDBMS at all).
  * 
  * Major features:<br>
  * <ul>
@@ -64,7 +64,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * 
  * Compared to a "real" DBMS major limitations are (in order of assumed severity):<br>
  * <ul>
- * <li>Number of simultaneuously open resources is limited to the number of available file descriptors
+ * <li>Number of simultaneously open resources is limited to the number of available file descriptors
  * <li>It does not scale a bit
  * <li>Pessimistic transaction and locking scheme
  * <li>Isolation level currently is restricted to <em>read committed</em> and <em>repeated read</em> (which is not that bad)
@@ -89,31 +89,32 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <li>There is no dedicated class for a transaction. Having such a class would be better practice and 
  * make certain actions more intuitive.
  * <li>Resource identifiers need a reasonsable string representation obtainable by <code>toString</code>.
- * More specifically, they will have to resolve to a <em>valid</em> file path that does note denote a directoy. 
+ * More specifically, they will have to resolve to a <em>valid</em> file path that does note denote a directory. 
  * If it does, you might be able to create it, but not to read or write anything 
  * from resp. to it. Valid string representations of a resource idenfier are 
  * for example "file" "/root" or "hjfhdfhuhuhsdufhdsufhdsufhdfuhdfduhduhduhdu". 
  * Invalid are for example "/" or "/root/". Invalid on some file systems are for example "c:" or "file://huhu".
  * <li>As there are no active processes inside this RM and it shares its threads with the application,
  * control over transactions is limited to points where the application calls the RM. 
- * In particular, this disables <em>active</em> terminmation of transactions upon timeout.
+ * In particular, this disables <em>active</em> termination of transactions upon timeout.
  * <li>There is no notion of a connection to this file manager. This means you can not connect from hosts other than
  * local and you will get problems when plugging this store into a J2EE store using connectors. 
  * <li>Methods should throw more specific exceptions
  * </ul>
  * 
- * <em>Caution</em>:<br>
+ * <p><em>Caution</em>:<br>
  * The <code>txId</code> passed to many methods as an identifier for the
  * transaction concerned will function as a key in a <code>HashMap</code>.
  * Thus assure that <code>equals</code> and <code>hashCode</code> are both
- * properly implemented and match each other.
- * 
+ * properly implemented and match each other.</p>
  *  
- * <em>Caution</em>: You will have to guarantee that no other process will access neither
- * the store or the working dir concurrently to this <code>FileResourceManager</code>.
+ * <p><em>Caution</em>:<br>
+ * You will have to guarantee that no other process will access neither
+ * the store or the working dir concurrently to this <code>FileResourceManager</code>.</p>
  * 
- * <em>Special Caution</em>: Be very careful not to have two instances of
- * <code>FileResourceManager</code> working in the same store and/or working dir.
+ * <p><em>Special Caution</em>:<br>
+ * Be very careful not to have two instances of <code>FileResourceManager</code>
+ * working in the same store and/or working dir.
  *   
  * @version $Revision$
  */
@@ -208,7 +209,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
      */
 
     /**
-     * Creates a new resouce manager operation on the specified directories.
+     * Creates a new resource manager operation on the specified directories.
      * 
      * @param storeDir directory where main data should go after commit
      * @param workDir directory where transactions store temporary data
@@ -220,7 +221,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     }
 
     /**
-     * Creates a new resouce manager operation on the specified directories.
+     * Creates a new resource manager operation on the specified directories.
      * 
      * @param storeDir directory where main data should go after commit
      * @param workDir directory where transactions store temporary data 
@@ -234,11 +235,11 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         boolean urlEncodePath,
         LoggerFacade logger,
         boolean debug) {
-        this(storeDir, workDir, urlEncodePath ? new URLEncodeIdMapper() : null, logger, false);
+        this(storeDir, workDir, urlEncodePath ? new URLEncodeIdMapper() : null, logger, debug);
     }
 
     /**
-     * Creates a new resouce manager operation on the specified directories.
+     * Creates a new resource manager operation on the specified directories.
      * 
      * @param storeDir directory where main data should go after commit
      * @param workDir directory where transactions store temporary data 
@@ -982,19 +983,23 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         return buf.toString();
     }
 
+    protected String getTransactionBaseDir(Object txId) {
+        return workDir + '/' + txId.toString();
+    }
+
     protected String getChangePath(Object txId, Object path) {
-        StringBuffer buf = new StringBuffer(txId.toString().length() + path.toString().length()
-                + WORK_CHANGE_DIR.length() + workDir.length() + 5);
-        buf.append(workDir).append('/').append(txId.toString()).append('/').append(WORK_CHANGE_DIR).append(
-                assureLeadingSlash(path));
+        String txBaseDir = getTransactionBaseDir(txId);
+        StringBuffer buf = new StringBuffer(txBaseDir.length() + path.toString().length()
+                + WORK_CHANGE_DIR.length() + 5);
+        buf.append(txBaseDir).append('/').append(WORK_CHANGE_DIR).append(assureLeadingSlash(path));
         return buf.toString();
     }
 
     protected String getDeletePath(Object txId, Object path) {
-        StringBuffer buf = new StringBuffer(txId.toString().length() + path.toString().length()
-                + WORK_DELETE_DIR.length() + workDir.length() + 5);
-        buf.append(workDir).append('/').append(txId.toString()).append('/').append(WORK_DELETE_DIR).append(
-                assureLeadingSlash(path));
+        String txBaseDir = getTransactionBaseDir(txId);
+        StringBuffer buf = new StringBuffer(txBaseDir.length() + path.toString().length()
+                + WORK_DELETE_DIR.length() + 5);
+        buf.append(txBaseDir).append('/').append(WORK_DELETE_DIR).append(assureLeadingSlash(path));
         return buf.toString();
     }
 
@@ -1338,7 +1343,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         }
 
         public synchronized void init() throws ResourceManagerException {
-            String baseDir = workDir + "/" + txId;
+            String baseDir = getTransactionBaseDir(txId);
             String changeDir = baseDir + "/" + WORK_CHANGE_DIR;
             String deleteDir = baseDir + "/" + WORK_DELETE_DIR;
 
@@ -1354,7 +1359,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         }
 
         public synchronized void commit() throws ResourceManagerException {
-            String baseDir = workDir + "/" + txId;
+            String baseDir = getTransactionBaseDir(txId);
             String changeDir = baseDir + "/" + WORK_CHANGE_DIR;
             String deleteDir = baseDir + "/" + WORK_DELETE_DIR;
 
@@ -1380,7 +1385,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                 return; // XXX for debugging only
             boolean clean = true;
             Exception cleanException = null;
-            String baseDir = workDir + "/" + txId;
+            String baseDir = getTransactionBaseDir(txId);
             FileHelper.removeRec(new File(baseDir));
             if (!clean) {
                 throw new ResourceManagerSystemException(
@@ -1446,7 +1451,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         }
 
         public synchronized void saveState() throws ResourceManagerException {
-            String statePath = workDir + "/" + txId + "/" + CONTEXT_FILE;
+            String statePath = getTransactionBaseDir(txId) + "/" + CONTEXT_FILE;
             File file = new File(statePath);
             BufferedWriter writer = null;
             try {
@@ -1473,7 +1478,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         }
 
         public synchronized void recoverState() throws ResourceManagerException {
-            String statePath = workDir + "/" + txId + "/" + CONTEXT_FILE;
+            String statePath = getTransactionBaseDir(txId) + "/" + CONTEXT_FILE;
             File file = new File(statePath);
             BufferedReader reader = null;
             try {
