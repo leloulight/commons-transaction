@@ -724,4 +724,11 @@ public class FileResourceManagerTest extends TestCase {
         }
     }
 
+    public void testCopyRec() throws Throwable {
+        logger.info("Checking file copy");
+        reset();
+        createInitialFiles();
+        FileHelper.copyRec(new File(INITIAL_FILES[0]), new File(STORE + "/olli/NewFile"));
+    }
+
 }
