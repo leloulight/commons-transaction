@@ -31,6 +31,8 @@ BUGFIXES FROM 1.1
 - Fixed bug reported by Niklas Gustavsson on http://www.mail-archive.com/commons-dev@jakarta.apache.org/msg69441.html.
   Failed deletion of a file now throws an exception and enters an error state upon commit.
 - Reduced likelyhood of clash between internally generated and external tx id in generatedUniqueTxId
+- Fixed bugzilla issue 35377. Synchronizing on Set activeTransactions while iterating over its items in
+  OptimisticMapWrapper.copyChangesToConcurrentTransactions() for preventing ConcurrentModificationException.
 
 KNOWN ISSUES
 ------------

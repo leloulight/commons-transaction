@@ -63,9 +63,9 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
     protected Set activeTransactions;
 
     protected LoggerFacade logger;
-    
+
     protected ReadWriteLock commitLock;
-    
+
     /**
      * Creates a new optimistic transactional map wrapper. Temporary maps and sets to store transactional
      * data will be instances of {@link java.util.HashMap} and {@link java.util.HashSet}. 
@@ -105,8 +105,7 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
         this.logger = logger;
         commitLock = new ReadWriteLock("COMMIT", logger);
     }
-    
-    
+
     public void startTransaction() {
         if (getActiveTx() != null) {
             throw new IllegalStateException(
@@ -182,40 +181,40 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
     protected void copyChangesToConcurrentTransactions() {
         CopyingTxContext thisTxContext = (CopyingTxContext) getActiveTx();
 
-        for (Iterator it = activeTransactions.iterator(); it.hasNext();) {
-            CopyingTxContext otherTxContext = (CopyingTxContext) it.next();
+        synchronized (activeTransactions) {
+            for (Iterator it = activeTransactions.iterator(); it.hasNext();) {
+                CopyingTxContext otherTxContext = (CopyingTxContext) it.next();
 
-            // no need to copy data if the other transaction does not access global map anyway
-            if (otherTxContext.cleared)
-                continue;
+                // no need to copy data if the other transaction does not access global map anyway
+                if (otherTxContext.cleared)
+                    continue;
 
-            if (thisTxContext.cleared) {
-                // we will clear everything, so we have to copy everything before
-                otherTxContext.externalChanges.putAll(wrapped);
-            } else // no need to check if we have already copied everthing
+                if (thisTxContext.cleared) {
+                    // we will clear everything, so we have to copy everything before
+                    otherTxContext.externalChanges.putAll(wrapped);
+                } else // no need to check if we have already copied everthing
                 {
-
-                for (Iterator it2 = thisTxContext.changes.entrySet().iterator(); it2.hasNext();) {
-                    Map.Entry entry = (Map.Entry) it2.next();
-                    Object value = wrapped.get(entry.getKey());
-                    if (value != null) {
-                        // undo change
-                        otherTxContext.externalChanges.put(entry.getKey(), value);
-                    } else {
-                        // undo add
-                        otherTxContext.externalDeletes.add(entry.getKey());
+                    for (Iterator it2 = thisTxContext.changes.entrySet().iterator(); it2.hasNext();) {
+                        Map.Entry entry = (Map.Entry) it2.next();
+                        Object value = wrapped.get(entry.getKey());
+                        if (value != null) {
+                            // undo change
+                            otherTxContext.externalChanges.put(entry.getKey(), value);
+                        } else {
+                            // undo add
+                            otherTxContext.externalDeletes.add(entry.getKey());
+                        }
                     }
-                }
 
-                for (Iterator it2 = thisTxContext.deletes.iterator(); it2.hasNext();) {
-                    // undo delete
-                    Object key = it2.next();
-                    Object value = wrapped.get(key);
-                    otherTxContext.externalChanges.put(key, value);
+                    for (Iterator it2 = thisTxContext.deletes.iterator(); it2.hasNext();) {
+                        // undo delete
+                        Object key = it2.next();
+                        Object value = wrapped.get(key);
+                        otherTxContext.externalChanges.put(key, value);
+                    }
                 }
             }
         }
-
     }
 
     public class CopyingTxContext extends TxContext {
@@ -316,7 +315,7 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
                 commitLock.release(this);
             }
         }
-        
+
         protected void remove(Object key) {
             try {
                 commitLock.acquireRead(this, ACCESS_TIMEOUT);
@@ -365,7 +364,7 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
                 commitLock.release(this);
             }
         }
-        
+
         protected void dispose() {
             try {
                 commitLock.acquireRead(this, ACCESS_TIMEOUT);
