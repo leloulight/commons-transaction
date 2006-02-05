@@ -687,7 +687,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
             context.isLightWeight = true;
             // XXX higher isolation might be needed to make sure upgrade to commit lock always works
             context.isolationLevel = ISOLATION_LEVEL_READ_COMMITTED;
-//            context.isolationLevel = ISOLATION_LEVEL_REPEATABLE_READ;
+            // context.isolationLevel = ISOLATION_LEVEL_REPEATABLE_READ;
             globalTransactions.put(txId, context);
         }
 
@@ -780,12 +780,6 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         }
     }
 
-    /*
-     * --- public methods of interface StreamableResourceManager ---
-     *
-     *  
-     */
-
     public InputStream readResource(Object resourceId) throws ResourceManagerException {
         // create temporary light weight tx
         Object txId;
@@ -797,7 +791,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
             context.isLightWeight = true;
             // XXX higher isolation might be needed to make sure upgrade to commit lock always works
             context.isolationLevel = ISOLATION_LEVEL_READ_COMMITTED;
-//            context.isolationLevel = ISOLATION_LEVEL_REPEATABLE_READ;
+            // context.isolationLevel = ISOLATION_LEVEL_REPEATABLE_READ;
             globalTransactions.put(txId, context);
         }
 
@@ -833,9 +827,6 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         lockResource(resourceId, txId, false);
 
         String resourcePath = getPathForWrite(txId, resourceId);
-        if (resourcePath == null) {
-            throw new ResourceManagerException("No such resource at '" + resourceId + "'", ERR_NO_SUCH_RESOURCE, txId);
-        }
 
         File file = new File(resourcePath);
         try {
@@ -1056,7 +1047,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         String txChangePath = getChangePath(txId, resourceId);
         String txDeletePath = getDeletePath(txId, resourceId);
 
-        // now, this is gets bit complicated:
+        // now, this gets a bit complicated:
 
         boolean changeExists = FileHelper.fileExists(txChangePath);
         boolean deleteExists = FileHelper.fileExists(txDeletePath);
@@ -1090,7 +1081,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
         if (changeExists) {
             return txChangePath;
-        } else if ((mainExists && !deleteExists)) {
+        } else if (mainExists && !deleteExists) {
             return mainPath;
         } else {
             return null;
@@ -1607,5 +1598,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
             return is.markSupported();
 
         }
+
     }
+
 }
