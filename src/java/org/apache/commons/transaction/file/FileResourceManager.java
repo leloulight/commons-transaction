@@ -197,11 +197,11 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     protected Map globalTransactions;
     protected List globalOpenResources;
     protected LockManager2 lockManager;
-    
+
     protected ResourceIdToPathMapper idMapper = null;
 
     protected int idCnt = 0;
-    
+
     /*
      * --- ctor and general getter / setter methods ---
      *
@@ -780,6 +780,44 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         }
     }
 
+    public void copyResource(Object txId, Object fromResourceId, Object toResourceId, boolean overwrite) throws ResourceManagerException {
+        if (logger.isFineEnabled()) logger.logFine(txId + " copying " + fromResourceId + " to " + toResourceId);
+
+        lockResource(fromResourceId, txId, true);
+        lockResource(toResourceId, txId, false);
+
+        if (resourceExists(txId, toResourceId) && !overwrite) {
+            throw new ResourceManagerException(
+                "Resource at '" + toResourceId + "' already exists",
+                ERR_RESOURCE_EXISTS,
+                txId);
+        }
+
+        InputStream fromResourceStream = null;
+        OutputStream toResourceStream = null;
+        try {
+            fromResourceStream = readResource(txId, fromResourceId);
+            toResourceStream = writeResource(txId, toResourceId);
+            FileHelper.copy(fromResourceStream, toResourceStream);
+        } catch (IOException e) {
+            throw new ResourceManagerException(ERR_SYSTEM, txId, e);
+        } finally {
+            closeOpenResource(fromResourceStream);
+            closeOpenResource(toResourceStream);
+        }
+    }
+
+    public void moveResource(Object txId, Object fromResourceId, Object toResourceId, boolean overwrite) throws ResourceManagerException {
+        if (logger.isFineEnabled()) logger.logFine(txId + " moving " + fromResourceId + " to " + toResourceId);
+
+        lockResource(fromResourceId, txId, false);
+        lockResource(toResourceId, txId, false);
+
+        copyResource(txId, fromResourceId, toResourceId, overwrite);
+
+        deleteResource(txId, fromResourceId, false);
+    }
+
     public InputStream readResource(Object resourceId) throws ResourceManagerException {
         // create temporary light weight tx
         Object txId;
@@ -821,16 +859,35 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     }
 
     public OutputStream writeResource(Object txId, Object resourceId) throws ResourceManagerException {
+        return writeResource(txId, resourceId, false);
+    }
+
+    public OutputStream writeResource(Object txId, Object resourceId, boolean append) throws ResourceManagerException {
 
         if (logger.isFineEnabled()) logger.logFine(txId + " writing " + resourceId);
 
         lockResource(resourceId, txId, false);
 
+        if (append) {
+            String mainPath = getMainPath(resourceId);
+            String txChangePath = getChangePath(txId, resourceId);
+            String txDeletePath = getDeletePath(txId, resourceId);
+
+            boolean changeExists = FileHelper.fileExists(txChangePath);
+            boolean deleteExists = FileHelper.fileExists(txDeletePath);
+            boolean mainExists = FileHelper.fileExists(mainPath);
+
+            if (mainExists && !changeExists && !deleteExists) {
+                // the read and the write path for resourceId will be different!
+                copyResource(txId, resourceId, resourceId, true);
+            }
+        }
+
         String resourcePath = getPathForWrite(txId, resourceId);
 
         File file = new File(resourcePath);
         try {
-            FileOutputStream stream = new FileOutputStream(file);
+            FileOutputStream stream = new FileOutputStream(file, append);
             TransactionContext context = getContext(txId);
             context.registerResource(stream);
             context.readOnly = false;
@@ -1207,7 +1264,6 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                     } catch (ResourceManagerException e) {
                         logger.logWarning("Rolling back of " + context.txId + " failed", e);
                     }
-                    // 
                 }
             }
 
@@ -1513,12 +1569,12 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
             buf.append(Long.toString(startTime)).append('\n');
             if (debug) {
                 buf.append("----- Lock Debug Info -----\n");
-                
+
                 for (Iterator it = lockManager.getAll(txId).iterator(); it.hasNext();) {
                     GenericLock lock = (GenericLock) it.next();
                     buf.append(lock.toString()+"\n");
                 }
-                
+
             }
             return buf.toString();
         }
@@ -1573,11 +1629,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                         // release access lock in order to allow other transactions to commit
                         if (lockManager.getLevel(txId, resourceId) == LOCK_ACCESS) {
                             if (logger.isFinerEnabled()) {
-	                            logger.logFiner(
-	                                "Upon close of resource releasing access lock for tx "
-	                                    + txId
-	                                    + " on resource at "
-	                                    + resourceId);
+                                logger.logFiner("Upon close of resource releasing access lock for tx " + txId + " on resource at " + resourceId);
                             }
                             lockManager.release(txId, resourceId);
                         }
