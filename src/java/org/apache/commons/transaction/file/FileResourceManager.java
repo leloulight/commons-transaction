@@ -1377,7 +1377,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         protected boolean finished = false;
 
         // list of streams participating in this tx
-        private List openResourcs = new ArrayList();
+        private List openResources = new ArrayList();
 
         public TransactionContext(Object txId) throws ResourceManagerException {
             this.txId = txId;
@@ -1483,7 +1483,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
         public synchronized void closeResources() {
             synchronized (globalOpenResources) {
-                for (Iterator it = openResourcs.iterator(); it.hasNext();) {
+                for (Iterator it = openResources.iterator(); it.hasNext();) {
                     Object stream = it.next();
                     closeOpenResource(stream);
                 }
@@ -1493,7 +1493,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         public synchronized void registerResource(Object openResource) {
             synchronized (globalOpenResources) {
                 registerOpenResource(openResource);
-                openResourcs.add(openResource);
+                openResources.add(openResource);
             }
         }
 
