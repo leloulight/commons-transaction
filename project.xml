@@ -6,7 +6,6 @@
   <groupId>commons-transaction</groupId>
   <artifactId>commons-transaction</artifactId>
   <logo>/images/transaction-logo-white.png</logo>
-  <url>http://jakarta.apache.org/commons/transaction/</url>
   <inceptionYear>2004</inceptionYear>
   <shortDescription>Commons Transaction</shortDescription>
   <description>Commons Transaction</description>
