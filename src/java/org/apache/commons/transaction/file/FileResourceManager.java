@@ -199,6 +199,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     protected LockManager2 lockManager;
 
     protected ResourceIdToPathMapper idMapper = null;
+    protected TransactionIdToPathMapper txIdMapper = null;
 
     protected int idCnt = 0;
 
@@ -235,7 +236,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         boolean urlEncodePath,
         LoggerFacade logger,
         boolean debug) {
-        this(storeDir, workDir, urlEncodePath ? new URLEncodeIdMapper() : null, logger, debug);
+        this(storeDir, workDir, urlEncodePath ? new URLEncodeIdMapper() : null, new DirectTransactionIdToPathMapper(), logger, debug);
     }
 
     /**
@@ -244,6 +245,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
      * @param storeDir directory where main data should go after commit
      * @param workDir directory where transactions store temporary data 
      * @param idMapper mapper for resourceId to path
+     * @param txIdMapper mapper for transaction id to path
      * @param logger the logger to be used by this store
      * @param debug if set to <code>true</code> logs all locking information to "transaction.log" for debugging inspection 
      */
@@ -251,13 +253,15 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         String storeDir,
         String workDir,
         ResourceIdToPathMapper idMapper,
+        TransactionIdToPathMapper txIdMapper,
         LoggerFacade logger,
         boolean debug) {
         this.workDir = workDir;
         this.storeDir = storeDir;
+        this.idMapper = idMapper;
+        this.txIdMapper = txIdMapper;
         this.logger = logger;
         this.debug = debug;
-        this.idMapper = idMapper;
     }
 
     /**
@@ -505,7 +509,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         if (logger.isFineEnabled()) logger.logFine("Starting Tx " + txId);
 
         assureStarted(); // can only start a new transaction when not already stopping
-        if (txId == null || txId.toString().length() == 0) {
+        if (txId == null || txIdMapper.getPathForId(txId).length() == 0) {
             throw new ResourceManagerException(ERR_TXID_INVALID, txId);
         }
 
@@ -1032,7 +1036,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     }
 
     protected String getTransactionBaseDir(Object txId) {
-        return workDir + '/' + txId.toString();
+        return workDir + '/' + txIdMapper.getPathForId(txId);
     }
 
     protected String getChangePath(Object txId, Object path) {
@@ -1278,7 +1282,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
             return;
         for (int i = 0; i < files.length; i++) {
             File file = files[i];
-            String txId = file.getName();
+            Object txId = txIdMapper.getIdForPath(file.getName());
             // recover all transactions we do not already know
             if (!globalTransactions.containsKey(txId)) {
 
