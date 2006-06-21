@@ -35,8 +35,7 @@ BUGFIXES FROM 1.1
 - Reduced likelyhood of clash between internally generated and external tx id in generatedUniqueTxId
 - Fixed bugzilla issue 35377. Synchronizing on Set activeTransactions while iterating over its items in
   OptimisticMapWrapper.copyChangesToConcurrentTransactions() for preventing ConcurrentModificationException.
-- Fixed bugzilla issue 37379. The construction of the transaction specific path is now done in a protected method
-  getTransactionBaseDir(Object txId) to allow easy sub classing where the trivial way is not sufficient.
+- Fixed bugzilla issue 37379. The construction of the transaction specific path is now done via a TransactionIdToPathMapper.
 
 KNOWN ISSUES
 ------------
