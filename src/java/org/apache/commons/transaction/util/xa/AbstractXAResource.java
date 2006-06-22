@@ -125,6 +125,11 @@ public abstract class AbstractXAResource implements XAResource, Status {
         	
         int result = ts.prepare();
         ts.setStatus(STATUS_PREPARED);
+        
+        if (result == XA_RDONLY) {
+            commit(xid, false);
+        }
+        
         return result;
     }
 
