@@ -36,6 +36,7 @@ BUGFIXES FROM 1.1
 - Fixed bugzilla issue 35377. Synchronizing on Set activeTransactions while iterating over its items in
   OptimisticMapWrapper.copyChangesToConcurrentTransactions() for preventing ConcurrentModificationException.
 - Fixed bugzilla issue 37379. The construction of the transaction specific path is now done via a TransactionIdToPathMapper.
+- Fixed issue with deleteResource(..) and createResource(..) of FileResourceManager seen as read-only operations.
 
 KNOWN ISSUES
 ------------

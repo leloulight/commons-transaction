@@ -729,6 +729,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         String txDeletePath = getDeletePath(txId, resourceId);
         String mainPath = getMainPath(resourceId);
         try {
+            getContext(txId).readOnly = false;
 
             // first undo change / create when there was one
             undoScheduledChangeOrCreate(txId, resourceId);
@@ -769,7 +770,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
         String txChangePath = getChangePath(txId, resourceId);
         try {
-
+            getContext(txId).readOnly = false;
+            
             // creation means either undoing a delete or actually scheduling a create
             if (!undoScheduledDelete(txId, resourceId)) {
                 FileHelper.createFile(txChangePath);
