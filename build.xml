@@ -314,26 +314,10 @@
     <!-- =================================================================== -->
     <!-- Build documentation                                                 -->
     <!-- =================================================================== -->
-    <target name="doc" depends="prepare,javadocs,xdocs"
+    <target name="doc" depends="prepare,javadocs"
     description="Generate full documentation" />
 
-    <target name="xdocs" depends="prepare" description="Generate documentation">
-        <style basedir="xdocs" destdir="${build.doc}" extension=".html" style="xdocs/style/basic.xsl" includes="*.xml"/>
-        <style basedir="xdocs/file" destdir="${build.doc}/file" extension=".html" style="xdocs/style/basic.xsl" includes="*.xml"/>
-        <style basedir="xdocs/locks" destdir="${build.doc}/locks" extension=".html" style="xdocs/style/basic.xsl" includes="*.xml"/>
-        <style basedir="xdocs/maps" destdir="${build.doc}/maps" extension=".html" style="xdocs/style/basic.xsl" includes="*.xml"/>
-        <copy todir="${build.doc}">
-            <fileset dir="xdocs">
-                <include name="**/*.gif"/>
-                <include name="**/*.jpg"/>
-                <include name="**/*.png"/>
-                <include name="**/*.css"/>
-                <include name="**/*.sample"/>
-            </fileset>
-        </copy>
-    </target>
-
-  <!-- 
+  <!--
   ===================================================================
   Creates the API documentation                             
   =================================================================== 
