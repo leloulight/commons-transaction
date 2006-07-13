@@ -39,6 +39,8 @@ BUGFIXES FROM 1.1
 - Fixed issue with deleteResource(..) and createResource(..) of FileResourceManager seen as read-only operations.
 - Fixed issue with AbstractXAResource. Resources did not get released when prepare(..) returns XA_RDONLY as no
   commit(..) is triggered by the TransactionManager explicitely.
+- TransactionalMapWrapper now properly supports null values. Bug report and fix supplied by Greg Steckman at http://issues.apache.org/bugzilla/show_bug.cgi?id=38545
+- Minor bug reported at http://issues.apache.org/bugzilla/show_bug.cgi?id=39559 has been fixed.
 
 KNOWN ISSUES
 ------------
