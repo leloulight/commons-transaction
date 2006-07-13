@@ -11,7 +11,7 @@
           <item name="Overview" href="/index.html" />
           <item name="Download" href="http://jakarta.apache.org/site/downloads/downloads_commons-transaction.cgi"/>
           <item name="Javadoc" href="/apidocs/index.html"/>
-          <item name="Downloads" href="downloads.html"/>
+          <item name="Releases" href="releases.html"/>
         </menu>
         <menu name="Documentation">
           <item name="Transactional Maps" href="/maps/index.html">
