@@ -181,7 +181,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
     public void lock(Object ownerId, Object resourceId, int targetLockLevel, boolean reentrant,
             long timeoutMSecs) throws LockException {
         lock(ownerId, resourceId, targetLockLevel, reentrant ? GenericLock.COMPATIBILITY_REENTRANT
-                : GenericLock.COMPATIBILITY_NONE, false, globalTimeoutMSecs);
+                : GenericLock.COMPATIBILITY_NONE, false, timeoutMSecs);
     }
 
     /**
