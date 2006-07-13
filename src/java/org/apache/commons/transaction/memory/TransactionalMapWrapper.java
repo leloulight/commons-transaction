@@ -317,7 +317,7 @@ public class TransactionalMapWrapper implements Map, Status {
      * @see Map#containsKey(java.lang.Object) 
      */
     public boolean containsKey(Object key) {
-        return (get(key) != null);
+	return keySet().contains(key);
     }
 
     /**
@@ -529,6 +529,7 @@ public class TransactionalMapWrapper implements Map, Status {
             Set keySet = new HashSet();
             if (!cleared) {
                 keySet.addAll(wrapped.keySet());
+                keySet.removeAll(deletes);
             }
             keySet.addAll(adds.keySet());
             return keySet;
@@ -541,14 +542,12 @@ public class TransactionalMapWrapper implements Map, Status {
                 return null;
             }
 
-            Object changed = changes.get(key);
-            if (changed != null) {
-                return changed;
+            if(changes.containsKey(key)){
+                return changes.get(key);
             }
 
-            Object added = adds.get(key);
-            if (added != null) {
-                return added;
+            if(adds.containsKey(key)){
+                return adds.get(key);
             }
 
             if (cleared) {
@@ -563,7 +562,7 @@ public class TransactionalMapWrapper implements Map, Status {
             try {
                 readOnly = false;
                 deletes.remove(key);
-                if (wrapped.get(key) != null) {
+                if (wrapped.containsKey(key)) {
                     changes.put(key, value);
                 } else {
                     adds.put(key, value);

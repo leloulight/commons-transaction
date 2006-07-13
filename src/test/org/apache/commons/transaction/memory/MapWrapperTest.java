@@ -121,6 +121,37 @@ public class MapWrapperTest extends TestCase {
         report("value2", (String) txMap1.get("key1"));
     }
 
+    public void testContainsKeyWithNullValue() throws Throwable {
+
+        logger.info("Checking containsKey returns true when the value is null");
+
+        final Map map1 = new HashMap();
+
+        final TransactionalMapWrapper txMap1 = getNewWrapper(map1);
+
+        assertTrue(txMap1.isEmpty());
+
+        // make sure changes are propagated to wrapped map outside tx
+        txMap1.put("key1", null);
+        assertTrue(txMap1.containsKey("key1"));
+
+        // make sure changes are progated to wrapped map after commit
+        txMap1.startTransaction();
+        txMap1.put("key2", null);
+        assertTrue(txMap1.containsKey("key2"));
+        txMap1.remove("key1");
+        assertTrue(map1.containsKey("key1"));
+        txMap1.commitTransaction();
+        assertTrue(txMap1.containsKey("key2"));
+        assertFalse(txMap1.containsKey("key1"));
+
+        txMap1.startTransaction();
+        assertTrue(txMap1.containsKey("key2"));
+        txMap1.remove("key2");
+        assertFalse(txMap1.containsKey("key2"));
+        txMap1.commitTransaction();
+    }
+
     public void testComplex() throws Throwable {
 
         logger.info("Checking advanced and complex transaction features");
