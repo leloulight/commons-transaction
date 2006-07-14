@@ -1,8 +1,8 @@
-Jakarta Commons Transaction Release 1.1.1
------------------------------------------
+Jakarta Commons Transaction Release 1.2
+---------------------------------------
 
-RELEASE NUMBER: 1.1.1
-RELEASE TAG / BRANCH: TRANSACTION_1_1_1_RELEASE / none yet
+RELEASE NUMBER: 1.2
+RELEASE TAG / BRANCH: TRANSACTION_1_2_RELEASE / none yet
 
 DESCRIPTION
 -----------
@@ -19,7 +19,9 @@ There are implementations for:
 GENERAL RELEASE NOTES
 ---------------------
 
-This is the first bug fix/maintenance release of Commons Transaction 1.1.
+This is a bug fix/maintenance/feature release of Commons Transaction. A lot of bug fixing work
+from a number of people has gone into this release. This makes Commons Transaction more stable and reliable.
+Additionally, some nice features have been added. See below for details.
 
 ENHANCEMENTS FROM 1.1
 ---------------------
