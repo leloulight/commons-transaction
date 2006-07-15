@@ -62,9 +62,9 @@
 
   <path id="classpath">
     <pathelement location="${build.classes}" />
-    <fileset dir="${lib.dir}"/>
     <pathelement location="${j2ee.jar}"/>
     <pathelement location="${servlet.jar}"/>
+    <fileset dir="${lib.dir}"/>
   </path>
 
   <!-- 
@@ -163,6 +163,7 @@
       optimize="${compile.optimize}" >
       <exclude name="**/jca/**"/>
       <exclude name="**/JDK14URLEncodeIdMapper.java" unless="jvm14.present"/>
+      <exclude name="**/Jdk14Logger.java" unless="jvm14.present"/>
       <src path="${java.dir}"/>
       <classpath refid="classpath" />
     </javac>
