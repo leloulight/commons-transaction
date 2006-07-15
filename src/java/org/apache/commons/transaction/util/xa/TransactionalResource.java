@@ -44,7 +44,7 @@ public interface TransactionalResource {
 
     /**
      * Prepares the changes done inside this transaction reasource. Same
-     * semantics as {@link XAResource.prepare(Xid)}.
+     * semantics as {@link javax.transaction.xa.XAResource#prepare(Xid)}.
      * 
      * @throws XAException
      *             when anything goes wrong the error must be described in XA
@@ -70,7 +70,7 @@ public interface TransactionalResource {
     /**
      * Returns the current status of this transaction resource.
      * 
-     * @return the current status of this resource as defined by {@link Status}.
+     * @return the current status of this resource as defined by {@link javax.transaction.Status}.
      */
     public int getStatus();
 

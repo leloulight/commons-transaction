@@ -27,7 +27,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
 
 /**
  * Convenience implementation of a read/write lock with an option for upgrade
- * based on {@link ReadWriteUpgradeLockLock}.<br>
+ * based on {@link ReadWriteUpgradeLock}.<br>
  * <br>
  * Reads are shared which means there can be any number of concurrent read
  * accesses allowed by this lock. Writes are exclusive. This means when there is
