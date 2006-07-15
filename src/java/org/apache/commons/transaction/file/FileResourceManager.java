@@ -891,9 +891,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
         String resourcePath = getPathForWrite(txId, resourceId);
 
-        File file = new File(resourcePath);
         try {
-            FileOutputStream stream = new FileOutputStream(file, append);
+            FileOutputStream stream = new FileOutputStream(resourcePath, append);
             TransactionContext context = getContext(txId);
             context.registerResource(stream);
             context.readOnly = false;
