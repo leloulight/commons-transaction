@@ -25,7 +25,7 @@ package org.apache.commons.transaction.util;
 
 /**
  * Simple turn based barrier to make a sequence of calls from different threads deterministic.
- * This is very useful for testing where you want to have a contious flow throughout 
+ * This is very useful for testing where you want to have a continuous flow throughout 
  * different threads. The idea is to have an ordered sequence of steps where step n can not be 
  * executed before n-1.
  * 
