@@ -435,32 +435,32 @@
   
   <target name="zip-bin">
     <tar longfile="gnu" tarfile="${dist.dir}/${final.name}.tar">
-      <tarfileset dir="${build.bin.dist}"/>
+      <tarfileset prefix="${final.name}" dir="${build.bin.dist}"/>
     </tar>
-    <gzip zipfile="${dist.dir}/${final.name}.tgz" src="${dist.dir}/${final.name}.tar"/>
+    <gzip zipfile="${dist.dir}/${final.name}.tar.gz" src="${dist.dir}/${final.name}.tar"/>
     <delete file="${dist.dir}/${final.name}.tar" />
     
     <zip zipfile="${dist.dir}/${final.name}.zip" >
-      <zipfileset dir="${build.bin.dist}"/>
+      <zipfileset prefix="${final.name}" dir="${build.bin.dist}"/>
     </zip>
       
-    <checksum file="${dist.dir}/${final.name}.tgz"/>
-    <checksum file="${dist.dir}/${final.name}.zip"/>
+    <checksum fileext=".md5" file="${dist.dir}/${final.name}.tar.gz"/>
+    <checksum fileext=".md5" file="${dist.dir}/${final.name}.zip"/>
   </target>
 
   <target name="zip-src">
     <tar longfile="gnu" tarfile="${dist.dir}/${final.name}-src.tar">
-      <tarfileset dir="${build.src.dist}"/>
+      <tarfileset prefix="${final.name}-src" dir="${build.src.dist}"/>
     </tar>
-    <gzip zipfile="${dist.dir}/${final.name}-src.tgz" src="${dist.dir}/${final.name}-src.tar"/>
+    <gzip zipfile="${dist.dir}/${final.name}-src.tar.gz" src="${dist.dir}/${final.name}-src.tar"/>
     <delete file="${dist.dir}/${final.name}-src.tar" />
     
     <zip zipfile="${dist.dir}/${final.name}-src.zip" >
-      <zipfileset dir="${build.src.dist}"/>
+      <zipfileset prefix="${final.name}-src" dir="${build.src.dist}"/>
     </zip>
       
-    <checksum file="${dist.dir}/${final.name}-src.tgz"/>
-    <checksum file="${dist.dir}/${final.name}-src.zip"/>
+    <checksum fileext=".md5" file="${dist.dir}/${final.name}-src.tar.gz"/>
+    <checksum fileext=".md5" file="${dist.dir}/${final.name}-src.zip"/>
   </target>
 
 </project>
