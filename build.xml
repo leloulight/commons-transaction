@@ -20,7 +20,7 @@
   <property name="compile.deprecation" value="true" />
   <property name="compile.optimize" value="true" />
 
-  <property name="version" value="1.2-rc1"/>
+  <property name="version" value="1.2-rc3"/>
   <property name="name" value="commons-transaction" />
   <property name="title" value="Commons Transaction" />
   <property name="package" value="org.apache.commons.transaction" />
@@ -57,8 +57,8 @@
   <property name="dist.lib" value="${dist.dir}/lib"/>
   <property name="dist.deploy" value="${dist.dir}/deploy"/>
 
-  <property name="j2ee.jar" value="${lib.dir}/geronimo-spec-j2ee-1.0-M1.jar"/>
-  <property name="servlet.jar" value="${lib.dir}/geronimo-spec-j2ee-1.0-M1.jar"/>
+  <property name="j2ee.jar" value="${lib.dir}/geronimo-spec-j2ee.jar"/>
+  <property name="servlet.jar" value="${lib.dir}/geronimo-spec-servlet-2.4.jar"/>
 
   <path id="classpath">
     <pathelement location="${build.classes}" />
@@ -431,6 +431,10 @@
 <!-- ====================================================================== -->
 
   <target name="package" depends="scrub,dist,zip-bin,zip-src" description="Packages distribution">
+    <copy file="project.xml" tofile="${dist.dir}/${final.name}.pom" />
+    <antcall target="internal-md5">
+      <param name="path" value="${dist.dir}/${final.name}.pom"/>
+    </antcall>
   </target>
   
   <target name="zip-bin">
@@ -440,12 +444,17 @@
     <gzip zipfile="${dist.dir}/${final.name}.tar.gz" src="${dist.dir}/${final.name}.tar"/>
     <delete file="${dist.dir}/${final.name}.tar" />
     
+    <antcall target="internal-md5">
+      <param name="path" value="${dist.dir}/${final.name}.tar.gz"/>
+    </antcall>
+
     <zip zipfile="${dist.dir}/${final.name}.zip" >
       <zipfileset prefix="${final.name}" dir="${build.bin.dist}"/>
     </zip>
       
-    <checksum fileext=".md5" file="${dist.dir}/${final.name}.tar.gz"/>
-    <checksum fileext=".md5" file="${dist.dir}/${final.name}.zip"/>
+    <antcall target="internal-md5">
+      <param name="path" value="${dist.dir}/${final.name}.zip"/>
+    </antcall>
   </target>
 
   <target name="zip-src">
@@ -455,12 +464,24 @@
     <gzip zipfile="${dist.dir}/${final.name}-src.tar.gz" src="${dist.dir}/${final.name}-src.tar"/>
     <delete file="${dist.dir}/${final.name}-src.tar" />
     
+    <antcall target="internal-md5">
+      <param name="path" value="${dist.dir}/${final.name}-src.tar.gz"/>
+    </antcall>
+
     <zip zipfile="${dist.dir}/${final.name}-src.zip" >
       <zipfileset prefix="${final.name}-src" dir="${build.src.dist}"/>
     </zip>
       
-    <checksum fileext=".md5" file="${dist.dir}/${final.name}-src.tar.gz"/>
-    <checksum fileext=".md5" file="${dist.dir}/${final.name}-src.zip"/>
+    <antcall target="internal-md5">
+      <param name="path" value="${dist.dir}/${final.name}-src.zip"/>
+    </antcall>
+
+  </target>
+
+  <target name="internal-md5">
+    <basename property="_base" file="${path}"/>
+    <checksum file="${path}" property="md5"/>
+   	<echo message="${md5} *${_base}" file="${path}.md5"/>
   </target>
 
 </project>
