@@ -9,7 +9,7 @@
   <shortDescription>Commons Transaction</shortDescription>
   <description>Commons Transaction</description>
 
-  <currentVersion>1.2-rc1</currentVersion>
+  <currentVersion>1.2-rc3</currentVersion>
 
   <url>http://jakarta.apache.org/commons/${pom.artifactId.substring(8)}/</url>
   <package>org.apache.commons.${pom.artifactId.substring(8)}</package>
