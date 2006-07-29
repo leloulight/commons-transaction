@@ -57,8 +57,8 @@
   <property name="dist.lib" value="${dist.dir}/lib"/>
   <property name="dist.deploy" value="${dist.dir}/deploy"/>
 
-  <property name="j2ee.jar" value="${lib.dir}/geronimo-spec-j2ee.jar"/>
-  <property name="servlet.jar" value="${lib.dir}/geronimo-spec-servlet-2.4.jar"/>
+  <property name="j2ee.jar" value="${lib.dir}/geronimo-spec-j2ee-1.4-rc4.jar"/>
+  <property name="servlet.jar" value="${lib.dir}/geronimo-spec-servlet-2.4-rc4.jar"/>
 
   <path id="classpath">
     <pathelement location="${build.classes}" />
@@ -78,7 +78,11 @@
         <available property="j2ee.present" classname="javax.resource.cci.Connection" classpath="${j2ee.jar}"/>
         <available property="servlet.present" classname="javax.servlet.Servlet" classpath="${servlet.jar}"/>
         <condition property="jvm14.present">
-            <equals arg1="${ant.java.version}" arg2="1.4"/>
+            <or>
+              <equals arg1="${ant.java.version}" arg2="1.4"/>
+              <equals arg1="${ant.java.version}" arg2="1.5"/>
+              <equals arg1="${ant.java.version}" arg2="1.6"/>
+            </or>
         </condition>
         <echo message="+-------------------------------------------------------"/>
         <echo message="| Build environment for ${name} ${version}"/>
@@ -105,6 +109,7 @@
         <echo message="Optional Libraries:"/>
         <echo message="  J2EE API                      ${j2ee.present}"/>
         <echo message="  Servlet API                   ${servlet.present}"/>
+        <echo message="  JVM 14                        ${jvm14.present}"/>
         <echo message=""/>
         <property name="required.present" value="true"/>
         <!--condition property="required.present">
@@ -169,7 +174,7 @@
     </javac>
   </target>
   
-  <target name="build-test" depends="build">
+  <target name="build-test" depends="detect,build" if="jvm14.present">
     <javac destdir="${build.classes}"
       target="${compile.target}"
       debug="${compile.debug}"
@@ -434,6 +439,10 @@
     <copy file="project.xml" tofile="${dist.dir}/${final.name}.pom" />
     <antcall target="internal-md5">
       <param name="path" value="${dist.dir}/${final.name}.pom"/>
+    </antcall>
+    <copy file="${build.lib}/${final.name}.jar" tofile="${dist.dir}/${final.name}.jar" />
+    <antcall target="internal-md5">
+      <param name="path" value="${dist.dir}/${final.name}.jar"/>
     </antcall>
   </target>
   

@@ -10,8 +10,8 @@ compile.deprecation=on
 compile.optimize=on
 
 # jars (set to have the spec from somewhere else)
-#j2ee.jar=E:/lib/jboss-j2ee.jar
-#servlet.jar=E:/lib/servlet.jar
+#j2ee.jar=D:/devel/j2ee-1.2.jar
+#servlet.jar=D:/devel/j2ee-1.2.jar
 
 # deploy dirs
 
