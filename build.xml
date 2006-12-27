@@ -75,14 +75,24 @@
   <target name="detect" depends="detect.display,detect.fail" description="Display configuration and conditional compilation flags"/>
 
   <target name="detect.display">
-    <available property="j2ee.present" classname="javax.resource.cci.Connection" classpath="${j2ee.jar}"/>
-    <available property="servlet.present" classname="javax.servlet.Servlet" classpath="${servlet.jar}"/>
     <condition property="jvm14.present">
       <or>
         <equals arg1="${ant.java.version}" arg2="1.4"/>
         <equals arg1="${ant.java.version}" arg2="1.5"/>
         <equals arg1="${ant.java.version}" arg2="1.6"/>
       </or>
+    </condition>
+    <condition property="j2ee.present">
+      <and>
+        <isset property="jvm14.present"/>
+        <available property="j2ee.present" classname="javax.resource.cci.Connection" classpath="${j2ee.jar}"/>
+      </and>
+    </condition>
+    <condition property="servlet.present">
+      <and>
+        <isset property="jvm14.present"/>
+        <available property="j2ee.present" classname="javax.servlet.Servlet" classpath="${servlet.jar}"/>
+      </and>
     </condition>
     <echo message="+-------------------------------------------------------"/>
     <echo message="| Build environment for ${name} ${version}"/>
