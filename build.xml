@@ -75,56 +75,57 @@
   <target name="detect" depends="detect.display,detect.fail" description="Display configuration and conditional compilation flags"/>
 
   <target name="detect.display">
-        <available property="j2ee.present" classname="javax.resource.cci.Connection" classpath="${j2ee.jar}"/>
-        <available property="servlet.present" classname="javax.servlet.Servlet" classpath="${servlet.jar}"/>
-        <condition property="jvm14.present">
-            <or>
-              <equals arg1="${ant.java.version}" arg2="1.4"/>
-              <equals arg1="${ant.java.version}" arg2="1.5"/>
-              <equals arg1="${ant.java.version}" arg2="1.6"/>
-            </or>
-        </condition>
-        <echo message="+-------------------------------------------------------"/>
-        <echo message="| Build environment for ${name} ${version}"/>
-        <echo message="| "/>
-        <echo message="| Note: "/>
-        <echo message="|   If ${property.name} is displayed for a library "/>
-        <echo message="|   instead of 'true', that library is not present."/>
-        <echo message="+-------------------------------------------------------"/>
-        <echo message=""/>
-        <echo message="Environment:"/>
-        <echo message="  Java home                     ${java.home}"/>
-        <echo message="  Java version                  ${ant.java.version}"/>
-        <echo message=""/>
-        <echo message="Build options:"/>
-        <echo message="  Generate debugging info       ${compile.debug}"/>
-        <echo message="  Display deprecation info      ${compile.deprecation}"/>
-        <echo message="  Optimize                      ${compile.optimize}"/>
-        <echo message=""/>
-        <echo message="Directories:"/>
-        <echo message="  Build directory               ${build.dir}"/>
-        <echo message="  Distribution directory        ${dist.dir}"/>
-        <echo message="  JBoss deploy directory        ${jboss.deploy.dir}"/>
-        <echo message=""/>
-        <echo message="Optional Libraries:"/>
-        <echo message="  J2EE API                      ${j2ee.present}"/>
-        <echo message="  Servlet API                   ${servlet.present}"/>
-        <echo message="  JVM 14                        ${jvm14.present}"/>
-        <echo message=""/>
-        <property name="required.present" value="true"/>
-        <!--condition property="required.present">
-            <and>
-                <equals arg1="${j2ee.present}" arg2="true"/>
-                <equals arg1="${servlet.present}" arg2="true"/>
-            </and>
-        </condition-->
-    </target>
-    <target name="detect.fail" unless="required.present">
-        <fail message="Failed dependancy">
+    <available property="j2ee.present" classname="javax.resource.cci.Connection" classpath="${j2ee.jar}"/>
+    <available property="servlet.present" classname="javax.servlet.Servlet" classpath="${servlet.jar}"/>
+    <condition property="jvm14.present">
+      <or>
+        <equals arg1="${ant.java.version}" arg2="1.4"/>
+        <equals arg1="${ant.java.version}" arg2="1.5"/>
+        <equals arg1="${ant.java.version}" arg2="1.6"/>
+      </or>
+    </condition>
+    <echo message="+-------------------------------------------------------"/>
+    <echo message="| Build environment for ${name} ${version}"/>
+    <echo message="| "/>
+    <echo message="| Note: "/>
+    <echo message="|   If ${property.name} is displayed for a library "/>
+    <echo message="|   instead of 'true', that library is not present."/>
+    <echo message="+-------------------------------------------------------"/>
+    <echo message=""/>
+    <echo message="Environment:"/>
+    <echo message="  Java home                     ${java.home}"/>
+    <echo message="  Java version                  ${ant.java.version}"/>
+    <echo message=""/>
+    <echo message="Build options:"/>
+    <echo message="  Generate debugging info       ${compile.debug}"/>
+    <echo message="  Display deprecation info      ${compile.deprecation}"/>
+    <echo message="  Optimize                      ${compile.optimize}"/>
+    <echo message=""/>
+    <echo message="Directories:"/>
+    <echo message="  Build directory               ${build.dir}"/>
+    <echo message="  Distribution directory        ${dist.dir}"/>
+    <echo message="  JBoss deploy directory        ${jboss.deploy.dir}"/>
+    <echo message=""/>
+    <echo message="Optional Libraries:"/>
+    <echo message="  J2EE API                      ${j2ee.present}"/>
+    <echo message="  Servlet API                   ${servlet.present}"/>
+    <echo message="  JVM 14                        ${jvm14.present}"/>
+    <echo message=""/>
+    <property name="required.present" value="true"/>
+    <!--condition property="required.present">
+      <and>
+        <equals arg1="${j2ee.present}" arg2="true"/>
+        <equals arg1="${servlet.present}" arg2="true"/>
+      </and>
+    </condition-->
+  </target>
+  
+  <target name="detect.fail" unless="required.present">
+    <fail message="Failed dependancy">
       One or more required libraries could not be found.
       Please check your build.propertes file.
     </fail>
-    </target>
+  </target>
   <!-- 
   ===================================================================
   Prepare the build              
@@ -237,7 +238,7 @@
     </jar>
 
     <copy todir="${dist.lib}">
-          <fileset dir="${build.lib}"/>
+      <fileset dir="${build.lib}"/>
     </copy>
 
   </target>
@@ -257,8 +258,8 @@
     </zip>
 
     <copy todir="${dist.deploy}">
-          <fileset dir="${build.deploy}"/>
-          <fileset dir="${conf.dir}/connector/map/jboss"/>
+      <fileset dir="${build.deploy}"/>
+      <fileset dir="${conf.dir}/connector/map/jboss"/>
     </copy>
 
   </target>
@@ -277,7 +278,7 @@
     </zip>
 
     <copy todir="${dist.deploy}">
-          <fileset dir="${build.deploy}"/>
+      <fileset dir="${build.deploy}"/>
     </copy>
 
   </target>
@@ -291,7 +292,7 @@
   <target name="deploy-jboss" depends="detect, map-connector, map-example-war">
 
     <copy todir="${jboss.deploy.dir}">
-          <fileset dir="${dist.deploy}"/>
+      <fileset dir="${dist.deploy}"/>
     </copy>
 
   </target>
