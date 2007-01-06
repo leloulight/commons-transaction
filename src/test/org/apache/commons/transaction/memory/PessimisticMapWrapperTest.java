@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/memory/PessimisticMapWrapperTest.java,v 1.3 2005/01/13 01:34:25 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,19 +13,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.memory;
-
-import junit.framework.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.*;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.apache.commons.transaction.locking.LockException;
-import org.apache.commons.transaction.util.Jdk14Logger;
+import org.apache.commons.transaction.util.CommonsLoggingLogger;
 import org.apache.commons.transaction.util.LoggerFacade;
 import org.apache.commons.transaction.util.RendezvousBarrier;
 
@@ -42,8 +37,8 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
  */
 public class PessimisticMapWrapperTest extends MapWrapperTest {
 
-    private static final Logger logger = Logger.getLogger(PessimisticMapWrapperTest.class.getName());
-    private static final LoggerFacade sLogger = new Jdk14Logger(logger);
+    private static final Log log = LogFactory.getLog(PessimisticMapWrapperTest.class.getName());
+    private static final LoggerFacade sLogger = new CommonsLoggingLogger(log);
 
     protected static final long TIMEOUT = Long.MAX_VALUE;
 
@@ -80,16 +75,11 @@ public class PessimisticMapWrapperTest extends MapWrapperTest {
     }
 
     public void testMulti() throws Throwable {
-        logger.info("Checking concurrent transaction features");
+        sLogger.logInfo("Checking concurrent transaction features");
 
         final Map map1 = new HashMap();
 
         final PessimisticMapWrapper txMap1 = (PessimisticMapWrapper) getNewWrapper(map1);
-
-        final RendezvousBarrier beforeCommitBarrier =
-            new RendezvousBarrier("Before Commit", 2, BARRIER_TIMEOUT, sLogger);
-
-        final RendezvousBarrier afterCommitBarrier = new RendezvousBarrier("After Commit", 2, BARRIER_TIMEOUT, sLogger);
 
         Thread thread1 = new Thread(new Runnable() {
             public void run() {
@@ -123,7 +113,7 @@ public class PessimisticMapWrapperTest extends MapWrapperTest {
     }
 
     public void testConflict() throws Throwable {
-        logger.info("Checking concurrent transaction features");
+        sLogger.logInfo("Checking concurrent transaction features");
 
         final Map map1 = new HashMap();
 

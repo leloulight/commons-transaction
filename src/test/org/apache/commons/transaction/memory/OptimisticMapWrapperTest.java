@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/memory/OptimisticMapWrapperTest.java,v 1.1 2004/11/18 23:27:19 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,18 +13,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.memory;
-
-import junit.framework.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.*;
 
-import org.apache.commons.transaction.util.Jdk14Logger;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.apache.commons.transaction.util.CommonsLoggingLogger;
 import org.apache.commons.transaction.util.LoggerFacade;
 import org.apache.commons.transaction.util.RendezvousBarrier;
 
@@ -41,8 +36,8 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
  */
 public class OptimisticMapWrapperTest extends MapWrapperTest {
 
-    private static final Logger logger = Logger.getLogger(OptimisticMapWrapperTest.class.getName());
-    private static final LoggerFacade sLogger = new Jdk14Logger(logger);
+    private static final Log log = LogFactory.getLog(OptimisticMapWrapperTest.class.getName());
+    private static final LoggerFacade sLogger = new CommonsLoggingLogger(log);
 
     public static Test suite() {
         TestSuite suite = new TestSuite(OptimisticMapWrapperTest.class);
@@ -75,7 +70,7 @@ public class OptimisticMapWrapperTest extends MapWrapperTest {
 	}
 
     public void testMulti() throws Throwable {
-        logger.info("Checking concurrent transaction features");
+        log.info("Checking concurrent transaction features");
 
         final Map map1 = new HashMap();
 
@@ -95,7 +90,7 @@ public class OptimisticMapWrapperTest extends MapWrapperTest {
                     txMap1.commitTransaction();
                     afterCommitBarrier.call();
                 } catch (InterruptedException e) {
-                    logger.log(Level.WARNING, "Thread interrupted", e);
+                    sLogger.logWarning("Thread interrupted", e);
                     afterCommitBarrier.reset();
                     beforeCommitBarrier.reset();
                 }
@@ -123,7 +118,7 @@ public class OptimisticMapWrapperTest extends MapWrapperTest {
     }
 
 	public void testConflict() throws Throwable {
-		logger.info("Checking concurrent transaction features");
+		log.info("Checking concurrent transaction features");
 
 		final Map map1 = new HashMap();
 
@@ -143,7 +138,7 @@ public class OptimisticMapWrapperTest extends MapWrapperTest {
 					txMap1.commitTransaction();
 					afterCommitBarrier.call();
 				} catch (InterruptedException e) {
-					logger.log(Level.WARNING, "Thread interrupted", e);
+					sLogger.logWarning("Thread interrupted", e);
 					afterCommitBarrier.reset();
 					beforeCommitBarrier.reset();
 				}

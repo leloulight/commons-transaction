@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/file/FileResourceManagerTest.java,v 1.3 2005/01/13 01:34:25 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,9 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.file;
 
 import java.io.BufferedReader;
@@ -32,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.logging.Logger;
 
 import javax.transaction.Status;
 
@@ -40,8 +31,11 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.apache.commons.transaction.util.CommonsLoggingLogger;
 import org.apache.commons.transaction.util.FileHelper;
-import org.apache.commons.transaction.util.Jdk14Logger;
 import org.apache.commons.transaction.util.LoggerFacade;
 import org.apache.commons.transaction.util.RendezvousBarrier;
 
@@ -52,8 +46,8 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
  */
 public class FileResourceManagerTest extends TestCase {
 
-    private static final Logger logger = Logger.getLogger(FileResourceManagerTest.class.getName());
-    private static final LoggerFacade sLogger = new Jdk14Logger(logger); 
+    private static final Log log = LogFactory.getLog(FileResourceManagerTest.class.getName());
+    private static final LoggerFacade sLogger = new CommonsLoggingLogger(log); 
 
     private static final String STORE = "tmp/store";
     private static final String WORK = "tmp/work";
@@ -181,18 +175,6 @@ public class FileResourceManagerTest extends TestCase {
                     stream.close();
                 }
             } catch (IOException e) {
-            }
-        }
-    }
-
-    private static final void deleteInDir(String dirPath, String[] fileNames) {
-        File dir = new File(dirPath);
-
-        if (dir.isDirectory()) {
-            for (int i = 0; i < fileNames.length; i++) {
-                String fileName = fileNames[i];
-                File file = new File(dir, fileName);
-                file.delete();
             }
         }
     }
@@ -590,7 +572,7 @@ public class FileResourceManagerTest extends TestCase {
         FileResourceManager.TransactionContext context = rm.getContext(txId);
         // needing synchronization in order not to interfer with shutdown thread
         synchronized (context) {
-            logger.fine("Committing Tx " + txId);
+            sLogger.logFine("Committing Tx " + txId);
 
             context.status = Status.STATUS_COMMITTING;
             context.saveState();
@@ -629,7 +611,7 @@ public class FileResourceManagerTest extends TestCase {
     }
 
     public void testConflict() throws Throwable {
-        logger.info("Checking concurrent transaction features");
+        sLogger.logInfo("Checking concurrent transaction features");
 
         reset();
         createInitialFiles();
@@ -662,7 +644,7 @@ public class FileResourceManagerTest extends TestCase {
                         rm.commitTransaction("tx1");
                     } catch (InterruptedException ie) {
                     } catch (ResourceManagerException e) {
-                        assertEquals(e.getStatus(), ResourceManagerException.ERR_DEAD_LOCK);
+                        assertEquals(e.getStatus(), ResourceManagerErrorCodes.ERR_DEAD_LOCK);
                         deadlockCnt++;
                         try {
                             rm.rollbackTransaction("tx1");
@@ -697,7 +679,7 @@ public class FileResourceManagerTest extends TestCase {
                 rm.deleteResource("tx2", "key2");
                 rm.commitTransaction("tx2");
             } catch (ResourceManagerException e) {
-                assertEquals(e.getStatus(), ResourceManagerException.ERR_DEAD_LOCK);
+                assertEquals(e.getStatus(), ResourceManagerErrorCodes.ERR_DEAD_LOCK);
                 deadlockCnt++;
                 try {
                     rm.rollbackTransaction("tx2");
@@ -726,7 +708,7 @@ public class FileResourceManagerTest extends TestCase {
     }
 
     public void testCopyRec() throws Throwable {
-        logger.info("Checking file copy");
+        sLogger.logInfo("Checking file copy");
         reset();
         createInitialFiles();
         FileHelper.copyRec(new File(INITIAL_FILES[0]), new File(STORE + "/olli/NewFile"));

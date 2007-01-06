@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/memory/MapWrapperTest.java,v 1.1 2004/11/18 23:27:19 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,20 +13,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.memory;
-
-import junit.framework.*;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.logging.*;
 
-import org.apache.commons.transaction.util.Jdk14Logger;
+import javax.transaction.Status;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.apache.commons.transaction.util.CommonsLoggingLogger;
 import org.apache.commons.transaction.util.LoggerFacade;
 import org.apache.commons.transaction.util.RendezvousBarrier;
 
@@ -43,8 +41,8 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
  */
 public class MapWrapperTest extends TestCase {
 
-    private static final Logger logger = Logger.getLogger(MapWrapperTest.class.getName());
-    private static final LoggerFacade sLogger = new Jdk14Logger(logger);
+    private static final Log log = LogFactory.getLog(MapWrapperTest.class.getName());
+    private static final LoggerFacade sLogger = new CommonsLoggingLogger(log);
 
     protected static final long BARRIER_TIMEOUT = 20000;
 
@@ -91,7 +89,7 @@ public class MapWrapperTest extends TestCase {
 
     public void testBasic() throws Throwable {
 
-        logger.info("Checking basic transaction features");
+        sLogger.logInfo("Checking basic transaction features");
 
         final Map map1 = new HashMap();
 
@@ -124,7 +122,7 @@ public class MapWrapperTest extends TestCase {
 
     public void testContainsKeyWithNullValue() throws Throwable {
 
-        logger.info("Checking containsKey returns true when the value is null");
+        sLogger.logInfo("Checking containsKey returns true when the value is null");
 
         final Map map1 = new HashMap();
 
@@ -155,7 +153,7 @@ public class MapWrapperTest extends TestCase {
 
     public void testComplex() throws Throwable {
 
-        logger.info("Checking advanced and complex transaction features");
+        sLogger.logInfo("Checking advanced and complex transaction features");
 
         final Map map1 = new HashMap();
 
@@ -166,14 +164,14 @@ public class MapWrapperTest extends TestCase {
         txMap1.put("key2", "value2");
 
         // let's see if we have all values:
-        logger.info("Checking if global values are present");
+        sLogger.logInfo("Checking if global values are present");
 
         assertTrue(txMap1.containsValue("value1"));
         assertTrue(txMap1.containsValue("value2"));
         assertFalse(txMap1.containsValue("novalue"));
 
         // ... and all keys
-        logger.info("Checking if global keys are present");
+        sLogger.logInfo("Checking if global keys are present");
         assertTrue(txMap1.containsKey("key1"));
         assertTrue(txMap1.containsKey("key2"));
         assertFalse(txMap1.containsKey("nokey"));
@@ -184,7 +182,7 @@ public class MapWrapperTest extends TestCase {
         txMap1.put("key4", "value4");
 
         // let's see if we have all values:
-        logger.info("Checking if values inside transactions are present");
+        sLogger.logInfo("Checking if values inside transactions are present");
         assertTrue(txMap1.containsValue("value1"));
         assertTrue(txMap1.containsValue("value2"));
         assertTrue(txMap1.containsValue("value3"));
@@ -192,7 +190,7 @@ public class MapWrapperTest extends TestCase {
         assertFalse(txMap1.containsValue("novalue"));
 
         // ... and all keys
-        logger.info("Checking if keys inside transactions are present");
+        sLogger.logInfo("Checking if keys inside transactions are present");
         assertTrue(txMap1.containsKey("key1"));
         assertTrue(txMap1.containsKey("key2"));
         assertTrue(txMap1.containsKey("key3"));
@@ -200,7 +198,7 @@ public class MapWrapperTest extends TestCase {
         assertFalse(txMap1.containsKey("nokey"));
 
         // now let's delete some old stuff
-        logger.info("Checking remove inside transactions");
+        sLogger.logInfo("Checking remove inside transactions");
         txMap1.remove("key1");
         assertFalse(txMap1.containsKey("key1"));
         assertFalse(txMap1.containsValue("value1"));
@@ -214,7 +212,7 @@ public class MapWrapperTest extends TestCase {
         assertNull(txMap1.get("key3"));
         assertEquals(2, txMap1.size());
 
-        logger.info("Checking remove and propagation after commit");
+        sLogger.logInfo("Checking remove and propagation after commit");
         txMap1.commitTransaction();
 
         txMap1.remove("key1");
@@ -229,7 +227,7 @@ public class MapWrapperTest extends TestCase {
 
     public void testSets() throws Throwable {
 
-        logger.info("Checking set opertaions");
+        sLogger.logInfo("Checking set opertaions");
 
         final Map map1 = new HashMap();
 
@@ -330,7 +328,7 @@ public class MapWrapperTest extends TestCase {
     }
 
     public void testMulti() throws Throwable {
-        logger.info("Checking concurrent transaction features");
+        sLogger.logInfo("Checking concurrent transaction features");
 
         final Map map1 = new HashMap();
 
@@ -350,7 +348,7 @@ public class MapWrapperTest extends TestCase {
                     txMap1.commitTransaction();
                     afterCommitBarrier.call();
                 } catch (InterruptedException e) {
-                    logger.log(Level.WARNING, "Thread interrupted", e);
+                    sLogger.logWarning("Thread interrupted", e);
                     afterCommitBarrier.reset();
                     beforeCommitBarrier.reset();
                 }
@@ -378,15 +376,15 @@ public class MapWrapperTest extends TestCase {
     }
 
     public void testTxControl() throws Throwable {
-        logger.info("Checking advanced transaction control (heavily used in JCA implementation)");
+        sLogger.logInfo("Checking advanced transaction control (heavily used in JCA implementation)");
 
         final Map map1 = new HashMap();
 
         final TransactionalMapWrapper txMap1 = getNewWrapper(map1);
 
-        assertEquals(txMap1.getTransactionState(), TransactionalMapWrapper.STATUS_NO_TRANSACTION);
+        assertEquals(txMap1.getTransactionState(), Status.STATUS_NO_TRANSACTION);
         txMap1.startTransaction();
-        assertEquals(txMap1.getTransactionState(), TransactionalMapWrapper.STATUS_ACTIVE);
+        assertEquals(txMap1.getTransactionState(), Status.STATUS_ACTIVE);
 
         assertTrue(txMap1.isReadOnly());
         txMap1.put("key", "value");
@@ -404,7 +402,7 @@ public class MapWrapperTest extends TestCase {
         }
         assertTrue(failed);
         txMap1.rollbackTransaction();
-        assertEquals(txMap1.getTransactionState(), TransactionalMapWrapper.STATUS_NO_TRANSACTION);
+        assertEquals(txMap1.getTransactionState(), Status.STATUS_NO_TRANSACTION);
 
         txMap1.startTransaction();
         final TransactionalMapWrapper.TxContext ctx = txMap1.suspendTransaction();
