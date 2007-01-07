@@ -34,7 +34,7 @@
 
   <property name="src.dir" value="${basedir}/src"/>
   <property name="java.dir" value="${src.dir}/java"/>
-  <property name="java14.dir" value="${src.dir}/java1.4"/>
+  <property name="java1.4.dir" value="${src.dir}/java1.4"/>
   <property name="test.dir" value="${src.dir}/test"/>
   <property name="lib.dir" value="${basedir}/lib"/>
   <property name="conf.dir" value="${src.dir}/conf"/>
@@ -78,7 +78,7 @@
   <target name="detect" depends="detect.display,detect.fail" description="Display configuration and conditional compilation flags"/>
 
   <target name="detect.display">
-    <condition property="jvm14.present">
+    <condition property="java1.4.present">
       <or>
         <equals arg1="${ant.java.version}" arg2="1.4"/>
         <equals arg1="${ant.java.version}" arg2="1.5"/>
@@ -114,7 +114,7 @@
     <echo message="  Java Transaction API                 ${jta.present}"/>
     <echo message="  J2EE Connection Architecture API     ${jca.present}"/>
     <echo message="  Servlet API                          ${servlet.present}"/>
-    <echo message="  JVM 14                               ${jvm14.present}"/>
+    <echo message="  Java 1.4                             ${java1.4.present}"/>
     <echo message=""/>
     <condition property="required.present">
       <and>
@@ -188,18 +188,18 @@
     </javac>
   </target>
   
-  <target name="build-jca" depends="build" if="jvm14.present">
+  <target name="build-jca" depends="build" if="java1.4.present">
     <javac destdir="${build.classes}"
       target="${compile.target}"
       debug="${compile.debug}"
       deprecation="${compile.deprecation}"
       optimize="${compile.optimize}" >
-      <src path="${java14.dir}"/>
+      <src path="${java1.4.dir}"/>
       <classpath refid="classpath" />
     </javac>
   </target>
   
-  <target name="build-map-example" depends="build-jca" if="jvm14.present">
+  <target name="build-map-example" depends="build-jca" if="java1.4.present">
     <javac destdir="${build.classes}"
       target="${compile.target}"
       debug="${compile.debug}"
