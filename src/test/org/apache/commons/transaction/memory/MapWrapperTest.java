@@ -37,7 +37,7 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
 /**
  * Tests for map wrapper. 
  *
- * @version $Revision$
+ * @version $Id$
  */
 public class MapWrapperTest extends TestCase {
 

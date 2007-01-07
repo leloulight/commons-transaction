@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/test/org/apache/commons/transaction/locking/GenericLockTest.java,v 1.12 2005/01/13 16:44:03 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,9 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.locking;
 
 import java.io.PrintWriter;
@@ -38,7 +30,7 @@ import org.apache.commons.transaction.util.TurnBarrier;
 /**
  * Tests for generic locks. 
  *
- * @version $Revision$
+ * @version $Id$
  */
 public class GenericLockTest extends TestCase {
 

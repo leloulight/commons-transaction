@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/ReadWriteLockManager.java,v 1.4 2005/01/09 15:12:11 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,9 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.locking;
 
 import org.apache.commons.transaction.util.LoggerFacade;
@@ -29,7 +21,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
 /**
  * Manager for {@link org.apache.commons.transaction.locking.ReadWriteLock}s on resources.
  * 
- * @version $Revision$
+ * @version $Id$
  * @since 1.1
  */
 public class ReadWriteLockManager extends GenericLockManager {

@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/OptimisticMapWrapper.java,v 1.1 2004/11/18 23:27:18 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,9 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.memory;
 
 import java.io.PrintWriter;
@@ -52,7 +44,7 @@ import org.apache.commons.transaction.util.PrintWriterLogger;
  * <br>
  * <em>Caution:</em> This implementation might be slow when large amounts of data is changed in a transaction as much references will need to be copied around.
  * 
- * @version $Revision$
+ * @version $Id$
  * @see TransactionalMapWrapper
  * @see PessimisticMapWrapper
  */

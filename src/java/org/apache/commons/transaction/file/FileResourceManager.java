@@ -109,7 +109,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * Be very careful not to have two instances of <code>FileResourceManager</code>
  * working in the same store and/or working dir.
  *   
- * @version $Revision$
+ * @version $Id$
  */
 public class FileResourceManager implements ResourceManager, ResourceManagerErrorCodes {
 

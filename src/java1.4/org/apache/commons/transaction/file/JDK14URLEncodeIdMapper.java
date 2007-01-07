@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/file/JDK14URLEncodeIdMapper.java,v 1.2 2005/01/09 15:12:12 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,9 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.file;
 
 import java.io.UnsupportedEncodingException;
@@ -29,7 +21,8 @@ import java.net.URLEncoder;
 
 /**
  * URL encodes a resource id using JDK1.4 functionality. 
- * 
+ *
+ * @version $Id$
  * @since 1.1 
  */
 public class JDK14URLEncodeIdMapper implements ResourceIdToPathMapper {

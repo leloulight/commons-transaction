@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/MultiLevelLock2.java,v 1.3 2005/01/09 23:56:07 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,9 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.locking;
 
 /**
@@ -29,7 +21,7 @@ package org.apache.commons.transaction.locking;
  * Extended multi level lock. Compared to basic {@link MultiLevelLock} allows for more flexible
  * locking including preference and more compatibility modes.
  * 
- * @version $Revision$
+ * @version $Id$
  * @see LockManager2
  * @see MultiLevelLock
  * @see GenericLock

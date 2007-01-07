@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/xa/AbstractXAResource.java,v 1.2 2004/11/29 18:28:17 luetzkendorf Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -37,6 +31,8 @@ import org.apache.commons.transaction.util.LoggerFacade;
 
 /**
  * Abstract XAResource doing all the tedious tasks shared by many XAResouce implementations.
+ * 
+ * @version $Id$
  */
 public abstract class AbstractXAResource implements XAResource, Status {
 

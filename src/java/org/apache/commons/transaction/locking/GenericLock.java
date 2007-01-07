@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/locking/GenericLock.java,v 1.14 2005/01/13 23:12:44 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,9 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.locking;
 
 import java.util.ArrayList;
@@ -37,8 +29,7 @@ import java.util.Set;
 import org.apache.commons.transaction.util.LoggerFacade;
 
 /**
- * 
- * A generic implementaion of a simple multi level lock.
+ * A generic implementain of a simple multi level lock.
  * 
  * <p>
  * The idea is to have an ascending number of lock levels ranging from
@@ -123,7 +114,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * </ul>
  * </p>
  * 
- * @version $Revision$
+ * @version $Id$
  */
 public class GenericLock implements MultiLevelLock2 {
 

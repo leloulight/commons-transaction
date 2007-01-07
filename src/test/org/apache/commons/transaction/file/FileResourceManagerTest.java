@@ -42,7 +42,7 @@ import org.apache.commons.transaction.util.RendezvousBarrier;
 /**
  * Tests for FileResourceManager. 
  *
- * @version $Revision$
+ * @version $Id$
  */
 public class FileResourceManagerTest extends TestCase {
 

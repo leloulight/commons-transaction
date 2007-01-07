@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/PessimisticMapWrapper.java,v 1.2 2004/12/14 12:12:46 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,7 +13,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.commons.transaction.memory;
@@ -45,7 +38,7 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * <br>
  * <em>Note:</em> This wrapper guarantees isolation level <code>SERIALIZABLE</code>.
  * 
- * @version $Revision$
+ * @version $Id$
  * @see TransactionalMapWrapper
  * @see OptimisticMapWrapper
  */

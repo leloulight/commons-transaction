@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/memory/jca/MapXAResource.java,v 1.1 2004/11/18 23:27:17 ozeigermann Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,9 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.memory.jca;
 
 import java.io.PrintWriter;
@@ -38,9 +30,7 @@ import org.apache.commons.transaction.util.xa.AbstractXAResource;
 import org.apache.commons.transaction.util.xa.TransactionalResource;
 
 /**
- * 
- * @version $Revision$
- *  
+ * @version $Id$
  */
 public class MapXAResource extends AbstractXAResource {
 

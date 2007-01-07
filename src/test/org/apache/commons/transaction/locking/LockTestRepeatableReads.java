@@ -26,8 +26,7 @@ import org.apache.commons.transaction.util.PrintWriterLogger;
 /**
  * Tests for repeatable read in locks as investigated for OJB. 
  *
- * @version $Revision$
- * @author Armin Waibel
+ * @version $Id$
  */
 public class LockTestRepeatableReads extends TestCase
 {

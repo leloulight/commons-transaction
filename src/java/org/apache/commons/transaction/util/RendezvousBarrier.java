@@ -1,10 +1,4 @@
 /*
- * $Header: /home/jerenkrantz/tmp/commons/commons-convert/cvs/home/cvs/jakarta-commons//transaction/src/java/org/apache/commons/transaction/util/RendezvousBarrier.java,v 1.2 2004/11/29 18:28:17 luetzkendorf Exp $
- * $Revision$
- * $Date$
- *
- * ====================================================================
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,16 +13,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package org.apache.commons.transaction.util;
 
 /**
  * Simple barrier that blocks until all parties have either called or have arrived at the meeting point. 
  * Very useful for testing or other purposes that require to make concurrent settings deterministic.
  *
- * @version $Revision$
+ * @version $Id$
  */
 public class RendezvousBarrier {
 
