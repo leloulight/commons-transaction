@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Id$
+ * @since 1.3
  */
 public class CommonsLoggingLogger implements LoggerFacade {
 
