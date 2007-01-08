@@ -133,6 +133,13 @@ public interface ResourceManager extends Status {
     public boolean recover() throws ResourceManagerSystemException;
 
     /**
+     * Resets the store if applicable (optional operation).
+     * 
+     * @throws UnsupportedOperationException if the <code>reset</code> operation is not supported by this ResourceManager.
+     */
+    public void reset();
+    
+    /**
      * Gets the default isolation level as an integer. 
      * The higher the value the higher the isolation.
      *  
@@ -193,17 +200,27 @@ public interface ResourceManager extends Status {
     public void setIsolationLevel(Object txId, int level) throws ResourceManagerException;
 
     /**
-     * Gets the default transaction timeout. After this time expires and the concerned transaction
-     * has not finished - either rolled back or committed - the resource manager is allowed and
-     * also encouraged - but not required - to abort the transaction and to roll it back. 
+     * Gets the default transaction timeout in milliseconds.
+     * After this time expires and the concerned transaction has not finished
+     * - either rolled back or committed - the resource manager is allowed and
+     * also encouraged - but not required - to abort the transaction and to roll it back.
      * 
-     * @return default transaction timeout
+     * @return default transaction timeout in milliseconds
      * @throws ResourceManagerException if an error occured
      */
     public long getDefaultTransactionTimeout() throws ResourceManagerException;
 
     /**
-     * Gets the transaction timeout of the specified transaction.
+     * Sets the default transaction timeout in milliseconds.
+     * 
+     * @param mSecs default transaction timeout in milliseconds
+     * @throws ResourceManagerException if an error occured
+     * @see #getDefaultTransactionTimeout
+     */
+    public void setDefaultTransactionTimeout(long mSecs) throws ResourceManagerException;
+    
+    /**
+     * Gets the transaction timeout of the specified transaction in milliseconds.
      * 
      * @param txId identifier for the concerned transaction
      * @return transaction timeout of the specified transaction in milliseconds
@@ -213,7 +230,7 @@ public interface ResourceManager extends Status {
     public long getTransactionTimeout(Object txId) throws ResourceManagerException;
 
     /**
-     * Sets the transaction timeout of the specified transaction.
+     * Sets the transaction timeout of the specified transaction in milliseconds.
      * 
      * @param txId identifier for the concerned transaction
      * @param mSecs transaction timeout of the specified transaction in milliseconds
