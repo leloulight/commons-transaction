@@ -30,6 +30,7 @@
 
   <property file="${basedir}/build.properties"/>
 
+  <property name="compile.source" value="1.3" />
   <property name="compile.target" value="1.3" />
   <property name="compile.debug" value="true" />
   <property name="compile.deprecation" value="true" />
@@ -183,6 +184,7 @@
 
   <target name="build" depends="prepare,detect" description="Compiles the main classes">
     <javac destdir="${build.classes}"
+      source="${compile.source}"
       target="${compile.target}"
       debug="${compile.debug}"
       deprecation="${compile.deprecation}"
@@ -194,6 +196,7 @@
   
   <target name="build-test" depends="detect,build">
     <javac destdir="${build.classes}"
+      source="${compile.source}"
       target="${compile.target}"
       debug="${compile.debug}"
       deprecation="${compile.deprecation}"
@@ -205,6 +208,7 @@
   
   <target name="build-jca" depends="build" if="java1.4.present">
     <javac destdir="${build.classes}"
+      source="${compile.source}"
       target="${compile.target}"
       debug="${compile.debug}"
       deprecation="${compile.deprecation}"
@@ -216,6 +220,7 @@
   
   <target name="build-map-example" depends="build-jca" if="java1.4.present">
     <javac destdir="${build.classes}"
+      source="${compile.source}"
       target="${compile.target}"
       debug="${compile.debug}"
       deprecation="${compile.deprecation}"
