@@ -133,13 +133,6 @@ public interface ResourceManager extends Status {
     public boolean recover() throws ResourceManagerSystemException;
 
     /**
-     * Resets the store if applicable (optional operation).
-     * 
-     * @throws UnsupportedOperationException if the <code>reset</code> operation is not supported by this ResourceManager.
-     */
-    public void reset();
-    
-    /**
      * Gets the default isolation level as an integer. 
      * The higher the value the higher the isolation.
      *  
@@ -210,15 +203,6 @@ public interface ResourceManager extends Status {
      */
     public long getDefaultTransactionTimeout() throws ResourceManagerException;
 
-    /**
-     * Sets the default transaction timeout in milliseconds.
-     * 
-     * @param mSecs default transaction timeout in milliseconds
-     * @throws ResourceManagerException if an error occured
-     * @see #getDefaultTransactionTimeout
-     */
-    public void setDefaultTransactionTimeout(long mSecs) throws ResourceManagerException;
-    
     /**
      * Gets the transaction timeout of the specified transaction in milliseconds.
      * 

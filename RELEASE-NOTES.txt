@@ -29,7 +29,6 @@ ENHANCEMENTS FROM 1.1
 - Added functions to FileResourceManager for copying and moving resources.
 - Added possibility to append to (instead of overwriting) an existing resource with writeResource in FileResourceManager.
 - Added LoggerFacade implementation for Jakarta Commons Logging
-- Added setDefaultTransactionTimeout() and reset() to ResourceManager (Jira issue TRANSACTION-11).
 
 BUGFIXES FROM 1.1
 -----------------
