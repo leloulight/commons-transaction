@@ -234,6 +234,24 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
 
     /**
      * Creates a new resource manager operation on the specified directories.
+     * This constructor is reintroduced for backwards API compatibility and is used by jakarta-slide.
+     *
+     * @param storeDir directory where main data should go after commit
+     * @param workDir directory where transactions store temporary data
+     * @param idMapper mapper for resourceId to path
+     * @param logger the logger to be used by this store
+     * @param debug if set to <code>true</code> logs all locking information to "transaction.log" for debugging inspection
+     */
+    public FileResourceManager(
+        String storeDir,
+        String workDir,
+        ResourceIdToPathMapper idMapper,
+        LoggerFacade logger,
+        boolean debug) {
+        this(storeDir, workDir, idMapper, new NoOpTransactionIdToPathMapper(), logger, debug);
+    }
+    /**
+     * Creates a new resource manager operation on the specified directories.
      * 
      * @param storeDir directory where main data should go after commit
      * @param workDir directory where transactions store temporary data 
