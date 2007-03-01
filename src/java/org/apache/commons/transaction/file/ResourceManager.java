@@ -128,7 +128,7 @@ public interface ResourceManager extends Status {
      * a network connection must be reestablished.
      * 
      * @return <code>true</code> upon successful recovery of the resource manager
-     * @throws ResourceManagerSystemException if anything fatal hapened during shutdown
+     * @throws ResourceManagerSystemException if anything fatal hapened during recovery
      */
     public boolean recover() throws ResourceManagerSystemException;
 
