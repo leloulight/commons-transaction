@@ -2,7 +2,7 @@ Jakarta Commons Transaction Release 1.2
 ---------------------------------------
 
 RELEASE NUMBER: 1.2
-RELEASE TAG / BRANCH: TRANSACTION_1_2_RELEASE / none yet
+RELEASE TAG / BRANCH: TRANSACTION_1_2_RELEASE_BRANCH / none yet
 
 DESCRIPTION
 -----------
