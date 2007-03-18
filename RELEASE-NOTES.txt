@@ -1,8 +1,13 @@
-Jakarta Commons Transaction Release 1.2
+Jakarta Commons Transaction Release 1.3
 ---------------------------------------
 
-RELEASE NUMBER: 1.2
-RELEASE TAG / BRANCH: TRANSACTION_1_2_RELEASE / none yet
+RELEASE NUMBER: 1.3
+RELEASE TAG / BRANCH: none yet / none yet
+
+STATUS
+------
+
+Branch to be spawned
 
 DESCRIPTION
 -----------
@@ -19,31 +24,12 @@ There are implementations for:
 GENERAL RELEASE NOTES
 ---------------------
 
-This is a bug fix/maintenance/feature release of Commons Transaction. A lot of bug fixing work
-from a number of people has gone into this release. This makes Commons Transaction more stable and reliable.
-Additionally, some nice features have been added. See below for details.
-
-ENHANCEMENTS FROM 1.1
+ENHANCEMENTS FROM 1.2
 ---------------------
-- Better error reporting in FileHelper when destination directories (moveRec) or files (copyRec) could not be created
-- Added functions to FileResourceManager for copying and moving resources.
-- Added possibility to append to (instead of overwriting) an existing resource with writeResource in FileResourceManager.
-- Added LoggerFacade implementation for Jakarta Commons Logging
+- A simple, path based administration interface was added. This allows to call certain methods of the manager simply by accessing a certain path.
 
-BUGFIXES FROM 1.1
+BUGFIXES FROM 1.2
 -----------------
-- Fixed bugzilla issue 35201. Maps in AbstractXAResource now are synchronized to avoid problems in multi threaded scenarios.
-- Fixed bug reported by Niklas Gustavsson on http://www.mail-archive.com/commons-dev@jakarta.apache.org/msg69441.html.
-  Failed deletion of a file now throws an exception and enters an error state upon commit.
-- Reduced likelyhood of clash between internally generated and external tx id in generatedUniqueTxId
-- Fixed bugzilla issue 35377. Synchronizing on Set activeTransactions while iterating over its items in
-  OptimisticMapWrapper.copyChangesToConcurrentTransactions() for preventing ConcurrentModificationException.
-- Fixed bugzilla issue 37379. The construction of the transaction specific path is now done via a TransactionIdToPathMapper.
-- Fixed issue with deleteResource(..) and createResource(..) of FileResourceManager seen as read-only operations.
-- Fixed issue with AbstractXAResource. Resources did not get released when prepare(..) returns XA_RDONLY as no
-  commit(..) is triggered by the TransactionManager explicitely.
-- TransactionalMapWrapper now properly supports null values. Bug report and fix supplied by Greg Steckman at http://issues.apache.org/bugzilla/show_bug.cgi?id=38545
-- Minor bug reported at http://issues.apache.org/bugzilla/show_bug.cgi?id=39559 has been fixed.
 
 KNOWN ISSUES
 ------------
