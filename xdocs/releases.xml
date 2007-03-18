@@ -29,6 +29,7 @@
            <li><a href="http://archive.apache.org/dist/jakarta/commons/transaction/">Version 1.0 - 15 December 2004</a> / <a href="http://svn.apache.org/repos/asf/jakarta/commons/proper/transaction/tags/TRANSACTION_1_0_RELEASE/RELEASE-NOTES.txt">release notes</a></li>
            <li><a href="http://archive.apache.org/dist/jakarta/commons/transaction/">Version 1.0.1 - 13 January 2005</a> / <a href="http://svn.apache.org/repos/asf/jakarta/commons/proper/transaction/tags/TRANSACTION_1_0_1_RELEASE/RELEASE-NOTES.txt">release notes</a></li>
            <li><a href="http://jakarta.apache.org/site/downloads/downloads_commons-transaction.cgi">Version 1.1 - 02 June 2005</a> / <a href="http://svn.apache.org/repos/asf/jakarta/commons/proper/transaction/tags/TRANSACTION_1_1_FINAL_RELEASE/RELEASE-NOTES.txt">release notes</a></li>
+           <li><a href="http://jakarta.apache.org/site/downloads/downloads_commons-transaction.cgi">Version 1.2 - 04 March 2007</a> / <a href="http://svn.apache.org/repos/asf/jakarta/commons/proper/transaction/tags/TRANSACTION_1_2_RELEASE/RELEASE-NOTES.txt">release notes</a></li>
          </ul>
          <p>
             The latest binary and source releases are always available on the
@@ -45,8 +46,6 @@
       <section name="Beta Releases / Release Candidates">
          <p>The following beta releases / release candidates are available:</p>
          <ul>
-           <li><a href="http://people.apache.org/dist/jakarta/commons/transaction/1.1b1/">Version 1.1 beta 1 - 13 January 2005</a> / <a href="http://svn.apache.org/repos/asf/jakarta/commons/proper/transaction/tags/TRANSACTION_1_1_B1_RELEASE/RELEASE-NOTES.txt">release notes</a></li>
-           <li><a href="http://people.apache.org/dist/jakarta/commons/transaction/1.1b2/">Version 1.1 beta 2 - 5 February 2005</a> / <a href="http://svn.apache.org/repos/asf/jakarta/commons/proper/transaction/tags/TRANSACTION_1_1_B2_RELEASE/RELEASE-NOTES.txt">release notes</a></li>
          </ul>
       </section>
       <section name="Latest Sources">
