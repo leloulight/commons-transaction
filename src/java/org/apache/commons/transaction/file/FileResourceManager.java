@@ -18,6 +18,7 @@ package org.apache.commons.transaction.file;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -195,6 +196,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     protected TransactionIdToPathMapper txIdMapper = null;
 
     protected int idCnt = 0;
+    
+    protected String virtualAdminPath = null;
 
     /*
      * --- ctor and general getter / setter methods ---
@@ -202,6 +205,14 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
      *  
      */
 
+    public String getVirtualAdminPath() {
+        return virtualAdminPath;
+    }
+
+    public void setVirtualAdminPath(String virutalAdminPath) {
+        this.virtualAdminPath = virutalAdminPath;
+    }
+    
     /**
      * Creates a new resource manager operation on the specified directories.
      * 
@@ -717,15 +728,25 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     }
 
     public boolean resourceExists(Object txId, Object resourceId) throws ResourceManagerException {
+        if (isVirtualAdminId(resourceId)) {
+            logger.logFine("Faking existence of virtual administration command");
+            return true;
+        }
+
         lockResource(resourceId, txId, true);
         return (getPathForRead(txId, resourceId) != null);
     }
 
     public void deleteResource(Object txId, Object resourceId) throws ResourceManagerException {
+
+        checkForVirtualAdminCommand(resourceId);
+
         deleteResource(txId, resourceId, true);
     }
 
     public void deleteResource(Object txId, Object resourceId, boolean assureOnly) throws ResourceManagerException {
+
+        checkForVirtualAdminCommand(resourceId);
 
         if (logger.isFineEnabled()) logger.logFine(txId + " deleting " + resourceId);
 
@@ -760,10 +781,15 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     }
 
     public void createResource(Object txId, Object resourceId) throws ResourceManagerException {
+
+        checkForVirtualAdminCommand(resourceId);
+
         createResource(txId, resourceId, true);
     }
 
     public void createResource(Object txId, Object resourceId, boolean assureOnly) throws ResourceManagerException {
+
+        checkForVirtualAdminCommand(resourceId);
 
         if (logger.isFineEnabled()) logger.logFine(txId + " creating " + resourceId);
 
@@ -798,6 +824,10 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     }
 
     public void copyResource(Object txId, Object fromResourceId, Object toResourceId, boolean overwrite) throws ResourceManagerException {
+        
+        checkForVirtualAdminCommand(fromResourceId);
+        checkForVirtualAdminCommand(toResourceId);
+
         if (logger.isFineEnabled()) logger.logFine(txId + " copying " + fromResourceId + " to " + toResourceId);
 
         lockResource(fromResourceId, txId, true);
@@ -825,6 +855,10 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     }
 
     public void moveResource(Object txId, Object fromResourceId, Object toResourceId, boolean overwrite) throws ResourceManagerException {
+
+        checkForVirtualAdminCommand(fromResourceId);
+        checkForVirtualAdminCommand(toResourceId);
+
         if (logger.isFineEnabled()) logger.logFine(txId + " moving " + fromResourceId + " to " + toResourceId);
 
         lockResource(fromResourceId, txId, false);
@@ -836,6 +870,12 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     }
 
     public InputStream readResource(Object resourceId) throws ResourceManagerException {
+
+        if (isVirtualAdminId(resourceId)) {
+            logger.logWarning("Issuing virtual admin command" + resourceId);
+            return executeAdminCommand(resourceId);
+        }
+        
         // create temporary light weight tx
         Object txId;
         synchronized (globalTransactions) {
@@ -855,6 +895,12 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
     }
 
     public InputStream readResource(Object txId, Object resourceId) throws ResourceManagerException {
+        
+        if (isVirtualAdminId(resourceId)) {
+            String message = "You must not call virtual admin commands (" + resourceId + ") from within transactions!";
+            logger.logSevere(message);
+            throw new ResourceManagerException(message);
+        }
 
         if (logger.isFineEnabled()) logger.logFine(txId + " reading " + resourceId);
 
@@ -875,12 +921,73 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
         }
     }
 
+    protected void checkForVirtualAdminCommand(Object resourceId) throws ResourceManagerException {
+        if (isVirtualAdminId(resourceId)) {
+            String message = "You must not make modification calls to virtual admin commands ("
+                    + resourceId + ")!";
+            logger.logSevere(message);
+            throw new ResourceManagerException(message);
+        }
+    }
+
+    protected boolean isVirtualAdminId(Object resourceId) {
+        return (getVirtualAdminPath() != null && resourceId.toString().startsWith(
+                getVirtualAdminPath()));
+    }
+
+    protected InputStream executeAdminCommand(Object resourceId) {
+        StringBuffer sb = new StringBuffer();
+
+        if (!isVirtualAdminId(resourceId)) {
+            String message = "Internal error: " + resourceId.toString()
+                    + " is no administration command, but is supposed to!";
+            sb.append(message);
+            logger.logSevere(message);
+        } else {
+            String command = resourceId.toString().substring(getVirtualAdminPath().length());
+            logger.logInfo("Processing admin command " + command);
+
+            // XXX this really should be more flexible
+            try {
+                if (isAKnowCommand(command)) {
+                    if (command.equals("recover")) {
+                        recover();
+                    }
+
+                    String message = "Command " + command + " terminated successfully";
+                    sb.append(message);
+                    logger.logInfo(message);
+                } else {
+                    String message = "Command " + command + " unknown";
+                    sb.append(message);
+                    logger.logWarning(message);
+
+                }
+            } catch (ResourceManagerSystemException e) {
+                String message = "Command " + command + " failed with the following message: "
+                        + e.getMessage();
+                sb.append(message);
+                logger.logSevere(message, e);
+            }
+
+        }
+        ByteArrayInputStream baIs = new ByteArrayInputStream(sb.toString().getBytes());
+        return baIs;
+
+    }
+
+    protected boolean isAKnowCommand(String command) {
+        return command.equals("recover");
+    }
+    
     public OutputStream writeResource(Object txId, Object resourceId) throws ResourceManagerException {
         return writeResource(txId, resourceId, false);
     }
 
     public OutputStream writeResource(Object txId, Object resourceId, boolean append) throws ResourceManagerException {
 
+        checkForVirtualAdminCommand(resourceId);
+        
         if (logger.isFineEnabled()) logger.logFine(txId + " writing " + resourceId);
 
         lockResource(resourceId, txId, false);
