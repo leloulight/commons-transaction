@@ -25,7 +25,7 @@
   <shortDescription>Commons Transaction</shortDescription>
   <description>Commons Transaction</description>
 
-  <currentVersion>1.2-rc4</currentVersion>
+  <currentVersion>1.3-dev</currentVersion>
 
   <url>http://jakarta.apache.org/commons/${pom.artifactId.substring(8)}/</url>
   <package>org.apache.commons.${pom.artifactId.substring(8)}</package>
@@ -141,28 +141,19 @@
 
   <dependencies>
     <dependency>
-      <groupId>geronimo-spec</groupId>
+      <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
-      <version>1.1</version>
-      <properties>
-        <scope>provided</scope>
-      </properties>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
-      <groupId>geronimo-spec</groupId>
+      <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
-      <version>1.1</version>
-      <properties>
-        <scope>provided</scope>
-      </properties>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
-      <groupId>geronimo-spec</groupId>
+      <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-servlet_2.4_spec</artifactId>
-      <version>1.1</version>
-      <properties>
-        <scope>provided</scope>
-      </properties>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
