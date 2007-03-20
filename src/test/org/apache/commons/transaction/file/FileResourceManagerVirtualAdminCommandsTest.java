@@ -104,8 +104,8 @@ public class FileResourceManagerVirtualAdminCommandsTest extends TestCase {
         createFiles(INITIAL_FILES);
     }
 
-    public static FileResourceManager createFRM() {
-        return new FileResourceManager(STORE, WORK, false, sLogger, true) {
+    public static VirtualAdminCommandsFileResourceManager createFRM() {
+        return new VirtualAdminCommandsFileResourceManager(STORE, WORK, false, sLogger, true) {
             public void setDirty(Object txId, Throwable t) {
                 dirty = true;
             }
@@ -130,7 +130,7 @@ public class FileResourceManagerVirtualAdminCommandsTest extends TestCase {
         sLogger.logInfo("Checking recover() admin command");
         reset();
         createInitialFiles();
-        FileResourceManager frm = createFRM();
+        VirtualAdminCommandsFileResourceManager frm = createFRM();
         frm.setVirtualAdminPath(ADMIN_COMMAND_PREFIX);
         InputStream is = frm.readResource(ADMIN_COMMAND_PREFIX + "recover");
         BufferedReader bf = new BufferedReader(new InputStreamReader(is));
