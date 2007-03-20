@@ -36,7 +36,7 @@
   <property name="compile.deprecation" value="true" />
   <property name="compile.optimize" value="true" />
 
-  <property name="version" value="1.2-rc4"/>
+  <property name="version" value="1.3-dev"/>
   <property name="name" value="commons-transaction" />
   <property name="title" value="Commons Transaction" />
   <property name="package" value="org.apache.commons.transaction" />
@@ -74,9 +74,9 @@
   <property name="dist.lib" value="${dist.dir}/lib"/>
   <property name="dist.deploy" value="${dist.dir}/deploy"/>
 
-  <property name="jta.jar" value="${lib.dir}/geronimo-jta_1.0.1B_spec-1.1.jar"/>
-  <property name="jca.jar" value="${lib.dir}/geronimo-j2ee-connector_1.5_spec-1.1.jar"/>
-  <property name="servlet.jar" value="${lib.dir}/geronimo-servlet_2.4_spec-1.1.jar"/>
+  <property name="jta.jar" value="${lib.dir}/geronimo-jta_1.0.1B_spec-1.1.1.jar"/>
+  <property name="jca.jar" value="${lib.dir}/geronimo-j2ee-connector_1.5_spec-1.1.1.jar"/>
+  <property name="servlet.jar" value="${lib.dir}/geronimo-servlet_2.4_spec-1.1.1.jar"/>
 
   <path id="classpath">
     <pathelement location="${build.classes}" />
