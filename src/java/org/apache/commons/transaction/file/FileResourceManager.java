@@ -622,6 +622,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                 context.status = STATUS_ROLLING_BACK;
                 context.saveState();
                 context.rollback();
+                if (logger.isFineEnabled()) logger.logFine("All resources successfully removed for tx" + txId);
                 context.status = STATUS_ROLLEDBACK;
                 context.saveState();
                 globalTransactions.remove(txId);
@@ -661,6 +662,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                 context.status = STATUS_COMMITTING;
                 context.saveState();
                 context.commit();
+                if (logger.isFineEnabled()) logger.logFine("All resources successfully moved for tx" + txId);
                 context.status = STATUS_COMMITTED;
                 context.saveState();
                 globalTransactions.remove(txId);
