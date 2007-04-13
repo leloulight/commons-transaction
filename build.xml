@@ -75,15 +75,8 @@
   <property name="dist.lib" value="${dist.dir}/lib"/>
   <property name="dist.deploy" value="${dist.dir}/deploy"/>
 
-  <property name="jta.jar" value="${lib.dir}/geronimo-jta_1.0.1B_spec-1.1.1.jar"/>
-  <property name="jca.jar" value="${lib.dir}/geronimo-j2ee-connector_1.5_spec-1.1.1.jar"/>
-  <property name="servlet.jar" value="${lib.dir}/geronimo-servlet_2.4_spec-1.1.1.jar"/>
-
   <path id="classpath">
     <pathelement location="${build.classes}" />
-    <pathelement location="${jta.jar}"/>
-    <pathelement location="${jca.jar}"/>
-    <pathelement location="${servlet.jar}"/>
     <fileset dir="${lib.dir}"/>
   </path>
 
@@ -102,9 +95,9 @@
         <equals arg1="${ant.java.version}" arg2="1.6"/>
       </or>
     </condition>
-    <available property="jta.present" classname="javax.transaction.Status" classpath="${jta.jar}"/>
-    <available property="jca.present" classname="javax.resource.cci.Connection" classpath="${jca.jar}"/>
-    <available property="servlet.present" classname="javax.servlet.Servlet" classpath="${servlet.jar}"/>
+    <available property="jta.present" classname="javax.transaction.Status" classpathref="classpath"/>
+    <available property="jca.present" classname="javax.resource.cci.Connection" classpathref="classpath"/>
+    <available property="servlet.present" classname="javax.servlet.Servlet" classpathref="classpath"/>
     <echo message="+-------------------------------------------------------"/>
     <echo message="| Build environment for ${name} ${version}"/>
     <echo message="| "/>
@@ -162,6 +155,7 @@
     <mkdir dir="${build.classes}"/>
     <mkdir dir="${build.lib}"/>
     <mkdir dir="${build.deploy}"/>
+    <mkdir dir="${lib.dir}"/>
   </target>
 
   <!-- 
@@ -183,7 +177,7 @@
   =================================================================== 
   -->
 
-  <target name="build" depends="prepare,detect" description="Compiles the main classes">
+  <target name="build" depends="prepare,download,detect" description="Compiles the main classes">
     <javac destdir="${build.classes}"
       source="${compile.source}"
       target="${compile.target}"
@@ -518,9 +512,7 @@
 
 <!-- ========== Download Dependencies ===================================== -->
 
-  <target name="download">
-
-    <mkdir dir="${lib.dir}"/>
+  <target name="download" unless="dependencies.provided">
 
     <echo message="Downloading Commons Codec jar..."/>
     <get dest="${lib.dir}/commons-codec-1.2.jar" usetimestamp="true" ignoreerrors="true"
