@@ -25,17 +25,17 @@ import javax.transaction.xa.Xid;
  * @version $Id$
  */
 public abstract class AbstractTransactionalResource implements TransactionalResource, Status {
-    protected Xid xid;
-
-    protected int status;
+    
+    private final Xid xid;
+    private int status;
 
     public AbstractTransactionalResource(Xid xid) {
         this.xid = xid;
-        status = STATUS_ACTIVE;
+        this.status = STATUS_ACTIVE;
     }
 
     public int getStatus() {
-        return status;
+        return this.status;
     }
 
     public void setStatus(int status) {
@@ -43,6 +43,7 @@ public abstract class AbstractTransactionalResource implements TransactionalReso
     }
 
     public Xid getXid() {
-        return xid;
+        return this.xid;
     }
+    
 }

@@ -34,13 +34,12 @@ import org.apache.commons.transaction.util.xa.TransactionalResource;
  */
 public class MapXAResource extends AbstractXAResource {
 
-    TransactionalMapWrapper map;
-    LoggerFacade loggerFacade;
+    private final TransactionalMapWrapper map;
+    private LoggerFacade loggerFacade;
 
     public MapXAResource(TransactionalMapWrapper map) {
-        this.map = map;
         // log important stuff to standard out as long as nothing else is configured
-        this.loggerFacade = new PrintWriterLogger(new PrintWriter(System.out), "WebDAVXAResource", false);
+        this(map, new PrintWriterLogger(new PrintWriter(System.out), "MapXAResource", false));
     }
 
     public MapXAResource(TransactionalMapWrapper map, LoggerFacade loggerFacade) {
@@ -57,7 +56,7 @@ public class MapXAResource extends AbstractXAResource {
     }
 
     public boolean isSameRM(XAResource xares) throws XAException {
-        return (xares != null && xares instanceof MapXAResource && map.equals(((MapXAResource) xares).map));
+        return (xares instanceof MapXAResource && this.map.equals(((MapXAResource) xares).map));
     }
 
     public Xid[] recover(int flag) throws XAException {
@@ -65,7 +64,7 @@ public class MapXAResource extends AbstractXAResource {
     }
 
     public LoggerFacade getLoggerFacade() {
-        return loggerFacade;
+        return this.loggerFacade;
     }
     
     public void setLoggerFacade(LoggerFacade loggerFacade) {
@@ -73,11 +72,11 @@ public class MapXAResource extends AbstractXAResource {
     }
 
     protected void setLoggerFacade(PrintWriter out) {
-        loggerFacade = new PrintWriterLogger(out, "WebDAVXAResource", true);
+        this.loggerFacade = new PrintWriterLogger(out, "MapXAResource", true);
     }
 
     protected TransactionalResource createTransactionResource(Xid xid) throws Exception {
-        return new MapTransactionalResource(xid, map, getLoggerFacade());
+        return new MapTransactionalResource(xid, this.map);
     }
 
     protected boolean includeBranchInXid() {
@@ -86,20 +85,17 @@ public class MapXAResource extends AbstractXAResource {
 
     protected static class MapTransactionalResource extends AbstractTransactionalResource {
 
-        TransactionalMapWrapper map;
+        private final TransactionalMapWrapper map;
         private TransactionalMapWrapper.TxContext txContext = null;
 
-        LoggerFacade loggerFacade;
-
-        public MapTransactionalResource(Xid xid, TransactionalMapWrapper map, LoggerFacade loggerFacade) {
+        public MapTransactionalResource(Xid xid, TransactionalMapWrapper map) {
             super(xid);
             this.map = map;
-            this.loggerFacade = loggerFacade;
         }
 
         public void commit() throws XAException {
             try {
-                map.commitTransaction();
+                this.map.commitTransaction();
             } catch (IllegalStateException e) {
                 throw new XAException(e.toString());
             }
@@ -112,7 +108,7 @@ public class MapXAResource extends AbstractXAResource {
                 resume();
 
             try {
-                map.rollbackTransaction();
+                this.map.rollbackTransaction();
             } catch (IllegalStateException e) {
                 throw new XAException(e.toString());
             }
@@ -124,25 +120,25 @@ public class MapXAResource extends AbstractXAResource {
             if (isSuspended())
                 resume();
 
-            if (map.isTransactionMarkedForRollback()) {
+            if (this.map.isTransactionMarkedForRollback()) {
                 throw new XAException(XAException.XA_RBROLLBACK);
             }
 
-            return (map.isReadOnly() ? XA_RDONLY : XA_OK);
+            return (this.map.isReadOnly() ? XA_RDONLY : XA_OK);
         }
 
         public void suspend() throws XAException {
             if (isSuspended()) {
                 throw new XAException(XAException.XAER_PROTO);
             }
-            this.txContext = map.suspendTransaction();
+            this.txContext = this.map.suspendTransaction();
         }
         
         public void resume() throws XAException {
             if (!isSuspended()) {
                 throw new XAException(XAException.XAER_PROTO);
             }
-            map.resumeTransaction(this.txContext);
+            this.map.resumeTransaction(this.txContext);
             this.txContext = null;
         }
         
