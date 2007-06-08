@@ -331,6 +331,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
                 locks.remove(lock);
             }
         }
+        removeOwnerWithoutLocks(ownerId);
     }
     
     /**
@@ -362,6 +363,7 @@ public class GenericLockManager implements LockManager, LockManager2 {
         if (locks != null) {
             locks.remove(lock);
         }
+        removeOwnerWithoutLocks(ownerId);
     }
 
     /**
@@ -528,5 +530,12 @@ public class GenericLockManager implements LockManager, LockManager2 {
         }
     }
 
-    
+    protected void removeOwnerWithoutLocks(Object ownerId) {
+        synchronized (globalOwners) {
+            Set locks = (Set) globalOwners.get(ownerId);
+            if (locks == null || locks.isEmpty()) {
+                globalOwners.remove(ownerId);
+            }
+        }
+    }
 }
