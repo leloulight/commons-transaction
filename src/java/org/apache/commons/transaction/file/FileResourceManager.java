@@ -151,7 +151,7 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
             for (int i = 0; i < files.length; i++) {
                 File removeFile = files[i];
                 File targetFile = new File(targetDir, removeFile.getName());
-                if (removeFile.isFile()) {
+                if (!removeFile.isDirectory()) {
                     if (targetFile.exists()) {
                         if (!targetFile.delete()) {
                             throw new IOException("Could not delete file " + removeFile.getName()
