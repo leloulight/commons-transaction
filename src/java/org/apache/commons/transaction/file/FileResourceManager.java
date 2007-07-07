@@ -157,7 +157,10 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                             throw new IOException("Could not delete file " + removeFile.getName()
                                     + " in directory targetDir");
                         }
-                    }
+                    } else if (!targetFile.isFile()) {
+                        // this is likely a dangling link
+                        targetFile.delete();
+                    } 
                     // indicate, this has been done
                     removeFile.delete();
                 } else {
