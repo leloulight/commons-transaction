@@ -1,4 +1,4 @@
-package org.apache.transaction.locking;
+package org.apache.commons.transaction.locking;
 
 public interface LockManager<K, L> {
     public L getLock(K key);

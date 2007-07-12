@@ -1,4 +1,4 @@
-package org.apache.transaction.locking;
+package org.apache.commons.transaction.locking;
 
 import java.util.concurrent.ConcurrentHashMap;
 
