@@ -10,4 +10,14 @@ public class NoOpMultiLevelLock implements MultiLevelLock {
         return internalLock;
     }
 
+
+    public Lock readLock() {
+        return internalLock;
+    }
+
+
+    public Lock writeLock() {
+        return internalLock;
+    }
+
 }

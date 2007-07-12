@@ -1,4 +1,4 @@
-package org.apache.commons.transaction.file;
+package org.apache.commons.transaction.util;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -6,7 +6,7 @@ import java.io.InputStream;
 
 import junit.framework.JUnit4TestAdapter;
 
-import org.apache.commons.transaction.file.ComboInputStreamMulticaster;
+import org.apache.commons.transaction.util.ComboInputStreamMulticaster;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

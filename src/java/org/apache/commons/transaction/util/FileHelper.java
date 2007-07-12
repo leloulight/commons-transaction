@@ -22,23 +22,26 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 
 /**
- * Helper methods for file manipulation. 
- * All methods are <em>thread safe</em>.
+ * Helper methods for file manipulation. All methods are <em>thread safe</em>.
  * 
  * @version $Id: FileHelper.java 493628 2007-01-07 01:42:48Z joerg $
  */
 public final class FileHelper {
 
     private static int BUF_SIZE = 50000;
+
     private static byte[] BUF = new byte[BUF_SIZE];
 
     /**
      * Deletes a file specified by a path.
-     *  
-     * @param path path of file to be deleted
-     * @return <code>true</code> if file has been deleted, <code>false</code> otherwise
+     * 
+     * @param path
+     *            path of file to be deleted
+     * @return <code>true</code> if file has been deleted, <code>false</code>
+     *         otherwise
      */
     public static boolean deleteFile(String path) {
         File file = new File(path);
@@ -47,9 +50,11 @@ public final class FileHelper {
 
     /**
      * Checks if a file specified by a path exits.
-     *  
-     * @param path path of file to be checked
-     * @return <code>true</code> if file exists, <code>false</code> otherwise
+     * 
+     * @param path
+     *            path of file to be checked
+     * @return <code>true</code> if file exists, <code>false</code>
+     *         otherwise
      */
     public static boolean fileExists(String path) {
         File file = new File(path);
@@ -57,12 +62,15 @@ public final class FileHelper {
     }
 
     /**
-     * Creates a file specified by a path. All necessary directories will be created.
+     * Creates a file specified by a path. All necessary directories will be
+     * created.
      * 
-     * @param path path of file to be created
-     * @return <code>true</code> if file has been created, <code>false</code> if the file already exists
-     * @throws  IOException
-     *          If an I/O error occurred
+     * @param path
+     *            path of file to be created
+     * @return <code>true</code> if file has been created, <code>false</code>
+     *         if the file already exists
+     * @throws IOException
+     *             If an I/O error occurred
      */
     public static boolean createFile(String path) throws IOException {
         File file = new File(path);
@@ -70,17 +78,19 @@ public final class FileHelper {
             return file.mkdirs();
         } else {
             File dir = file.getParentFile();
-            // do not check if this worked, as it may also return false, when all neccessary dirs are present
+            // do not check if this worked, as it may also return false, when
+            // all neccessary dirs are present
             dir.mkdirs();
             return file.createNewFile();
         }
     }
 
     /**
-     * Removes a file. If the specified file is a directory all contained files will
-     * be removed recursively as well. 
+     * Removes a file. If the specified file is a directory all contained files
+     * will be removed recursively as well.
      * 
-     * @param toRemove file to be removed
+     * @param toRemove
+     *            file to be removed
      */
     public static void removeRec(File toRemove) {
         if (toRemove.isDirectory()) {
@@ -95,9 +105,12 @@ public final class FileHelper {
     /**
      * Moves one directory or file to another. Existing files will be replaced.
      * 
-     * @param source file to move from
-     * @param target file to move to
-     * @throws IOException if an I/O error occurs (may result in partially done work)  
+     * @param source
+     *            file to move from
+     * @param target
+     *            file to move to
+     * @throws IOException
+     *             if an I/O error occurs (may result in partially done work)
      */
     public static void moveRec(File source, File target) throws IOException {
         byte[] sharedBuffer = new byte[BUF_SIZE];
@@ -142,13 +155,48 @@ public final class FileHelper {
             }
         }
     }
+    public static void copyUsingNIO(File sourceFile, File destinationFile) throws IOException {
+        // try again using NIO copy
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        try {
+            fis = new FileInputStream(sourceFile);
+            fos = new FileOutputStream(destinationFile);
+            FileChannel srcChannel = fis.getChannel();
+            FileChannel dstChannel = fos.getChannel();
+            dstChannel.transferFrom(srcChannel, 0, srcChannel.size());
+            srcChannel.close();
+            dstChannel.close();
+        } finally {
+            try {
+                fis.close();
+            } finally {
+                fos.close();
+            }
+        }
+    }
+    
+    public static boolean moveFileUsingNIO(File sourceFile, File destinationFile) throws IOException {
+        // try fast file-system-level move/rename first
+        boolean success = sourceFile.renameTo(destinationFile);
+
+        if (!success) {
+            copyUsingNIO(sourceFile, destinationFile);
+            success = sourceFile.delete();
+        }
+
+        return success;
+    }
 
     /**
      * Copies one directory or file to another. Existing files will be replaced.
      * 
-     * @param source directory or file to copy from
-     * @param target directory or file to copy to
-     * @throws IOException if an I/O error occurs (may result in partially done work)  
+     * @param source
+     *            directory or file to copy from
+     * @param target
+     *            directory or file to copy to
+     * @throws IOException
+     *             if an I/O error occurs (may result in partially done work)
      */
     public static void copyRec(File source, File target) throws IOException {
         byte[] sharedBuffer = new byte[BUF_SIZE];
@@ -181,7 +229,7 @@ public final class FileHelper {
             if (!target.isDirectory()) {
                 if (!target.exists()) {
                     File dir = target.getParentFile();
-                    if(!dir.exists() && !dir.mkdirs()) {
+                    if (!dir.exists() && !dir.mkdirs()) {
                         throw new IOException("Could not create target directory: " + dir);
                     }
                     if (!target.createNewFile()) {
@@ -223,11 +271,15 @@ public final class FileHelper {
     /**
      * Copies one file to another using the supplied buffer.
      * 
-     * @param input source file
-     * @param output destination file
-     * @param copyBuffer buffer used for copying
+     * @param input
+     *            source file
+     * @param output
+     *            destination file
+     * @param copyBuffer
+     *            buffer used for copying
      * @return the number of bytes copied
-     * @throws IOException if an I/O error occurs (may result in partially done work)  
+     * @throws IOException
+     *             if an I/O error occurs (may result in partially done work)
      * @see #copy(InputStream, OutputStream)
      */
     public static long copy(File input, File output, byte[] copyBuffer) throws IOException {
@@ -254,12 +306,16 @@ public final class FileHelper {
     }
 
     /**
-     * Copies an <code>InputStream</code> to a file using {@link #copy(InputStream, OutputStream)}.
+     * Copies an <code>InputStream</code> to a file using
+     * {@link #copy(InputStream, OutputStream)}.
      * 
-     * @param in stream to copy from 
-     * @param outputFile file to copy to
+     * @param in
+     *            stream to copy from
+     * @param outputFile
+     *            file to copy to
      * @return the number of bytes copied
-     * @throws IOException if an I/O error occurs (may result in partially done work)  
+     * @throws IOException
+     *             if an I/O error occurs (may result in partially done work)
      * @see #copy(InputStream, OutputStream)
      */
     public static long copy(InputStream in, File outputFile) throws IOException {
@@ -278,14 +334,19 @@ public final class FileHelper {
     }
 
     /**
-     * Copies an <code>InputStream</code> to an <code>OutputStream</code> using a local internal buffer for performance.
-     * Compared to {@link #globalBufferCopy(InputStream, OutputStream)} this method allows for better
-     * concurrency, but each time it is called generates a buffer which will be garbage.
+     * Copies an <code>InputStream</code> to an <code>OutputStream</code>
+     * using a local internal buffer for performance. Compared to
+     * {@link #globalBufferCopy(InputStream, OutputStream)} this method allows
+     * for better concurrency, but each time it is called generates a buffer
+     * which will be garbage.
      * 
-     * @param in stream to copy from 
-     * @param out stream to copy to
+     * @param in
+     *            stream to copy from
+     * @param out
+     *            stream to copy to
      * @return the number of bytes copied
-     * @throws IOException if an I/O error occurs (may result in partially done work)  
+     * @throws IOException
+     *             if an I/O error occurs (may result in partially done work)
      * @see #globalBufferCopy(InputStream, OutputStream)
      */
     public static long copy(InputStream in, OutputStream out) throws IOException {
@@ -295,14 +356,18 @@ public final class FileHelper {
     }
 
     /**
-     * Copies an <code>InputStream</code> to an <code>OutputStream</code> using a global internal buffer for performance.
-     * Compared to {@link #copy(InputStream, OutputStream)} this method generated no garbage,
-     * but decreases concurrency.
+     * Copies an <code>InputStream</code> to an <code>OutputStream</code>
+     * using a global internal buffer for performance. Compared to
+     * {@link #copy(InputStream, OutputStream)} this method generated no
+     * garbage, but decreases concurrency.
      * 
-     * @param in stream to copy from 
-     * @param out stream to copy to
+     * @param in
+     *            stream to copy from
+     * @param out
+     *            stream to copy to
      * @return the number of bytes copied
-     * @throws IOException if an I/O error occurs (may result in partially done work)  
+     * @throws IOException
+     *             if an I/O error occurs (may result in partially done work)
      * @see #copy(InputStream, OutputStream)
      */
     public static long globalBufferCopy(InputStream in, OutputStream out) throws IOException {
@@ -312,13 +377,18 @@ public final class FileHelper {
     }
 
     /**
-     * Copies an <code>InputStream</code> to an <code>OutputStream</code> using the specified buffer. 
+     * Copies an <code>InputStream</code> to an <code>OutputStream</code>
+     * using the specified buffer.
      * 
-     * @param in stream to copy from 
-     * @param out stream to copy to
-     * @param copyBuffer buffer used for copying
+     * @param in
+     *            stream to copy from
+     * @param out
+     *            stream to copy to
+     * @param copyBuffer
+     *            buffer used for copying
      * @return the number of bytes copied
-     * @throws IOException if an I/O error occurs (may result in partially done work)  
+     * @throws IOException
+     *             if an I/O error occurs (may result in partially done work)
      * @see #globalBufferCopy(InputStream, OutputStream)
      * @see #copy(InputStream, OutputStream)
      */

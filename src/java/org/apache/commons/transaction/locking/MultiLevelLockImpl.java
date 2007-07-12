@@ -28,7 +28,8 @@ public class MultiLevelLockImpl implements MultiLevelLock {
         if (level > maxLevel)
             throw new IllegalArgumentException("The requested lock level (" + level
                     + ") is higher than the maximum lock level (" + maxLevel + ")");
-
+        // FIXME
+        return null;
     }
 
     private class InternalMLLock implements Lock {
@@ -58,7 +59,7 @@ public class MultiLevelLockImpl implements MultiLevelLock {
         }
 
         public void unlock() {
-            LockSupport.unpark(thread)();
+//            LockSupport.unpark(thread)();
         }
     }
 
@@ -68,6 +69,16 @@ public class MultiLevelLockImpl implements MultiLevelLock {
 
     public void setMaxLevel(int maxLevel) {
         this.maxLevel = maxLevel;
+    }
+
+    public Lock readLock() {
+        // FIXME
+        return getLock(1);
+    }
+
+    public Lock writeLock() {
+        // FIXME
+        return getLock(2);
     }
 
 }

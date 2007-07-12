@@ -1,0 +1,5 @@
+package org.apache.commons.transaction;
+
+public enum Status {
+    ACTIVE, COMMITTED, COMMITTING, MARKED_ROLLBACK, NO_TRANSACTION, PREPARED, PREPARING, ROLLEDBACK, ROLLING_BACK, UNKNOWN
+}
