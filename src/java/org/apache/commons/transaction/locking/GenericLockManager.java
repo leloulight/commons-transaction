@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GenericLockManager<K, L> implements LockManager<K, L> {
     
-    private final ConcurrentHashMap<K, L> globalLocks = new ConcurrentHashMap<K, L>();
+    protected final ConcurrentHashMap<K, L> globalLocks = new ConcurrentHashMap<K, L>();
 
     @Override
     public L getLock(K key) {

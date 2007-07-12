@@ -16,6 +16,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+// TODO: Add two dedicated locks for close/open resp. spawn
 public class ComboInputStreamMulticaster implements InputStreamMulticaster {
 
     private int memoryBufferSize = 8192;
@@ -30,6 +31,7 @@ public class ComboInputStreamMulticaster implements InputStreamMulticaster {
 
     protected boolean isOpen = false;
 
+    @Override
     public synchronized void close() {
         if (!isOpen) {
             throw new IllegalStateException("You can not close: Stream multicaster is not open!");
@@ -37,6 +39,7 @@ public class ComboInputStreamMulticaster implements InputStreamMulticaster {
         isOpen = false;
     }
 
+    @Override
     public synchronized void open(InputStream backingInputStream) throws IOException {
         if (isOpen) {
             throw new IllegalStateException(
@@ -75,6 +78,7 @@ public class ComboInputStreamMulticaster implements InputStreamMulticaster {
         isOpen = true;
     }
 
+    @Override
     public synchronized InputStream spawn() throws IOException {
         if (!isOpen) {
             throw new IllegalStateException(
