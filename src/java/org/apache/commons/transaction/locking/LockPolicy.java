@@ -14,20 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.transaction;
+package org.apache.commons.transaction.locking;
 
-public interface TxContext {
-    Status getStatus();
+public interface LockPolicy {
 
-    void setStatus(Status status);
-
-    void commit();
-
-    boolean prepare();
-
-    void dispose();
-
-    boolean isReadOnly();
-    
-    public void setTimeout(long timeoutMSecs);
+    boolean readLock(Object id, long timeoutMSecs) throws LockException;
+    boolean writeLock(Object id, long timeoutMSecs) throws LockException;
+    boolean releaseAll() throws LockException;
 }

@@ -25,9 +25,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.transaction.AbstractTransactionManager;
+import org.apache.commons.transaction.AbstractTransactionalResource;
+import org.apache.commons.transaction.AbstractTxContext;
 import org.apache.commons.transaction.Status;
-import org.apache.commons.transaction.TransactionManager;
+import org.apache.commons.transaction.TransactionalResource;
 import org.apache.commons.transaction.TxContext;
 
 /**
@@ -49,7 +50,7 @@ import org.apache.commons.transaction.TxContext;
  * @see OptimisticMapWrapper
  * @see PessimisticMapWrapper
  */
-public class TransactionalMapWrapper extends AbstractTransactionManager<TransactionalMapWrapper.MapTxContext> implements Map, TransactionManager {
+public class TransactionalMapWrapper extends AbstractTransactionalResource<TransactionalMapWrapper.MapTxContext> implements Map, TransactionalResource {
 
     /** The map wrapped. */
     protected Map wrapped;
@@ -63,6 +64,11 @@ public class TransactionalMapWrapper extends AbstractTransactionManager<Transact
     public TransactionalMapWrapper(Map wrapped) {
         this.wrapped = Collections.synchronizedMap(wrapped);
     }
+
+    // can be used by sub classes
+    protected TransactionalMapWrapper() {
+    }
+    
 
     //
     // Map methods
@@ -290,21 +296,17 @@ public class TransactionalMapWrapper extends AbstractTransactionManager<Transact
         }
     }
 
-    public class MapTxContext implements TxContext {
+    public class MapTxContext extends AbstractTxContext implements TxContext {
         protected Set deletes;
         protected Map changes;
         protected Map adds;
-        protected Status status;
         protected boolean cleared;
-        protected boolean readOnly;
 
         protected MapTxContext() {
             deletes = new HashSet();
             changes = new HashMap();
             adds = new HashMap();
-            status = Status.ACTIVE;
             cleared = false;
-            readOnly = true;
         }
 
         protected Set keys() {
@@ -342,7 +344,7 @@ public class TransactionalMapWrapper extends AbstractTransactionManager<Transact
 
         protected void put(Object key, Object value) {
             try {
-                readOnly = false;
+                setReadOnly(false);
                 deletes.remove(key);
                 if (wrapped.containsKey(key)) {
                     changes.put(key, value);
@@ -350,10 +352,10 @@ public class TransactionalMapWrapper extends AbstractTransactionManager<Transact
                     adds.put(key, value);
                 }
             } catch (RuntimeException e) {
-                status = Status.MARKED_ROLLBACK;
+                setStatus(Status.MARKED_ROLLBACK);
                 throw e;
             } catch (Error e) {
-                status = Status.MARKED_ROLLBACK;
+                setStatus(Status.MARKED_ROLLBACK);
                 throw e;
             }
         }
@@ -361,17 +363,17 @@ public class TransactionalMapWrapper extends AbstractTransactionManager<Transact
         protected void remove(Object key) {
 
             try {
-                readOnly = false;
+                setReadOnly(false);
                 changes.remove(key);
                 adds.remove(key);
                 if (wrapped.containsKey(key) && !cleared) {
                     deletes.add(key);
                 }
             } catch (RuntimeException e) {
-                status = Status.MARKED_ROLLBACK;
+                setStatus(Status.MARKED_ROLLBACK);
                 throw e;
             } catch (Error e) {
-                status = Status.MARKED_ROLLBACK;
+                setStatus(Status.MARKED_ROLLBACK);
                 throw e;
             }
         }
@@ -386,7 +388,7 @@ public class TransactionalMapWrapper extends AbstractTransactionManager<Transact
         }
 
         protected void clear() {
-            readOnly = false;
+            setReadOnly(false);
             cleared = true;
             deletes.clear();
             changes.clear();
@@ -398,7 +400,7 @@ public class TransactionalMapWrapper extends AbstractTransactionManager<Transact
         }
 
         public void commit() {
-            if (!readOnly) {
+            if (!isReadOnly()) {
 
                 if (cleared) {
                     wrapped.clear();
@@ -414,26 +416,11 @@ public class TransactionalMapWrapper extends AbstractTransactionManager<Transact
             }
         }
 
-        public void dispose() {
-            status = Status.NO_TRANSACTION;
+        public void setTimeout(long timeoutMSecs) {
+            // TODO Auto-generated method stub
+            
         }
 
-        public Status getStatus() {
-            return status;
-        }
-
-        public void setStatus(Status status) {
-            this.status = status;
-        }
-
-        public boolean isReadOnly() {
-            return readOnly;
-        }
-
-        public boolean prepare() {
-            // we have nothing to prepare
-            return true;
-        }
     }
 
     @Override

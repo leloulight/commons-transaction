@@ -14,18 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.transaction.file;
+package org.apache.commons.transaction.xa;
+
+import javax.transaction.Status;
+import javax.transaction.xa.Xid;
 
 /**
- * Mapper from a resourceId to a path string.
- *
- * @version $Id: ResourceIdToPathMapper.java 493628 2007-01-07 01:42:48Z joerg $
- * @since 1.1
+ * Rudimentary abstract implementation of {@link TransactionalResource} for specific implementations to base upon.
+ * 
+ * @version $Id: AbstractTransactionalResource.java 528707 2007-04-13 23:46:37Z joerg $
  */
-public interface ResourceIdToPathMapper {
+public abstract class AbstractTransactionalResource implements TransactionalResource, Status {
     
-    public String getPathForWrite(String path);
-    public String getPathForRead(String resourceId);
-    public String getDeletePath(String path);
+    private final Xid xid;
+    private int status;
 
+    public AbstractTransactionalResource(Xid xid) {
+        this.xid = xid;
+        this.status = STATUS_ACTIVE;
+    }
+
+    public int getStatus() {
+        return this.status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public Xid getXid() {
+        return this.xid;
+    }
+    
 }

@@ -25,39 +25,74 @@ package org.apache.commons.transaction.locking;
 public class LockException extends RuntimeException {
 
     /**
-     * Thread has been interrupted while waiting for lock.
+     * 
      */
-    public static final int CODE_INTERRUPTED = 1;
+    private static final long serialVersionUID = -6450258112934501320L;
 
-    /**
-     * Maximum wait time for a lock has been exceeded.
-     */
-    public static final int CODE_TIMED_OUT = 2;
-
-    /**
-     * Locking request canceled because of deadlock.
-     */
-    public static final int CODE_DEADLOCK_VICTIM = 3;
+    public enum Code {
+        /**
+         * Thread has been interrupted while waiting for lock.
+         */
+        INTERRUPTED,
+        
+        /**
+         * Maximum wait time for a lock has been exceeded.
+         */
+        TIMED_OUT,
+        
+        /**
+         * Locking request canceled because of deadlock.
+         */
+        DEADLOCK_VICTIM,
+        
+        /**
+         * A conflict between two optimistic transactions occured.
+         * 
+         */
+        CONFLICT,
+        
+        /**
+         * A commit was tried, but did not succeed.
+         * 
+         */
+        COMMIT_FAILED
+    }
 
     protected Object resourceId;
 
-    protected String reason;
+    protected Code code;
 
-    protected int code;
-
-    public LockException(String reason, int code, Object resourceId) {
-        this.reason = reason;
+    public LockException(String message, Code code, Object resourceId) {
+        super(message);
         this.code = code;
         this.resourceId = resourceId;
+    }
+
+    public LockException(Code code, Object resourceId) {
+        this.code = code;
+        this.resourceId = resourceId;
+    }
+
+    public LockException(String message, Throwable cause, Object resourceId) {
+        super(message, cause);
+        this.resourceId = resourceId;
+    }
+
+    public LockException(Throwable cause, Object resourceId) {
+        super(cause);
+        this.resourceId = resourceId;
+    }
+
+    public LockException(Throwable cause) {
+        super(cause);
     }
 
     /**
      * Returns the formal reason for the exception.
      * 
-     * @return one of {@link #CODE_INTERRUPTED},{@link #CODE_TIMED_OUT}or
-     *         {@link #CODE_DEADLOCK_VICTIM}.
+     * @return the reason code
      */
-    public int getCode() {
+    public Code getCode() {
         return code;
     }
 
@@ -70,12 +105,4 @@ public class LockException extends RuntimeException {
         return resourceId;
     }
 
-    /**
-     * Returns the verbose for the exception.
-     * 
-     * @return the reason message
-     */
-    public String getReason() {
-        return reason;
-    }
 }

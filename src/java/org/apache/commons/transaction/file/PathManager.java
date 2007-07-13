@@ -16,8 +16,20 @@
  */
 package org.apache.commons.transaction.file;
 
-public interface LockPolicy {
+/**
+ * Mapper from a resourceId to a path string.
+ *
+ * @version $Id: ResourceIdToPathMapper.java 493628 2007-01-07 01:42:48Z joerg $
+ * @since 1.1
+ */
+public interface PathManager {
+    
+    public String getPathForWrite(String path);
+    public String getPathForRead(String resourceId);
+    public String getPathForDelete(String path);
+    public String getDeleteBaseDir();
+    public String getChangeBaseDir();
+    public String getTransactionBaseDir();
+    public String getStoreDir();
 
-    boolean readLock(String id) throws InterruptedException;
-    boolean writeLock(String id) throws InterruptedException;
 }

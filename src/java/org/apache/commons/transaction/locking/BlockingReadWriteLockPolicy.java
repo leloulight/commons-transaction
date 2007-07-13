@@ -14,35 +14,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.transaction.file;
+package org.apache.commons.transaction.locking;
 
 import java.util.concurrent.locks.ReadWriteLock;
 
-import org.apache.commons.transaction.locking.BookKeepingLockManager;
 
-public class BlockingLockPolicy implements LockPolicy {
-    protected BookKeepingLockManager<String, ReadWriteLock> lm;
+// Needs a timeout, do not do nasty "real" block
+public class BlockingReadWriteLockPolicy implements LockPolicy {
+    protected LockManager<Object, ReadWriteLock> lm;
 
-    public BookKeepingLockManager<String, ReadWriteLock> getLm() {
+    public LockManager<Object, ReadWriteLock> getLm() {
         return lm;
     }
 
-    public void setLm(BookKeepingLockManager<String, ReadWriteLock> lm) {
+    public void setLm(LockManager<Object, ReadWriteLock> lm) {
         this.lm = lm;
     }
 
-    protected ReadWriteLock initLock(String id) {
+    protected ReadWriteLock initLock(Object id) {
         return getLm().putIfAbsent(id, getLm().create());
     }
 
-    public boolean readLock(String id) throws InterruptedException {
+    public boolean readLock(Object id, long timeoutMSecs) throws LockException {
         initLock(id).readLock().lock();
         return true;
     }
 
-    public boolean writeLock(String id) throws InterruptedException {
+    // FIXME needs to be interruptable
+    public boolean writeLock(Object id, long timeoutMSecs) throws LockException {
         initLock(id).writeLock().lock();
         return true;
 
+    }
+
+    public boolean releaseAll() {
+        Iterable<ReadWriteLock> locks = getLm().getAllForCurrentThread();
+
+        for (ReadWriteLock lock : locks) {
+            lock.readLock().unlock();
+            lock.writeLock().unlock();
+        }
+        return true;
     }
 }

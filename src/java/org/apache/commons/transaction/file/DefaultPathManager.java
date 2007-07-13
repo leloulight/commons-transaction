@@ -25,7 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.transaction.util.FileHelper;
 
-public class URLEncodeIdMapper implements ResourceIdToPathMapper {
+public class DefaultPathManager implements PathManager {
     
     private Log logger = LogFactory.getLog(getClass());
 
@@ -115,7 +115,7 @@ public class URLEncodeIdMapper implements ResourceIdToPathMapper {
         return buf.toString();
     }
 
-    public String getDeletePath(String path) {
+    public String getPathForDelete(String path) {
         String txBaseDir = getTransactionBaseDir();
         StringBuffer buf = new StringBuffer(txBaseDir.length() + path.toString().length()
                 + getWorkDeleteDir() + 5);
@@ -142,7 +142,7 @@ public class URLEncodeIdMapper implements ResourceIdToPathMapper {
 
         String mainPath = getMainPath(resourceId);
         String txChangePath = getChangePath(resourceId);
-        String txDeletePath = getDeletePath(resourceId);
+        String txDeletePath = getPathForDelete(resourceId);
 
         // now, this gets a bit complicated:
 
@@ -180,6 +180,14 @@ public class URLEncodeIdMapper implements ResourceIdToPathMapper {
         } else {
             return null;
         }
+    }
+
+    public String getChangeBaseDir() {
+        return getTransactionBaseDir() + getWorkChangeDir();
+    }
+
+    public String getDeleteBaseDir() {
+        return getTransactionBaseDir() + getWorkDeleteDir();
     }
 
 

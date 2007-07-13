@@ -16,16 +16,16 @@
  */
 package org.apache.commons.transaction.memory;
 
-import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Collections;
+import java.util.concurrent.locks.ReadWriteLock;
 
-import org.apache.commons.transaction.locking.ReadWriteLock;
-import org.apache.commons.transaction.util.LoggerFacade;
-import org.apache.commons.transaction.util.PrintWriterLogger;
+import org.apache.commons.transaction.Status;
+import org.apache.commons.transaction.TxContext;
+import org.apache.commons.transaction.locking.BlockingReadWritegetLockPolicy();
+import org.apache.commons.transaction.locking.LockException;
 
 /**
  * Wrapper that adds transactional control to all kinds of maps that implement the {@link Map} interface. By using
@@ -53,7 +53,7 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
     protected static final int COMMIT_TIMEOUT = 1000 * 60; // 1 minute
     protected static final int ACCESS_TIMEOUT = 1000 * 30; // 30 seconds
 
-    protected ReadWriteLock commitLock;
+    protected static final Object COMMIT_LOCK = "COMMIT";
 
     /**
      * Creates a new optimistic transactional map wrapper. Temporary maps and sets to store transactional
@@ -63,7 +63,6 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
      */
     public OptimisticMapWrapper(Map wrapped) {
         super(wrapped);
-        commitLock = new ReadWriteLock("COMMIT", logger);
     }
 
     public void rollbackTransaction() {
@@ -72,11 +71,11 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
         activeTransactions.remove(txContext);
     }
 
-    public void commitTransaction() throws ConflictException {
+    public void commitTransaction() throws LockException {
         commitTransaction(false);
     }
 
-    public void commitTransaction(boolean force) throws ConflictException {
+    public void commitTransaction(boolean force) throws LockException {
         TxContext txContext = getActiveTx();
         
         if (txContext == null) {
@@ -84,19 +83,19 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
                 "Active thread " + Thread.currentThread() + " not associated with a transaction!");
         }
 
-        if (txContext.status == STATUS_MARKED_ROLLBACK) {
+        if (txContext.getStatus() == Status.MARKED_ROLLBACK) {
             throw new IllegalStateException("Active thread " + Thread.currentThread() + " is marked for rollback!");
         }
         
         try {
             // in this final commit phase we need to be the only one access the map
             // to make sure no one adds an entry after we checked for conflicts
-            commitLock.acquireWrite(txContext, COMMIT_TIMEOUT);
+            getLockPolicy().acquireWrite(txContext, COMMIT_TIMEOUT);
 
             if (!force) {
                 Object conflictKey = checkForConflicts();
                 if (conflictKey != null) {
-                    throw new ConflictException(conflictKey);
+                    throw new LockException(LockException.Code.CONFLICT, conflictKey);
                 }
             }
     
@@ -105,10 +104,9 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
             super.commitTransaction();
             
         } catch (InterruptedException e) {
-            // XXX a bit dirty ;)
-            throw new ConflictException(e);
+            throw new LockException(e);
         } finally {
-            commitLock.release(txContext);
+            getLockPolicy().release(txContext);
         }
     }
 
@@ -167,7 +165,7 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
         }
     }
 
-    public class CopyingTxContext extends TxContext {
+    public class CopyingTxContext extends MapTxContext {
         protected Map externalChanges;
         protected Map externalAdds;
         protected Set externalDeletes;
@@ -197,7 +195,7 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
 
         protected Set keys() {
             try {
-                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                getLockPolicy().acquireRead(this, ACCESS_TIMEOUT);
                 Set keySet = super.keys();
                 keySet.removeAll(externalDeletes);
                 keySet.addAll(externalAdds.keySet());
@@ -205,13 +203,13 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
             } catch (InterruptedException e) {
                 return null;
             } finally {
-                commitLock.release(this);
+                getLockPolicy().release(this);
             }
         }
 
         protected Object get(Object key) {
             try {
-                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                getLockPolicy().acquireRead(this, ACCESS_TIMEOUT);
 
                 if (deletes.contains(key)) {
                     // reflects that entry has been deleted in this tx 
@@ -252,33 +250,33 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
             } catch (InterruptedException e) {
                 return null;
             } finally {
-                commitLock.release(this);
+                getLockPolicy().release(this);
             }
         }
 
         protected void put(Object key, Object value) {
             try {
-                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                getLockPolicy().acquireRead(this, ACCESS_TIMEOUT);
                 super.put(key, value);
             } catch (InterruptedException e) {
             } finally {
-                commitLock.release(this);
+                getLockPolicy().release(this);
             }
         }
 
         protected void remove(Object key) {
             try {
-                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                getLockPolicy().acquireRead(this, ACCESS_TIMEOUT);
                 super.remove(key);
             } catch (InterruptedException e) {
             } finally {
-                commitLock.release(this);
+                getLockPolicy().release(this);
             }
         }
 
         protected int size() {
             try {
-                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                getLockPolicy().acquireRead(this, ACCESS_TIMEOUT);
                 int size = super.size();
     
                 size -= externalDeletes.size();
@@ -288,36 +286,36 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
             } catch (InterruptedException e) {
                 return -1;
             } finally {
-                commitLock.release(this);
+                getLockPolicy().release(this);
             }
         }
 
         protected void clear() {
             try {
-                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                getLockPolicy().acquireRead(this, ACCESS_TIMEOUT);
                 super.clear();
                 externalDeletes.clear();
                 externalChanges.clear();
                 externalAdds.clear();
             } catch (InterruptedException e) {
             } finally {
-                commitLock.release(this);
+                getLockPolicy().release(this);
             }
         }
 
         protected void merge() {
             try {
-                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                getLockPolicy().acquireRead(this, ACCESS_TIMEOUT);
                 super.merge();
             } catch (InterruptedException e) {
             } finally {
-                commitLock.release(this);
+                getLockPolicy().release(this);
             }
         }
 
         protected void dispose() {
             try {
-                commitLock.acquireRead(this, ACCESS_TIMEOUT);
+                getLockPolicy().acquireRead(this, ACCESS_TIMEOUT);
                 super.dispose();
                 setFactory.disposeSet(externalDeletes);
                 externalDeletes = null;
@@ -327,7 +325,7 @@ public class OptimisticMapWrapper extends TransactionalMapWrapper {
                 externalAdds = null;
             } catch (InterruptedException e) {
             } finally {
-                commitLock.release(this);
+                getLockPolicy().release(this);
             }
         }
 

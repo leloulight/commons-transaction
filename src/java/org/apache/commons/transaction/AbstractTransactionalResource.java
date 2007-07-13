@@ -19,6 +19,8 @@ package org.apache.commons.transaction;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.transaction.locking.LockPolicy;
+
 /**
  * Not thread-safe. FIXME: Should it be?
  * 
@@ -26,7 +28,7 @@ import java.util.Set;
  *
  * @param <T>
  */
-public abstract class AbstractTransactionManager<T extends TxContext> implements TransactionManager {
+public abstract class AbstractTransactionalResource<T extends TxContext> implements TransactionalResource {
     protected ThreadLocal<T> activeTx = new ThreadLocal<T>();
 
     protected Set<T> activeTransactions = new HashSet<T>();
@@ -200,7 +202,14 @@ public abstract class AbstractTransactionManager<T extends TxContext> implements
 
     @Override
     public void setTransactionTimeout(long mSecs) {
-        // not needed
+        TxContext txContext = getActiveTx();
+
+        if (txContext == null) {
+            throw new IllegalStateException("Active thread " + Thread.currentThread()
+                    + " not associated with a transaction!");
+        }
+        
+        txContext.setTimeout(mSecs);
     }
 
     protected T getActiveTx() {

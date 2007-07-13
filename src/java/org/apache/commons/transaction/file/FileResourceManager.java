@@ -20,21 +20,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.commons.transaction.locking.LockException;
+
 public interface FileResourceManager {
-    public InputStream read(String id) throws IOException;
+    public InputStream read(String id) throws IOException, LockException;
 
-    public OutputStream write(String id) throws IOException;
+    public OutputStream write(String id) throws IOException, LockException;
 
-    public boolean remove(String id) throws IOException;
+    public boolean remove(String id) throws IOException, LockException;
 
-    public boolean create(String id) throws IOException;
+    public boolean create(String id) throws IOException, LockException;
 
-    public boolean move(String sourceId, String destinationId) throws IOException;
+    public boolean move(String sourceId, String destinationId) throws IOException, LockException;
 
-    public boolean copy(String sourceId, String destinationId) throws IOException;
+    public boolean copy(String sourceId, String destinationId) throws IOException, LockException;
 
-    public boolean createDir(String id) throws IOException;
+    public boolean createDir(String id) throws IOException, LockException;
 
-    public boolean removeDir(String id) throws IOException;
+    public boolean removeDir(String id) throws IOException, LockException;
 
 }

@@ -16,7 +16,7 @@
  */
 package org.apache.commons.transaction;
 
-public interface TransactionManager {
+public interface TransactionalResource {
     /**
      * TODO
      * 

@@ -6,4 +6,5 @@ public class NativeLockManager extends GenericLockManager<Object, Object> implem
     public Object create() {
         return new Object();
     }
+
 }

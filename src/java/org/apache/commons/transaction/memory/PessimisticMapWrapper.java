@@ -21,9 +21,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.transaction.locking.ReadWriteLockManager;
-import org.apache.commons.transaction.util.LoggerFacade;
-
 /**
  * Wrapper that adds transactional control to all kinds of maps that implement the {@link Map} interface. By using
  * pessimistic transaction control (blocking locks) this wrapper has better isolation than {@link TransactionalMapWrapper}, but
@@ -42,15 +39,10 @@ import org.apache.commons.transaction.util.LoggerFacade;
  * @see TransactionalMapWrapper
  * @see OptimisticMapWrapper
  */
-public class PessimisticMapWrapper<LockingTxContext> extends TransactionalMapWrapper {
-
-    protected static final int READ = 1;
-    protected static final int WRITE = 2;
+public class PessimisticMapWrapper extends TransactionalMapWrapper {
 
     protected static final Object GLOBAL_LOCK = "GLOBAL";
 
-    protected ReadWriteLockManager lockManager;
-//    protected MultiLevelLock globalLock;
     protected long readTimeOut = 60000; /* FIXME: pass in ctor */
 
     /**
@@ -61,8 +53,6 @@ public class PessimisticMapWrapper<LockingTxContext> extends TransactionalMapWra
      */
     public PessimisticMapWrapper(Map wrapped) {
         super(wrapped);
-        lockManager = new ReadWriteLockManager(logger, readTimeOut);
-//        globalLock = new GenericLock(GLOBAL_LOCK_NAME, WRITE, logger);
     }
 
     public Collection values() {
@@ -97,9 +87,9 @@ public class PessimisticMapWrapper<LockingTxContext> extends TransactionalMapWra
     protected void assureWriteLock(Object key) {
         LockingTxContext txContext = (LockingTxContext) getActiveTx();
         if (txContext != null) {
-            lockManager.writeLock(txContext, key);
+            txContext.writeLock(key);
             // XXX fake intention lock (prohibits global WRITE)
-            lockManager.readLock(txContext, GLOBAL_LOCK); 
+            txContext.readLock(GLOBAL_LOCK); 
         }
     }
     
@@ -107,52 +97,47 @@ public class PessimisticMapWrapper<LockingTxContext> extends TransactionalMapWra
         LockingTxContext txContext = (LockingTxContext) getActiveTx();
         if (txContext != null) {
             // XXX fake intention lock (prohibits global WRITE)
-            lockManager.readLock(txContext, GLOBAL_LOCK); 
+            txContext.readLock(GLOBAL_LOCK); 
         }
     }
     
     public class LockingTxContext extends MapTxContext {
 
         protected Set keys() {
-            lockManager.readLock(this, GLOBAL_LOCK); 
+            readLock(GLOBAL_LOCK); 
             return super.keys();
         }
 
         protected Object get(Object key) {
-            lockManager.readLock(this, key);
+            readLock(key);
             // XXX fake intention lock (prohibits global WRITE)
-            lockManager.readLock(this, GLOBAL_LOCK);
+            readLock(GLOBAL_LOCK);
             return super.get(key);
         }
 
         protected void put(Object key, Object value) {
-            lockManager.writeLock(this, key);
+            writeLock(key);
             // XXX fake intention lock (prohibits global WRITE)
-            lockManager.readLock(this, GLOBAL_LOCK);
+            readLock(GLOBAL_LOCK);
             super.put(key, value);
         }
 
         protected void remove(Object key) {
-            lockManager.writeLock(this, key);
+            writeLock(key);
             // XXX fake intention lock (prohibits global WRITE)
-            lockManager.readLock(this, GLOBAL_LOCK);
+            readLock(GLOBAL_LOCK);
             super.remove(key);
         }
 
         protected int size() {
             // XXX this is bad luck, we need a global read lock just for the size :( :( :(
-            lockManager.readLock(this, GLOBAL_LOCK);
+            readLock(GLOBAL_LOCK);
             return super.size();
         }
 
         protected void clear() {
-            lockManager.writeLock(this, GLOBAL_LOCK);
+            writeLock(GLOBAL_LOCK);
             super.clear();
-        }
-
-        protected void dispose() {
-            super.dispose();
-            lockManager.releaseAll(this);
         }
 
         protected void finalize() throws Throwable {
