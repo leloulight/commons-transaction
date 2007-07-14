@@ -28,14 +28,14 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.transaction.AbstractTransactionalResource;
-import org.apache.commons.transaction.TransactionalResource;
-import org.apache.commons.transaction.AbstractTransactionalResource.AbstractTxContext;
+import org.apache.commons.transaction.AbstractTransactionalResourceManager;
+import org.apache.commons.transaction.TransactionalResourceManager;
+import org.apache.commons.transaction.AbstractTransactionalResourceManager.AbstractTxContext;
 import org.apache.commons.transaction.locking.LockException;
 import org.apache.commons.transaction.util.FileHelper;
 
 public class TxFileResourceManager extends
-        AbstractTransactionalResource<TxFileResourceManager.FileTxContext> implements
+        AbstractTransactionalResourceManager<TxFileResourceManager.FileTxContext> implements
         FileResourceManager {
 
     private Log logger = LogFactory.getLog(getClass());
@@ -44,7 +44,7 @@ public class TxFileResourceManager extends
 
     protected PathManager idMapper;
 
-    protected TransactionalResource tm;
+    protected TransactionalResourceManager tm;
 
     public static void applyDeletes(File removeDir, File targetDir, File rootDir)
             throws IOException {

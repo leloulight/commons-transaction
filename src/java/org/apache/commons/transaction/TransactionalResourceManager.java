@@ -16,26 +16,18 @@
  */
 package org.apache.commons.transaction;
 
-import javax.transaction.xa.XAException;
 
 /**
- * Interface for something that makes up a transactional resource.
+ * Interface for something that makes up a transactional resource manager.
  * 
- * @version $Id: TransactionalResource.java 493628 2007-01-07 01:42:48Z joerg $
  */
-public interface TransactionalResource {
+public interface TransactionalResourceManager {
     /**
      * TODO
      * 
      * @param mSecs
      */
     public void setTransactionTimeout(long mSecs);
-
-    /**
-     * Prepares the changes done inside this transaction reasource.
-     *  
-     */
-    public boolean prepareTransaction();
 
     /**
      * Starts a new transaction and associates it with the current thread. All
@@ -53,26 +45,6 @@ public interface TransactionalResource {
      */
     public void startTransaction();
 
-    /**
-     * Checks whether this transaction has been marked to allow a rollback as
-     * the only valid outcome. This can be set my method
-     * {@link #markTransactionForRollback()} or might be set internally be any
-     * fatal error. Once a transaction is marked for rollback there is no way to
-     * undo this. A transaction that is marked for rollback can not be
-     * committed, also rolled back.
-     * 
-     * @return <code>true</code> if this transaction has been marked for a
-     *         roll back
-     * @see #markTransactionForRollback()
-     */
-    public boolean isTransactionMarkedForRollback();
-
-    /**
-     * Marks the current transaction to allow only a rollback as valid outcome.
-     * 
-     * @see #isTransactionMarkedForRollback()
-     */
-    public void markTransactionForRollback();
 
     /**
      * Discards all changes made in the current transaction and deletes the
@@ -91,9 +63,5 @@ public interface TransactionalResource {
      * @see #rollbackTransaction()
      */
     public void commitTransaction();
-
-    boolean isReadOnlyTransaction();
-    boolean isTransactionPrepared();
-
 
 }

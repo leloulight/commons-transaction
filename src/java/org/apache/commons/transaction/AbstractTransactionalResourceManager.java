@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 
 import org.apache.commons.transaction.locking.LockException;
-import org.apache.commons.transaction.locking.LockManager;
 import org.apache.commons.transaction.locking.ReadWriteLockManager;
 import org.apache.commons.transaction.locking.LockException.Code;
 
@@ -33,7 +32,7 @@ import org.apache.commons.transaction.locking.LockException.Code;
  *
  * @param <T>
  */
-public abstract class AbstractTransactionalResource<T extends AbstractTransactionalResource.AbstractTxContext> implements TransactionalResource {
+public abstract class AbstractTransactionalResourceManager<T extends AbstractTransactionalResourceManager.AbstractTxContext> implements TransactionalResourceManager {
     protected ThreadLocal<T> activeTx = new ThreadLocal<T>();
 
     protected Set<T> activeTransactions = new HashSet<T>();
@@ -42,7 +41,18 @@ public abstract class AbstractTransactionalResource<T extends AbstractTransactio
 
     protected abstract T createContext();
 
-    @Override
+    /**
+     * Checks whether this transaction has been marked to allow a rollback as
+     * the only valid outcome. This can be set my method
+     * {@link #markTransactionForRollback()} or might be set internally be any
+     * fatal error. Once a transaction is marked for rollback there is no way to
+     * undo this. A transaction that is marked for rollback can not be
+     * committed, also rolled back.
+     * 
+     * @return <code>true</code> if this transaction has been marked for a
+     *         roll back
+     * @see #markTransactionForRollback()
+     */
     public boolean isTransactionMarkedForRollback() {
         T txContext = getActiveTx();
 
@@ -160,7 +170,10 @@ public abstract class AbstractTransactionalResource<T extends AbstractTransactio
         setActiveTx(null);
     }
 
-    @Override
+    /**
+     * Prepares the changes done inside this transaction reasource.
+     *  
+     */
     public boolean prepareTransaction() {
         T txContext = getActiveTx();
 
@@ -201,6 +214,11 @@ public abstract class AbstractTransactionalResource<T extends AbstractTransactio
         return false;
     }
 
+    /**
+     * Marks the current transaction to allow only a rollback as valid outcome.
+     * 
+     * @see #isTransactionMarkedForRollback()
+     */
     public void markTransactionForRollback() {
         // TODO Auto-generated method stub
         
