@@ -8,12 +8,4 @@ For 2.0:
   - Optimally, only a single Wrapper remains
   - All implementations shall be based on AbstractTxContext
 
-- Maybe get rid of lock policy. Could well be integrated into AbstractTxContext
-  - Question: Is there a need for a different kind of locking?
-
-- Merge 
-  - org.apache.commons.transaction.TransactionalResource with 
-  - org.apache.commons.transaction.xa.TransactionalResource
-  - same with the abstract impementations
-
-- We do not need suspend/resume/etc. in AbstractTransactionManager, we can leave this to the xa transaction manager
+- Port JCA implementation for Map from 1.x

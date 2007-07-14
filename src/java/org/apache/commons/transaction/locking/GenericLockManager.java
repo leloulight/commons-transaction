@@ -34,6 +34,7 @@ public abstract class GenericLockManager<K, L> implements LockManager<K, L> {
         return globalLocks.values();
     }
 
+    // FIXME
     public Set<L> getAllForCurrentThread() {
         // TODO Auto-generated method stub
         return null;

@@ -29,9 +29,11 @@ import javax.transaction.xa.Xid;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.transaction.TransactionalResource;
 
 /**
- * Abstract XAResource doing all the tedious tasks shared by many XAResouce implementations.
+ * Abstract XAResource doing all the tedious tasks shared by many XAResouce
+ * implementations.
  * 
  * @version $Id: AbstractXAResource.java 493628 2007-01-07 01:42:48Z joerg $
  */
@@ -43,14 +45,13 @@ public abstract class AbstractXAResource implements XAResource, Status {
     private ThreadLocal activeTransactionBranch = new ThreadLocal();
 
     private Map suspendedContexts = Collections.synchronizedMap(new HashMap());
+
     private Map activeContexts = Collections.synchronizedMap(new HashMap());
 
     public abstract boolean isSameRM(XAResource xares) throws XAException;
 
     public abstract Xid[] recover(int flag) throws XAException;
 
-    protected abstract boolean includeBranchInXid();
-    
     public void forget(Xid xid) throws XAException {
         if (logger.isDebugEnabled()) {
             logger.debug("Forgetting transaction branch " + xid);
@@ -74,18 +75,18 @@ public abstract class AbstractXAResource implements XAResource, Status {
             logger.debug("Committing transaction branch " + ts);
         }
 
-        if (ts.getStatus() == STATUS_MARKED_ROLLBACK) {
+        if (ts.isTransactionMarkedForRollback()) {
             throw new XAException(XAException.XA_RBROLLBACK);
         }
 
-        if (ts.getStatus() != STATUS_PREPARED) {
+        if (ts.isTransactionPrepared()) {
             if (onePhase) {
-                ts.prepare();
+                ts.prepareTransaction();
             } else {
                 throw new XAException(XAException.XAER_PROTO);
             }
         }
-        ts.commit();
+        ts.commitTransaction();
         setCurrentlyActiveTransactionalResource(null);
         removeActiveTransactionalResource(xid);
         removeSuspendedTransactionalResource(xid);
@@ -101,7 +102,7 @@ public abstract class AbstractXAResource implements XAResource, Status {
             logger.debug("Rolling back transaction branch " + ts);
         }
 
-        ts.rollback();
+        ts.rollbackTransaction();
         setCurrentlyActiveTransactionalResource(null);
         removeActiveTransactionalResource(xid);
         removeSuspendedTransactionalResource(xid);
@@ -117,17 +118,26 @@ public abstract class AbstractXAResource implements XAResource, Status {
             logger.debug("Preparing transaction branch " + ts);
         }
 
-        if (ts.getStatus() == STATUS_MARKED_ROLLBACK) {
+        if (ts.isTransactionMarkedForRollback()) {
             throw new XAException(XAException.XA_RBROLLBACK);
         }
-        	
-        int result = ts.prepare();
-        ts.setStatus(STATUS_PREPARED);
-        
+
+        int result;
+        boolean prepared = ts.prepareTransaction();
+        if (prepared) {
+            if (ts.isReadOnlyTransaction()) {
+                result = XA_RDONLY;
+            } else {
+                result = XA_OK;
+            }
+        } else {
+            throw new XAException(XAException.XA_RBROLLBACK);
+        }
+
         if (result == XA_RDONLY) {
             commit(xid, false);
         }
-        
+
         return result;
     }
 
@@ -140,24 +150,26 @@ public abstract class AbstractXAResource implements XAResource, Status {
             throw new XAException(XAException.XAER_INVAL);
         }
         if (logger.isDebugEnabled()) {
-            logger.debug(new StringBuffer(128)
-	            .append("Thread ").append(Thread.currentThread())
-	            .append(flags == TMSUSPEND ? " suspends" : flags == TMFAIL ? " fails" : " ends")
-	            .append(" work on behalf of transaction branch ")
-	            .append(ts).toString());
+            logger
+                    .debug(new StringBuffer(128).append("Thread ").append(Thread.currentThread())
+                            .append(
+                                    flags == TMSUSPEND ? " suspends" : flags == TMFAIL ? " fails"
+                                            : " ends").append(
+                                    " work on behalf of transaction branch ").append(ts).toString());
         }
 
         switch (flags) {
-            case TMSUSPEND :
-                ts.suspend();
-                addSuspendedTransactionalResource(xid, ts);
-                removeActiveTransactionalResource(xid);
-                break;
-            case TMFAIL :
-                ts.setStatus(STATUS_MARKED_ROLLBACK);
-                break;
-            case TMSUCCESS :
-                break;
+        case TMSUSPEND:
+            // FIXME: This would require action on the transactional resource,
+            // but we just can't do that
+            addSuspendedTransactionalResource(xid, ts);
+            removeActiveTransactionalResource(xid);
+            break;
+        case TMFAIL:
+            ts.markTransactionForRollback();
+            break;
+        case TMSUCCESS:
+            break;
         }
         setCurrentlyActiveTransactionalResource(null);
     }
@@ -167,35 +179,36 @@ public abstract class AbstractXAResource implements XAResource, Status {
             throw new XAException(XAException.XAER_INVAL);
         }
         if (logger.isDebugEnabled()) {
-            logger.debug(new StringBuffer(128)
-                    .append("Thread ").append(Thread.currentThread())
-                    .append(flags == TMNOFLAGS ? " starts" : flags == TMJOIN ? " joins" : " resumes")
-                    .append(" work on behalf of transaction branch ")
+            logger.debug(new StringBuffer(128).append("Thread ").append(Thread.currentThread())
+                    .append(
+                            flags == TMNOFLAGS ? " starts" : flags == TMJOIN ? " joins"
+                                    : " resumes").append(" work on behalf of transaction branch ")
                     .append(xid).toString());
         }
-        
+
         TransactionalResource ts;
         switch (flags) {
-            // a new transaction
-            case TMNOFLAGS :
-            case TMJOIN :
-            default :
-                try {
-                    ts = createTransactionResource(xid);
-                    ts.begin();
-                } catch (Exception e) {
-					logger.error("Could not create new transactional  resource", e);
-					throw new XAException(e.getMessage());
-				}
-                break;
-            case TMRESUME :
-                ts = getSuspendedTransactionalResource(xid);
-                if (ts == null) {
-                    throw new XAException(XAException.XAER_NOTA);
-                }
-                ts.resume();
-                removeSuspendedTransactionalResource(xid);
-                break;
+        // a new transaction
+        case TMNOFLAGS:
+        case TMJOIN:
+        default:
+            try {
+                ts = createTransactionResource(xid);
+                ts.startTransaction();
+            } catch (Exception e) {
+                logger.error("Could not create new transactional  resource", e);
+                throw new XAException(e.getMessage());
+            }
+            break;
+        case TMRESUME:
+            ts = getSuspendedTransactionalResource(xid);
+            if (ts == null) {
+                throw new XAException(XAException.XAER_NOTA);
+            }
+            // FIXME: This would require action on the transactional resource,
+            // but we just can't do that
+            removeSuspendedTransactionalResource(xid);
+            break;
         }
         setCurrentlyActiveTransactionalResource(ts);
         addAcitveTransactionalResource(xid, ts);
@@ -213,38 +226,35 @@ public abstract class AbstractXAResource implements XAResource, Status {
     }
 
     protected TransactionalResource getTransactionalResource(Xid xid) {
-    	TransactionalResource ts =  getActiveTransactionalResource(xid);
-    	if (ts != null) return ts;
-    	else return getSuspendedTransactionalResource(xid);
+        TransactionalResource ts = getActiveTransactionalResource(xid);
+        if (ts != null)
+            return ts;
+        else
+            return getSuspendedTransactionalResource(xid);
     }
+
     protected TransactionalResource getActiveTransactionalResource(Xid xid) {
-        Xid wxid = XidWrapper.wrap(xid, includeBranchInXid());
-        return (TransactionalResource) activeContexts.get(wxid);
+        return (TransactionalResource) activeContexts.get(xid);
     }
 
     protected TransactionalResource getSuspendedTransactionalResource(Xid xid) {
-        Xid wxid = XidWrapper.wrap(xid, includeBranchInXid());
-        return (TransactionalResource) suspendedContexts.get(wxid);
+        return (TransactionalResource) suspendedContexts.get(xid);
     }
 
     protected void addAcitveTransactionalResource(Xid xid, TransactionalResource txContext) {
-        Xid wxid = XidWrapper.wrap(xid, includeBranchInXid());
-        activeContexts.put(wxid, txContext);
+        activeContexts.put(xid, txContext);
     }
 
     protected void addSuspendedTransactionalResource(Xid xid, TransactionalResource txContext) {
-        Xid wxid = XidWrapper.wrap(xid, includeBranchInXid());
-        suspendedContexts.put(wxid, txContext);
+        suspendedContexts.put(xid, txContext);
     }
 
     protected void removeActiveTransactionalResource(Xid xid) {
-        Xid wxid = XidWrapper.wrap(xid, includeBranchInXid());
-        activeContexts.remove(wxid);
+        activeContexts.remove(xid);
     }
 
     protected void removeSuspendedTransactionalResource(Xid xid) {
-        Xid wxid = XidWrapper.wrap(xid, includeBranchInXid());
-        suspendedContexts.remove(wxid);
+        suspendedContexts.remove(xid);
     }
 
 }

@@ -26,40 +26,44 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.transaction.AbstractTransactionalResource;
-import org.apache.commons.transaction.AbstractTxContext;
-import org.apache.commons.transaction.Status;
 import org.apache.commons.transaction.TransactionalResource;
-import org.apache.commons.transaction.TxContext;
+import org.apache.commons.transaction.AbstractTransactionalResource.AbstractTxContext;
 
 /**
- * Wrapper that adds transactional control to all kinds of maps that implement the {@link Map} interface.
- * This wrapper has rather weak isolation, but is simply, neven blocks and commits will never fail for logical
- * reasons. 
- * <br>
- * Start a transaction by calling {@link #startTransaction()}. Then perform the normal actions on the map and
- * finally either call {@link #commitTransaction()} to make your changes permanent or {@link #rollbackTransaction()} to
- * undo them.
- * <br>
- * <em>Caution:</em> Do not modify values retrieved by {@link #get(Object)} as this will circumvent the transactional mechanism.
- * Rather clone the value or copy it in a way you see fit and store it back using {@link #put(Object, Object)}.
- * <br>
- * <em>Note:</em> This wrapper guarantees isolation level <code>READ COMMITTED</code> only. I.e. as soon a value
- * is committed in one transaction it will be immediately visible in all other concurrent transactions.
+ * Wrapper that adds transactional control to all kinds of maps that implement
+ * the {@link Map} interface. This wrapper has rather weak isolation, but is
+ * simply, neven blocks and commits will never fail for logical reasons. <br>
+ * Start a transaction by calling {@link #startTransaction()}. Then perform the
+ * normal actions on the map and finally either call
+ * {@link #commitTransaction()} to make your changes permanent or
+ * {@link #rollbackTransaction()} to undo them. <br>
+ * <em>Caution:</em> Do not modify values retrieved by {@link #get(Object)} as
+ * this will circumvent the transactional mechanism. Rather clone the value or
+ * copy it in a way you see fit and store it back using
+ * {@link #put(Object, Object)}. <br>
+ * <em>Note:</em> This wrapper guarantees isolation level
+ * <code>READ COMMITTED</code> only. I.e. as soon a value is committed in one
+ * transaction it will be immediately visible in all other concurrent
+ * transactions.
  * 
  * @version $Id: TransactionalMapWrapper.java 493628 2007-01-07 01:42:48Z joerg $
  * @see OptimisticMapWrapper
  * @see PessimisticMapWrapper
  */
-public class TransactionalMapWrapper extends AbstractTransactionalResource<TransactionalMapWrapper.MapTxContext> implements Map, TransactionalResource {
+public class TransactionalMapWrapper extends
+        AbstractTransactionalResource<TransactionalMapWrapper.MapTxContext> implements Map,
+        TransactionalResource {
 
     /** The map wrapped. */
     protected Map wrapped;
 
     /**
-     * Creates a new transactional map wrapper. Temporary maps and sets to store transactional
-     * data will be instances of {@link java.util.HashMap} and {@link java.util.HashSet}. 
+     * Creates a new transactional map wrapper. Temporary maps and sets to store
+     * transactional data will be instances of {@link java.util.HashMap} and
+     * {@link java.util.HashSet}.
      * 
-     * @param wrapped map to be wrapped
+     * @param wrapped
+     *            map to be wrapped
      */
     public TransactionalMapWrapper(Map wrapped) {
         this.wrapped = Collections.synchronizedMap(wrapped);
@@ -68,14 +72,13 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
     // can be used by sub classes
     protected TransactionalMapWrapper() {
     }
-    
 
     //
     // Map methods
     // 
 
     /**
-     * @see Map#clear() 
+     * @see Map#clear()
      */
     public void clear() {
         MapTxContext txContext = getActiveTx();
@@ -87,7 +90,7 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
     }
 
     /**
-     * @see Map#size() 
+     * @see Map#size()
      */
     public int size() {
         MapTxContext txContext = getActiveTx();
@@ -99,7 +102,7 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
     }
 
     /**
-     * @see Map#isEmpty() 
+     * @see Map#isEmpty()
      */
     public boolean isEmpty() {
         MapTxContext txContext = getActiveTx();
@@ -111,17 +114,17 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
     }
 
     /**
-     * @see Map#containsKey(java.lang.Object) 
+     * @see Map#containsKey(java.lang.Object)
      */
     public boolean containsKey(Object key) {
-	return keySet().contains(key);
+        return keySet().contains(key);
     }
 
     /**
-     * @see Map#containsValue(java.lang.Object) 
+     * @see Map#containsValue(java.lang.Object)
      */
     public boolean containsValue(Object value) {
-        TxContext txContext = getActiveTx();
+        MapTxContext txContext = getActiveTx();
 
         if (txContext == null) {
             return wrapped.containsValue(value);
@@ -131,11 +134,11 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
     }
 
     /**
-     * @see Map#values() 
+     * @see Map#values()
      */
     public Collection values() {
 
-        TxContext txContext = getActiveTx();
+        MapTxContext txContext = getActiveTx();
 
         if (txContext == null) {
             return wrapped.values();
@@ -145,7 +148,8 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
             for (Iterator it = keySet().iterator(); it.hasNext();) {
                 Object key = it.next();
                 Object value = get(key);
-                // XXX we have no isolation, so get entry might have been deleted in the meantime
+                // XXX we have no isolation, so get entry might have been
+                // deleted in the meantime
                 if (value != null) {
                     values.add(value);
                 }
@@ -155,7 +159,7 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
     }
 
     /**
-     * @see Map#putAll(java.util.Map) 
+     * @see Map#putAll(java.util.Map)
      */
     public void putAll(Map map) {
         MapTxContext txContext = getActiveTx();
@@ -171,10 +175,10 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
     }
 
     /**
-     * @see Map#entrySet() 
+     * @see Map#entrySet()
      */
     public Set entrySet() {
-        TxContext txContext = getActiveTx();
+        MapTxContext txContext = getActiveTx();
         if (txContext == null) {
             return wrapped.entrySet();
         } else {
@@ -183,7 +187,8 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
             for (Iterator it = keySet().iterator(); it.hasNext();) {
                 Object key = it.next();
                 Object value = get(key);
-                // XXX we have no isolation, so get entry might have been deleted in the meantime
+                // XXX we have no isolation, so get entry might have been
+                // deleted in the meantime
                 if (value != null) {
                     entrySet.add(new HashEntry(key, value));
                 }
@@ -193,7 +198,7 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
     }
 
     /**
-     * @see Map#keySet() 
+     * @see Map#keySet()
      */
     public Set keySet() {
         MapTxContext txContext = getActiveTx();
@@ -206,7 +211,7 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
     }
 
     /**
-     * @see Map#get(java.lang.Object) 
+     * @see Map#get(java.lang.Object)
      */
     public Object get(Object key) {
         MapTxContext txContext = getActiveTx();
@@ -219,7 +224,7 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
     }
 
     /**
-     * @see Map#remove(java.lang.Object) 
+     * @see Map#remove(java.lang.Object)
      */
     public Object remove(Object key) {
         MapTxContext txContext = getActiveTx();
@@ -249,10 +254,21 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
 
     }
 
+    @Override
+    protected MapTxContext createContext() {
+        return new MapTxContext();
+    }
+
+    @Override
+    protected MapTxContext getActiveTx() {
+        return activeTx.get();
+    }
+
     // mostly copied from org.apache.commons.collections.map.AbstractHashedMap
     protected static class HashEntry implements Map.Entry {
         /** The key */
         protected Object key;
+
         /** The value */
         protected Object value;
 
@@ -284,11 +300,13 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
             }
             Map.Entry other = (Map.Entry) obj;
             return (getKey() == null ? other.getKey() == null : getKey().equals(other.getKey()))
-                && (getValue() == null ? other.getValue() == null : getValue().equals(other.getValue()));
+                    && (getValue() == null ? other.getValue() == null : getValue().equals(
+                            other.getValue()));
         }
 
         public int hashCode() {
-            return (getKey() == null ? 0 : getKey().hashCode()) ^ (getValue() == null ? 0 : getValue().hashCode());
+            return (getKey() == null ? 0 : getKey().hashCode())
+                    ^ (getValue() == null ? 0 : getValue().hashCode());
         }
 
         public String toString() {
@@ -296,10 +314,13 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
         }
     }
 
-    public class MapTxContext extends AbstractTxContext implements TxContext {
+    public class MapTxContext extends AbstractTxContext {
         protected Set deletes;
+
         protected Map changes;
+
         protected Map adds;
+
         protected boolean cleared;
 
         protected MapTxContext() {
@@ -322,15 +343,15 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
         protected Object get(Object key) {
 
             if (deletes.contains(key)) {
-                // reflects that entry has been deleted in this tx 
+                // reflects that entry has been deleted in this tx
                 return null;
             }
 
-            if(changes.containsKey(key)){
+            if (changes.containsKey(key)) {
                 return changes.get(key);
             }
 
-            if(adds.containsKey(key)){
+            if (adds.containsKey(key)) {
                 return adds.get(key);
             }
 
@@ -352,10 +373,10 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
                     adds.put(key, value);
                 }
             } catch (RuntimeException e) {
-                setStatus(Status.MARKED_ROLLBACK);
+                markForRollback();
                 throw e;
             } catch (Error e) {
-                setStatus(Status.MARKED_ROLLBACK);
+                markForRollback();
                 throw e;
             }
         }
@@ -370,10 +391,10 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
                     deletes.add(key);
                 }
             } catch (RuntimeException e) {
-                setStatus(Status.MARKED_ROLLBACK);
+                markForRollback();
                 throw e;
             } catch (Error e) {
-                setStatus(Status.MARKED_ROLLBACK);
+                markForRollback();
                 throw e;
             }
         }
@@ -396,7 +417,7 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
         }
 
         protected boolean isEmpty() {
-            return (size() == 0); 
+            return (size() == 0);
         }
 
         public void commit() {
@@ -416,15 +437,6 @@ public class TransactionalMapWrapper extends AbstractTransactionalResource<Trans
             }
         }
 
-        public void setTimeout(long timeoutMSecs) {
-            // TODO Auto-generated method stub
-            
-        }
-
     }
 
-    @Override
-    protected MapTxContext createContext() {
-        return new MapTxContext();
-    }
 }

@@ -18,8 +18,13 @@ package org.apache.commons.transaction;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReadWriteLock;
 
-import org.apache.commons.transaction.locking.LockPolicy;
+import org.apache.commons.transaction.locking.LockException;
+import org.apache.commons.transaction.locking.LockManager;
+import org.apache.commons.transaction.locking.ReadWriteLockManager;
+import org.apache.commons.transaction.locking.LockException.Code;
 
 /**
  * Not thread-safe. FIXME: Should it be?
@@ -28,7 +33,7 @@ import org.apache.commons.transaction.locking.LockPolicy;
  *
  * @param <T>
  */
-public abstract class AbstractTransactionalResource<T extends TxContext> implements TransactionalResource {
+public abstract class AbstractTransactionalResource<T extends AbstractTransactionalResource.AbstractTxContext> implements TransactionalResource {
     protected ThreadLocal<T> activeTx = new ThreadLocal<T>();
 
     protected Set<T> activeTransactions = new HashSet<T>();
@@ -38,39 +43,15 @@ public abstract class AbstractTransactionalResource<T extends TxContext> impleme
     protected abstract T createContext();
 
     @Override
-    public boolean isReadOnly() {
-        TxContext txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
-
-        return txContext.isReadOnly();
-    }
-
-    @Override
     public boolean isTransactionMarkedForRollback() {
-        TxContext txContext = getActiveTx();
+        T txContext = getActiveTx();
 
         if (txContext == null) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
                     + " not associated with a transaction!");
         }
 
-        return (txContext.getStatus() == Status.MARKED_ROLLBACK);
-    }
-
-    @Override
-    public void markTransactionForRollback() {
-        TxContext txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
-
-        txContext.setStatus(Status.MARKED_ROLLBACK);
+        return (txContext.isMarkedForRollback());
     }
 
     /**
@@ -91,7 +72,7 @@ public abstract class AbstractTransactionalResource<T extends TxContext> impleme
      * 
      * @see #resumeTransaction(TxContext)
      */
-    public TxContext suspendTransaction() {
+    public T suspendTransaction() {
         T txContext = getActiveTx();
 
         if (txContext == null) {
@@ -135,16 +116,6 @@ public abstract class AbstractTransactionalResource<T extends TxContext> impleme
     }
 
     @Override
-    public Status getTransactionState() {
-        TxContext txContext = getActiveTx();
-
-        if (txContext == null) {
-            return Status.NO_TRANSACTION;
-        }
-        return txContext.getStatus();
-    }
-
-    @Override
     public void startTransaction() {
         if (getActiveTx() != null) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
@@ -158,7 +129,7 @@ public abstract class AbstractTransactionalResource<T extends TxContext> impleme
 
     @Override
     public void rollbackTransaction() {
-        TxContext txContext = getActiveTx();
+        T txContext = getActiveTx();
 
         if (txContext == null) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
@@ -172,14 +143,14 @@ public abstract class AbstractTransactionalResource<T extends TxContext> impleme
 
     @Override
     public void commitTransaction() {
-        TxContext txContext = getActiveTx();
+        T txContext = getActiveTx();
 
         if (txContext == null) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
                     + " not associated with a transaction!");
         }
 
-        if (txContext.getStatus() == Status.MARKED_ROLLBACK) {
+        if (txContext.isMarkedForRollback()) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
                     + " is marked for rollback!");
         }
@@ -191,7 +162,7 @@ public abstract class AbstractTransactionalResource<T extends TxContext> impleme
 
     @Override
     public boolean prepareTransaction() {
-        TxContext txContext = getActiveTx();
+        T txContext = getActiveTx();
 
         if (txContext == null) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
@@ -202,7 +173,7 @@ public abstract class AbstractTransactionalResource<T extends TxContext> impleme
 
     @Override
     public void setTransactionTimeout(long mSecs) {
-        TxContext txContext = getActiveTx();
+        T txContext = getActiveTx();
 
         if (txContext == null) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
@@ -218,6 +189,127 @@ public abstract class AbstractTransactionalResource<T extends TxContext> impleme
 
     protected void setActiveTx(T txContext) {
         activeTx.set(txContext);
+    }
+
+    public boolean isTransactionPrepared() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    public boolean isReadOnlyTransaction() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    public void markTransactionForRollback() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public abstract class AbstractTxContext {
+        private long timeout = -1L;
+
+        private long startTime = -1L;
+
+        private boolean readOnly = true;
+        
+        private boolean prepared = false;
+        private boolean markedForRollback = false;
+        
+        private ReadWriteLockManager lm = new ReadWriteLockManager();
+
+        public AbstractTxContext() {
+            startTime = System.currentTimeMillis();
+        }
+
+        protected long getRemainingTimeout() {
+            long now = System.currentTimeMillis();
+            return (getStartTime()- now + timeout);
+        }
+
+        public void dispose() {
+            Iterable<ReadWriteLock> locks = getLm().getAllForCurrentThread();
+
+            for (ReadWriteLock lock : locks) {
+                lock.readLock().unlock();
+                lock.writeLock().unlock();
+            }
+        }
+
+        public boolean isReadOnly() {
+            return readOnly;
+        }
+
+        public boolean prepare() {
+            prepared = true;
+            return true;
+        }
+
+        public long getStartTime() {
+            return startTime;
+        }
+
+        public void setStartTime(long startTimeMSecs) {
+            this.startTime = startTimeMSecs;
+        }
+
+        public long getTimeout() {
+            return timeout;
+        }
+
+        public void setTimeout(long timeoutMSecs) {
+            this.timeout = timeoutMSecs;
+        }
+        
+        public void setReadOnly(boolean readOnly) {
+            this.readOnly = readOnly;
+        }
+
+        public ReadWriteLockManager getLm() {
+            return lm;
+        }
+
+        protected ReadWriteLock initLock(Object id) {
+            return getLm().putIfAbsent(id, getLm().create());
+        }
+
+        public void readLock(Object id) throws LockException {
+            try {
+                boolean locked = initLock(id).readLock().tryLock(getRemainingTimeout(), TimeUnit.MILLISECONDS);
+                if (!locked) {
+                    throw new LockException(Code.TIMED_OUT, id);
+                }
+            } catch (InterruptedException e) {
+                throw new LockException(Code.INTERRUPTED, id);
+            }
+        }
+
+        public void writeLock(Object id)throws LockException  {
+            try {
+                boolean locked = initLock(id).writeLock().tryLock(getRemainingTimeout(), TimeUnit.MILLISECONDS);
+                if (!locked) {
+                    throw new LockException(Code.TIMED_OUT, id);
+                }
+            } catch (InterruptedException e) {
+                throw new LockException(Code.INTERRUPTED, id);
+            }
+        }
+
+        public boolean isMarkedForRollback() {
+            return markedForRollback;
+        }
+
+        public boolean isPrepared() {
+            return prepared;
+        }
+
+        public void markForRollback() {
+            markedForRollback = true;
+        }
+
+        public void commit() {
+            
+        }
     }
 
 }

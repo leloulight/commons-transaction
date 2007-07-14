@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.transaction.util.FileHelper;
 
 public class DefaultPathManager implements PathManager {
-    
+
     private Log logger = LogFactory.getLog(getClass());
 
     protected String workChangeDir = "change";
@@ -37,8 +37,6 @@ public class DefaultPathManager implements PathManager {
 
     protected String storeDir;
 
-
-    
     public String getStoreDir() {
         return storeDir;
     }
@@ -80,11 +78,11 @@ public class DefaultPathManager implements PathManager {
         }
         return path;
     }
-    
+
     public String assureLeadingSlash(String pathObject) {
         String path = "";
         if (pathObject != null) {
-                path = getPathForId(pathObject);
+            path = getPathForId(pathObject);
             if (path.length() > 0 && path.charAt(0) != '/' && path.charAt(0) != '\\') {
                 path = "/" + path;
             }
@@ -134,7 +132,7 @@ public class DefaultPathManager implements PathManager {
             return txChangePath;
         } catch (IOException e) {
             throw new Error("Can not write to resource at '" + path);
-                    
+
         }
     }
 
@@ -189,6 +187,5 @@ public class DefaultPathManager implements PathManager {
     public String getDeleteBaseDir() {
         return getTransactionBaseDir() + getWorkDeleteDir();
     }
-
 
 }

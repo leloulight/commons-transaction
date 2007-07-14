@@ -16,6 +16,13 @@
  */
 package org.apache.commons.transaction;
 
+import javax.transaction.xa.XAException;
+
+/**
+ * Interface for something that makes up a transactional resource.
+ * 
+ * @version $Id: TransactionalResource.java 493628 2007-01-07 01:42:48Z joerg $
+ */
 public interface TransactionalResource {
     /**
      * TODO
@@ -25,9 +32,8 @@ public interface TransactionalResource {
     public void setTransactionTimeout(long mSecs);
 
     /**
-     * TODO
-     * 
-     * @return
+     * Prepares the changes done inside this transaction reasource.
+     *  
      */
     public boolean prepareTransaction();
 
@@ -86,21 +92,8 @@ public interface TransactionalResource {
      */
     public void commitTransaction();
 
-    /**
-     * Returns the state of the current transaction.
-     * 
-     * @return state of the current transaction as decribed in the
-     *         {@link Status} interface.
-     */
-    public Status getTransactionState();
+    boolean isReadOnlyTransaction();
+    boolean isTransactionPrepared();
 
-    /**
-     * Checks if any write operations have been performed inside this
-     * transaction.
-     * 
-     * @return <code>true</code> if no write opertation has been performed
-     *         inside the current transaction, <code>false</code> otherwise
-     */
-    public boolean isReadOnly();
 
 }

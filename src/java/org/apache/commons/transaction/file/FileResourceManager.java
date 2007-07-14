@@ -19,24 +19,91 @@ package org.apache.commons.transaction.file;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 
 import org.apache.commons.transaction.locking.LockException;
 
 public interface FileResourceManager {
-    public InputStream read(String id) throws IOException, LockException;
+    
+    /**
+     * Checks if there is an object at the position specified by
+     * <code>path</code>.
+     * 
+     * @param path
+     *            path of the object to check
+     * @return <code>true</code> if the object at <code>path</code> exists
+     */
+    boolean exists(String path) throws IOException, LockException;
 
-    public OutputStream write(String id) throws IOException, LockException;
+    /**
+     * Checks if there is an object at the position specified by
+     * <code>path</code> and if so if it is a folder.
+     * 
+     * @param path
+     *            path of the object to check
+     * @return <code>true</code> if the object at <code>path</code> exists
+     *         and is a folder
+     */
+    boolean isFolder(String path) throws IOException, LockException;
 
-    public boolean remove(String id) throws IOException, LockException;
+    /**
+     * Checks if there is an object at the position specified by
+     * <code>path</code> and if so if it is a content resource.
+     * 
+     * @param path
+     *            path of the object to check
+     * @return <code>true</code> if the object at <code>path</code> exists
+     *         and is a file resource
+     */
+    boolean isFile(String path) throws IOException, LockException;
 
-    public boolean create(String id) throws IOException, LockException;
+    /**
+     * Creates a folder at the position specified by <code>folderpath</code>.
+     * 
+     * @param folderpath
+     *            path of the folder
+     */
+    void createFolder(String folderpath) throws IOException, LockException;
 
-    public boolean move(String sourceId, String destinationId) throws IOException, LockException;
+    /**
+     * Creates a content resource at the position specified by
+     * <code>path</code>.
+     * 
+     * @param path
+     *            path of the content resource
+     */
+    void createFile(String path) throws IOException, LockException;
 
-    public boolean copy(String sourceId, String destinationId) throws IOException, LockException;
+    /**
+     * Gets the names of the children of the folder specified by
+     * <code>path</code>.
+     * 
+     * @param path
+     *            URI of the folder
+     * @return collection containing names of the children
+     */
+    Collection<String> getChildrenNames(String path) throws IOException, LockException;
 
-    public boolean createDir(String id) throws IOException, LockException;
+    /**
+     * Gets the content of the file specified by <code>path</code>.
+     * 
+     * @param path
+     *            path of the content resource
+     * @return input stream you can read the content of the resource from
+     */
+    public InputStream read(String path) throws IOException, LockException;
 
-    public boolean removeDir(String id) throws IOException, LockException;
+    public OutputStream write(String path) throws IOException, LockException;
 
+    /**
+     * Removes the object specified by <code>uri</code>.
+     * 
+     * @param uri
+     *            URI of the object, i.e. content resource or folder
+     */            
+    public boolean remove(String path) throws IOException, LockException;
+
+    public boolean move(String sourcepath, String destinationpath) throws IOException, LockException;
+
+    public boolean copy(String sourcepath, String destinationpath) throws IOException, LockException;
 }
