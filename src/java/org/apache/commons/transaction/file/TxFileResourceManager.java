@@ -32,11 +32,13 @@ import org.apache.commons.transaction.AbstractTransactionalResourceManager;
 import org.apache.commons.transaction.TransactionalResourceManager;
 import org.apache.commons.transaction.AbstractTransactionalResourceManager.AbstractTxContext;
 import org.apache.commons.transaction.locking.LockException;
+import org.apache.commons.transaction.resource.ResourceManager;
+import org.apache.commons.transaction.resource.StreamableResource;
 import org.apache.commons.transaction.util.FileHelper;
 
 public class TxFileResourceManager extends
         AbstractTransactionalResourceManager<TxFileResourceManager.FileTxContext> implements
-        FileResourceManager {
+        ResourceManager<StreamableResource> {
 
     private Log logger = LogFactory.getLog(getClass());
 
