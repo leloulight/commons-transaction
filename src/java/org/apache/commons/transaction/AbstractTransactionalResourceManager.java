@@ -16,8 +16,6 @@
  */
 package org.apache.commons.transaction;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 
@@ -27,17 +25,13 @@ import org.apache.commons.transaction.locking.LockException.Code;
 
 /**
  * Not thread-safe. FIXME: Should it be?
- * 
+ *  
  * @author olli
  *
  * @param <T>
  */
 public abstract class AbstractTransactionalResourceManager<T extends AbstractTransactionalResourceManager.AbstractTxContext> implements TransactionalResourceManager {
     protected ThreadLocal<T> activeTx = new ThreadLocal<T>();
-
-    protected Set<T> activeTransactions = new HashSet<T>();
-
-    protected Set<T> suspendedTransactions = new HashSet<T>();
 
     protected abstract T createContext();
 
@@ -64,67 +58,6 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         return (txContext.isMarkedForRollback());
     }
 
-    /**
-     * Suspends the transaction associated to the current thread. I.e. the
-     * associated between the current thread and the transaction is deleted.
-     * This is useful when you want to continue the transaction in another
-     * thread later. Call {@link #resumeTransaction(TxContext)} - possibly in
-     * another thread than the current - to resume work on the transaction. <br>
-     * <br>
-     * <em>Caution:</em> When calling this method the returned identifier for
-     * the transaction is the only remaining reference to the transaction, so be
-     * sure to remember it or the transaction will be eventually deleted (and
-     * thereby rolled back) as garbage.
-     * 
-     * @return an identifier for the suspended transaction, will be needed to
-     *         later resume the transaction by
-     *         {@link #resumeTransaction(TxContext)}
-     * 
-     * @see #resumeTransaction(TxContext)
-     */
-    public T suspendTransaction() {
-        T txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
-
-        suspendedTransactions.add(txContext);
-        setActiveTx(null);
-        return txContext;
-    }
-
-    /**
-     * Resumes a transaction in the current thread that has previously been
-     * suspened by {@link #suspendTransaction()}.
-     * 
-     * @param suspendedTx
-     *            the identifier for the transaction to be resumed, delivered by
-     *            {@link #suspendTransaction()}
-     * 
-     * @see #suspendTransaction()
-     */
-    public void resumeTransaction(T suspendedTx) {
-        T txContext = getActiveTx();
-
-        if (txContext != null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " already associated with a transaction!");
-        }
-
-        if (suspendedTx == null) {
-            throw new IllegalStateException("No transaction to resume!");
-        }
-
-        if (!suspendedTransactions.contains(suspendedTx)) {
-            throw new IllegalStateException("Transaction to resume needs to be suspended!");
-        }
-
-        suspendedTransactions.remove(txContext);
-        setActiveTx(suspendedTx);
-    }
-
     @Override
     public void startTransaction() {
         if (getActiveTx() != null) {
@@ -133,7 +66,6 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         }
         T txContent = createContext();
         setActiveTx(txContent);
-        activeTransactions.add(txContent);
 
     }
 
@@ -148,7 +80,6 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
         txContext.dispose();
         setActiveTx(null);
-        activeTransactions.remove(txContext);
     }
 
     @Override
