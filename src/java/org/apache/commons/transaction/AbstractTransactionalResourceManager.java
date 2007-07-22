@@ -16,7 +16,6 @@
  */
 package org.apache.commons.transaction;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.transaction.locking.LockException;
