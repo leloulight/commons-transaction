@@ -39,7 +39,8 @@ public interface StreamableResource {
     Object getProperty(String name);
 
     Object setProperty(String name, Object newValue);
-
+    Object removeProperty(String name);
+    
     // plus locking methods
     void readLock();
 
