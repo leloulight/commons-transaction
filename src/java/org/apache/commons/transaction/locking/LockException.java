@@ -87,6 +87,10 @@ public class LockException extends RuntimeException {
         super(cause);
     }
 
+    public LockException(Code code) {
+        this.code = code;
+    }
+
     public LockException(Throwable cause, Code code) {
         super(cause);
         this.code = code;

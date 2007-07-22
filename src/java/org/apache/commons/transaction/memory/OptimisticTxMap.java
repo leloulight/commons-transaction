@@ -27,11 +27,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.transaction.TransactionalResourceManager;
 import org.apache.commons.transaction.locking.LockException;
+import org.apache.commons.transaction.locking.LockManager;
 
 /**
  * Wrapper that adds transactional control to all kinds of maps that implement
  * the {@link Map} interface. By using a naive optimistic transaction control
- * this wrapper has better isolation than {@link TxMap}, but
+ * this wrapper has better isolation than {@link BasicTxMap}, but
  * may also fail to commit.
  * 
  * <br>
@@ -50,11 +51,10 @@ import org.apache.commons.transaction.locking.LockException;
  * around.
  * 
  * @version $Id: OptimisticMapWrapper.java 493628 2007-01-07 01:42:48Z joerg $
- * @see TxMap
+ * @see BasicTxMap
  * @see PessimisticTxMap
  */
-public class OptimisticTxMap<K, V> extends TxMap<K, V> implements Map<K, V>,
-TransactionalResourceManager {
+public class OptimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K, V> {
 
     private Set<CopyingTxContext> activeTransactions = new HashSet<CopyingTxContext>();
     private ReadWriteLock commitLock = new ReentrantReadWriteLock();
@@ -68,11 +68,16 @@ TransactionalResourceManager {
         activeTransactions.remove(txContext);
     }
 
-    public void commitTransaction() throws LockException {
-        commitTransaction(false);
+    public OptimisticTxMap(String name) {
+        super(name);
     }
 
-    public void commitTransaction(boolean force) throws LockException {
+
+    public boolean commitTransaction() throws LockException {
+        return commitTransaction(false);
+    }
+
+    public boolean commitTransaction(boolean force) throws LockException {
         MapTxContext txContext = getActiveTx();
         
         if (txContext == null) {
@@ -99,8 +104,7 @@ TransactionalResourceManager {
     
             activeTransactions.remove(txContext);
             copyChangesToConcurrentTransactions();
-            super.commitTransaction();
-            
+            return super.commitTransaction();
         } catch (InterruptedException e) {
             throw new LockException(e);
         } finally {
@@ -337,4 +341,10 @@ TransactionalResourceManager {
     public void setCommitTimeout(long commitTimeout) {
         this.commitTimeout = commitTimeout;
     }
+    
+    @Override
+    public boolean commitCanFail() {
+        return true;
+    }
+
 }

@@ -22,11 +22,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.transaction.TransactionalResourceManager;
+import org.apache.commons.transaction.locking.LockManager;
 
 /**
  * Wrapper that adds transactional control to all kinds of maps that implement
  * the {@link Map} interface. By using pessimistic transaction control (blocking
- * locks) this wrapper has better isolation than {@link TxMap},
+ * locks) this wrapper has better isolation than {@link BasicTxMap},
  * but also has less possible concurrency and may even deadlock. A commit,
  * however, will never fail. <br>
  * Start a transaction by calling {@link #startTransaction()}. Then perform the
@@ -41,13 +42,16 @@ import org.apache.commons.transaction.TransactionalResourceManager;
  * <code>SERIALIZABLE</code>.
  * 
  * @version $Id: PessimisticMapWrapper.java 493628 2007-01-07 01:42:48Z joerg $
- * @see TxMap
+ * @see BasicTxMap
  * @see OptimisticTxMap
  */
-public class PessimisticTxMap<K, V> extends TxMap<K, V> implements Map<K, V>,
-TransactionalResourceManager {
+public class PessimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K, V> {
 
     protected static final Object GLOBAL_LOCK = "GLOBAL";
+
+    public PessimisticTxMap(String name) {
+        super(name);
+    }
 
     public Collection values() {
         assureGlobalReadLock();
@@ -142,6 +146,10 @@ TransactionalResourceManager {
             super.clear();
         }
 
+    }
+    @Override
+    public boolean commitCanFail() {
+        return false;
     }
 
 }

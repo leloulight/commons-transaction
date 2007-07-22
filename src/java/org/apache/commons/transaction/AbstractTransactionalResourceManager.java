@@ -16,37 +16,44 @@
  */
 package org.apache.commons.transaction;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
 
 import org.apache.commons.transaction.locking.LockException;
-import org.apache.commons.transaction.locking.ReadWriteLockManager;
-import org.apache.commons.transaction.locking.LockException.Code;
+import org.apache.commons.transaction.locking.LockManager;
 
 /**
  * Not thread-safe. FIXME: Should it be?
- *  
+ * 
  * @author olli
- *
+ * 
  * @param <T>
  */
-public abstract class AbstractTransactionalResourceManager<T extends AbstractTransactionalResourceManager.AbstractTxContext> implements TransactionalResourceManager {
+public abstract class AbstractTransactionalResourceManager<T extends AbstractTransactionalResourceManager.AbstractTxContext>
+        implements ManageableResourceManager {
     protected ThreadLocal<T> activeTx = new ThreadLocal<T>();
+
+    private LockManager<Object, String> lm;
+
+    private String name;
 
     protected abstract T createContext();
 
-    /**
-     * Checks whether this transaction has been marked to allow a rollback as
-     * the only valid outcome. This can be set my method
-     * {@link #markTransactionForRollback()} or might be set internally be any
-     * fatal error. Once a transaction is marked for rollback there is no way to
-     * undo this. A transaction that is marked for rollback can not be
-     * committed, also rolled back.
-     * 
-     * @return <code>true</code> if this transaction has been marked for a
-     *         roll back
-     * @see #markTransactionForRollback()
-     */
+    public AbstractTransactionalResourceManager() {
+    }
+
+    public AbstractTransactionalResourceManager(String name) {
+        this.name = name;
+    }
+
+    // can be used to share a lock manager with other transactinal resource
+    // managers
+    public AbstractTransactionalResourceManager(String name, LockManager<Object, String> lm) {
+        this.name = name;
+        this.lm = lm;
+    }
+
+    @Override
     public boolean isTransactionMarkedForRollback() {
         T txContext = getActiveTx();
 
@@ -59,13 +66,14 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
     }
 
     @Override
-    public void startTransaction() {
+    public void startTransaction(long timeout, TimeUnit unit) {
         if (getActiveTx() != null) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
                     + " already associated with a transaction!");
         }
-        T txContent = createContext();
-        setActiveTx(txContent);
+        T txContext = createContext();
+        txContext.start(timeout, unit);
+        setActiveTx(txContext);
 
     }
 
@@ -83,7 +91,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
     }
 
     @Override
-    public void commitTransaction() {
+    public boolean commitTransaction() {
         T txContext = getActiveTx();
 
         if (txContext == null) {
@@ -99,32 +107,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         txContext.commit();
         txContext.dispose();
         setActiveTx(null);
-    }
-
-    /**
-     * Prepares the changes done inside this transaction reasource.
-     *  
-     */
-    public boolean prepareTransaction() {
-        T txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
-        return txContext.prepare();
-    }
-
-    @Override
-    public void setTransactionTimeout(long mSecs) {
-        T txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
-        
-        txContext.setTimeout(mSecs);
+        return true;
     }
 
     protected T getActiveTx() {
@@ -135,121 +118,63 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         activeTx.set(txContext);
     }
 
-    public boolean isTransactionPrepared() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
     public boolean isReadOnlyTransaction() {
-        // TODO Auto-generated method stub
-        return false;
-    }
+        T txContext = getActiveTx();
 
-    /**
-     * Marks the current transaction to allow only a rollback as valid outcome.
-     * 
-     * @see #isTransactionMarkedForRollback()
-     */
-    public void markTransactionForRollback() {
-        // TODO Auto-generated method stub
-        
+        if (txContext == null) {
+            throw new IllegalStateException("Active thread " + Thread.currentThread()
+                    + " not associated with a transaction!");
+        }
+
+        return (txContext.isReadOnly());
     }
 
     public abstract class AbstractTxContext {
-        private long timeout = -1L;
-
-        private long startTime = -1L;
-
         private boolean readOnly = true;
-        
-        private boolean prepared = false;
-        private boolean markedForRollback = false;
-        
-        private ReadWriteLockManager lm = new ReadWriteLockManager();
 
+        private boolean markedForRollback = false;
+
+        private LockManager<Object, String> lm;
+        
         public AbstractTxContext() {
-            startTime = System.currentTimeMillis();
+        }
+        
+        public LockManager<Object, String> getLm() {
+            if (this.lm != null) return this.lm;
+            else return AbstractTransactionalResourceManager.this.lm;
         }
 
-        protected long getRemainingTimeout() {
-            long now = System.currentTimeMillis();
-            return (getStartTime()- now + timeout);
+
+        public void join(LockManager lm) {
+            this.lm = lm;
+        }
+
+        public void start(long timeout, TimeUnit unit) {
+            getLm().startWork(timeout, unit);
         }
 
         public void dispose() {
-            Iterable<ReadWriteLock> locks = getLm().getAllForCurrentThread();
-
-            for (ReadWriteLock lock : locks) {
-                lock.readLock().unlock();
-                lock.writeLock().unlock();
-            }
+            getLm().endWork();
         }
 
         public boolean isReadOnly() {
             return readOnly;
         }
 
-        public boolean prepare() {
-            prepared = true;
-            return true;
-        }
-
-        public long getStartTime() {
-            return startTime;
-        }
-
-        public void setStartTime(long startTimeMSecs) {
-            this.startTime = startTimeMSecs;
-        }
-
-        public long getTimeout() {
-            return timeout;
-        }
-
-        public void setTimeout(long timeoutMSecs) {
-            this.timeout = timeoutMSecs;
-        }
-        
         public void setReadOnly(boolean readOnly) {
             this.readOnly = readOnly;
         }
 
-        public ReadWriteLockManager getLm() {
-            return lm;
-        }
-
-        protected ReadWriteLock initLock(Object id) {
-            return getLm().putIfAbsent(id, getLm().create());
-        }
-
         public void readLock(Object id) throws LockException {
-            try {
-                boolean locked = initLock(id).readLock().tryLock(getRemainingTimeout(), TimeUnit.MILLISECONDS);
-                if (!locked) {
-                    throw new LockException(Code.TIMED_OUT, id);
-                }
-            } catch (InterruptedException e) {
-                throw new LockException(Code.INTERRUPTED, id);
-            }
+            getLm().lock(getName(), id, false);
         }
 
-        public void writeLock(Object id)throws LockException  {
-            try {
-                boolean locked = initLock(id).writeLock().tryLock(getRemainingTimeout(), TimeUnit.MILLISECONDS);
-                if (!locked) {
-                    throw new LockException(Code.TIMED_OUT, id);
-                }
-            } catch (InterruptedException e) {
-                throw new LockException(Code.INTERRUPTED, id);
-            }
+        public void writeLock(Object id) throws LockException {
+            getLm().lock(getName(), id, true);
         }
 
         public boolean isMarkedForRollback() {
             return markedForRollback;
-        }
-
-        public boolean isPrepared() {
-            return prepared;
         }
 
         public void markForRollback() {
@@ -257,8 +182,50 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         }
 
         public void commit() {
-            
+
         }
     }
+
+    public LockManager<Object, String> getLm() {
+        return lm;
+    }
+
+    public void setLm(LockManager<Object, String> lm) {
+        this.lm = lm;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public abstract boolean commitCanFail();
+
+    @Override
+    public void joinTransaction(LockManager lm) {
+        if (getActiveTx() != null) {
+            throw new IllegalStateException("Active thread " + Thread.currentThread()
+                    + " already associated with a transaction!");
+        }
+        T txContext = createContext();
+        txContext.join(lm);
+        setActiveTx(txContext);
+
+    }
+
+    public void setRollbackOnly() {
+        T txContext = getActiveTx();
+
+        if (txContext == null) {
+            throw new IllegalStateException("Active thread " + Thread.currentThread()
+                    + " not associated with a transaction!");
+        }
+        txContext.markForRollback();
+
+    }
+
 
 }

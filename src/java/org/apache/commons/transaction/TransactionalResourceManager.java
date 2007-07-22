@@ -16,19 +16,15 @@
  */
 package org.apache.commons.transaction;
 
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * Interface for something that makes up a transactional resource manager.
+ * Comparable to an XA resource.
  * 
  */
 public interface TransactionalResourceManager {
-    /**
-     * TODO
-     * 
-     * @param mSecs
-     */
-    public void setTransactionTimeout(long mSecs);
-
     /**
      * Starts a new transaction and associates it with the current thread. All
      * subsequent changes in the same thread made to the map are invisible from
@@ -43,14 +39,13 @@ public interface TransactionalResourceManager {
      * @see #commitTransaction()
      * @see #rollbackTransaction()
      */
-    public void startTransaction();
-
+    public void startTransaction(long timeout, TimeUnit unit);
 
     /**
      * Discards all changes made in the current transaction and deletes the
      * association between the current thread and the transaction.
      * 
-     * @see #startTransaction()
+     * @see #startTransaction(long, TimeUnit)
      * @see #commitTransaction()
      */
     public void rollbackTransaction();
@@ -59,9 +54,8 @@ public interface TransactionalResourceManager {
      * Commits all changes made in the current transaction and deletes the
      * association between the current thread and the transaction.
      * 
-     * @see #startTransaction()
+     * @see #startTransaction(long, TimeUnit)
      * @see #rollbackTransaction()
      */
-    public void commitTransaction();
-
+    public boolean commitTransaction();
 }

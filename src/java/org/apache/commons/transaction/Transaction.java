@@ -16,12 +16,19 @@
  */
 package org.apache.commons.transaction;
 
+import java.util.concurrent.TimeUnit;
+
+/**
+ * A managed transaction meant as interface to the user. Meant to operate on more than one resource manager.
+ * This is a light weight replacement for a complex 2PC xa transaction.
+ * 
+ * @author olli
+ *
+ * 
+ */
+// TODO: We need a manager for such a transaction (or at least an implementation)
 public interface Transaction {
-    public void setTransactionTimeout(long mSecs);
-
-    public void start();
-
-    void setRollbackOnly();
+    public void start(long timeout, TimeUnit unit);
 
     boolean isRollbackOnly();
 
@@ -29,6 +36,6 @@ public interface Transaction {
 
     public void commit();
 
-    boolean enlistResourceManager(TransactionalResourceManager resourceManager);
+    void enlistResourceManager(ManageableResourceManager resourceManager);
 
 }
