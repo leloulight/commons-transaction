@@ -8,6 +8,7 @@ public interface ResourceEvent {
     String getPath();
     String getDestinationPath();
     String propertyName();
+    StreamableResource getResource();
     
     EventType getEventType();
 }
