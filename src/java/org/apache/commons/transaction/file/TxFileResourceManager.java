@@ -18,80 +18,44 @@ package org.apache.commons.transaction.file;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.transaction.AbstractTransactionalResourceManager;
-import org.apache.commons.transaction.TransactionalResourceManager;
+import org.apache.commons.transaction.ManageableResourceManager;
 import org.apache.commons.transaction.AbstractTransactionalResourceManager.AbstractTxContext;
+import org.apache.commons.transaction.file.FileResourceManager.FileResource;
 import org.apache.commons.transaction.locking.LockException;
+import org.apache.commons.transaction.resource.ResourceException;
 import org.apache.commons.transaction.resource.ResourceManager;
 import org.apache.commons.transaction.resource.StreamableResource;
-import org.apache.commons.transaction.util.FileHelper;
 
 public class TxFileResourceManager extends
         AbstractTransactionalResourceManager<TxFileResourceManager.FileTxContext> implements
-        ResourceManager<StreamableResource> {
+        ManageableResourceManager, ResourceManager<StreamableResource> {
 
     private Log logger = LogFactory.getLog(getClass());
 
     protected String contextFileName = "transaction.log";
 
-    protected PathManager idMapper;
+    protected String rootPath;
 
-    protected TransactionalResourceManager tm;
+    protected FileResourceManager wrapped;
 
-    public static void applyDeletes(File removeDir, File targetDir, File rootDir)
-            throws IOException {
-        if (removeDir.isDirectory() && targetDir.isDirectory()) {
-            File[] files = removeDir.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                File removeFile = files[i];
-                File targetFile = new File(targetDir, removeFile.getName());
-                if (!removeFile.isDirectory()) {
-                    if (targetFile.exists()) {
-                        if (!targetFile.delete()) {
-                            throw new IOException("Could not delete file " + removeFile.getName()
-                                    + " in directory targetDir");
-                        }
-                    } else if (!targetFile.isFile()) {
-                        // this is likely a dangling link
-                        targetFile.delete();
-                    }
-                    // indicate, this has been done
-                    removeFile.delete();
-                } else {
-                    applyDeletes(removeFile, targetFile, rootDir);
-                }
-                // delete empty target directories, except root dir
-                if (!targetDir.equals(rootDir) && targetDir.list().length == 0) {
-                    targetDir.delete();
-                }
-            }
-        }
-    }
+    protected FileResourceUndoManager undoManager;
 
-    public String getContextFileName() {
-        return contextFileName;
+    public TxFileResourceManager(String rootPath) {
+        this.rootPath = rootPath;
+        wrapped = new FileResourceManager(rootPath);
     }
 
     public void setContextFileName(String contextFile) {
         this.contextFileName = contextFile;
-    }
-
-    public PathManager getIdMapper() {
-        return idMapper;
-    }
-
-    public void setIdMapper(PathManager idMapper) {
-        this.idMapper = idMapper;
     }
 
     @Override
@@ -101,91 +65,175 @@ public class TxFileResourceManager extends
 
     // TODO resource manager needs to forward requests to this context, locking
     // will happen here
-    public class FileTxContext extends AbstractTxContext implements FileResourceManager {
+    // FIXME
+    // needs
+    // - custom commit / rollback
+    // - proper resource tracking
+    public class FileTxContext extends AbstractTxContext implements
+            ResourceManager<StreamableResource> {
 
         // list of streams participating in this tx
         private Collection<Closeable> openStreams = new ArrayList<Closeable>();
 
         public FileTxContext() {
-            super();
-            String changeDir = getIdMapper().getChangeBaseDir();
-            String deleteDir = getIdMapper().getDeleteBaseDir();
-
-            new File(changeDir).mkdirs();
-            new File(deleteDir).mkdirs();
-        }
-
-        public void commit() {
-            super.commit();
-            String changeDir = getIdMapper().getChangeBaseDir();
-            String deleteDir = getIdMapper().getDeleteBaseDir();
-            String storeDir = getIdMapper().getStoreDir();
-
-            try {
-                applyDeletes(new File(deleteDir), new File(storeDir), new File(storeDir));
-                FileHelper.moveRec(new File(changeDir), new File(storeDir));
-            } catch (IOException e) {
-                throw new LockException(LockException.Code.COMMIT_FAILED, e);
-            }
-        }
-
-        public void cleanUp() {
-            String baseDir = getIdMapper().getTransactionBaseDir();
-            FileHelper.removeRec(new File(baseDir));
-        }
-
-        public boolean copy(String sourceId, String destinationId) throws IOException,
-                LockException {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        public boolean createDir(String id) throws IOException, LockException {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        public boolean move(String sourceId, String destinationId) throws IOException,
-                LockException {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        public InputStream read(String id) throws IOException, LockException {
-            readLock(id);
-            String path = getIdMapper().getPathForRead(id);
-            InputStream is = new FileInputStream(new File(path));
-            registerStream(is);
-            return is;
-        }
-
-        public OutputStream write(String id) throws IOException {
-            writeLock(id);
-            String path = getIdMapper().getPathForRead(id);
-            return new FileOutputStream(new File(path));
-        }
-
-        public boolean remove(String id) throws IOException {
-            writeLock(id);
-            String path = getIdMapper().getPathForDelete(id);
-            return new File(path).delete();
-        }
-
-        public boolean create(String id) throws IOException {
-            writeLock(id);
-            String path = getIdMapper().getPathForDelete(id);
-            return new File(path).createNewFile();
-        }
-
-        public boolean removeDir(String id) throws IOException, LockException {
-            // TODO Auto-generated method stub
-            return false;
         }
 
         protected void registerStream(Closeable stream) {
             openStreams.add(stream);
         }
 
+        public StreamableResource getResource(String path) throws ResourceException {
+            return new TxFileResource(path);
+        }
+
+        public String getRootPath() {
+            return TxFileResourceManager.this.getRootPath();
+        }
+
+        // FIXME needs custom implementations
+        // Details:
+        // - Hierarchical locking
+        // - Calls to configured undo manager
+        protected class TxFileResource extends FileResource {
+
+            public TxFileResource(File file) {
+                super(file);
+            }
+
+            public TxFileResource(String path) {
+                super(path);
+            }
+
+            public void copy(String destinationpath) throws ResourceException {
+                super.copy(destinationpath);
+            }
+
+            public void createAsDirectory() throws ResourceException {
+                super.createAsDirectory();
+            }
+
+            public void createAsFile() throws ResourceException {
+                super.createAsFile();
+            }
+
+            public void delete() throws ResourceException {
+                super.delete();
+            }
+
+            public boolean exists() {
+                return super.exists();
+            }
+
+            public List<StreamableResource> getChildren() throws ResourceException {
+                return super.getChildren();
+            }
+
+            public StreamableResource getParent() throws ResourceException {
+                return super.getParent();
+            }
+
+            public String getPath() throws ResourceException {
+                return super.getPath();
+            }
+
+            public Object getProperty(String name) {
+                return super.getProperty(name);
+            }
+
+            public boolean isDirectory() {
+                return super.isDirectory();
+            }
+
+            public boolean isFile() {
+                return super.isFile();
+            }
+
+            public void move(String destinationpath) throws ResourceException {
+                super.move(destinationpath);
+            }
+
+            public InputStream readStream() throws ResourceException {
+                return super.readStream();
+            }
+
+            public void removeProperty(String name) {
+                super.removeProperty(name);
+            }
+
+            public void setProperty(String name, Object newValue) {
+                super.setProperty(name, newValue);
+            }
+
+            public boolean tryReadLock() {
+                try {
+                    return getLm().tryLock(getName(), getPath(), false);
+                } catch (ResourceException e) {
+                    // FIXME: ouch!
+                    throw new LockException(e);
+                }
+            }
+
+            public boolean tryWriteLock() {
+                try {
+                    return getLm().tryLock(getName(), getPath(), true);
+                } catch (ResourceException e) {
+                    // FIXME: ouch!
+                    throw new LockException(e);
+                }
+            }
+
+            public void readLock() {
+                try {
+                    getLm().lock(getName(), getPath(), false);
+                } catch (ResourceException e) {
+                    // FIXME: ouch!
+                    throw new LockException(e);
+                }
+                super.readLock();
+            }
+
+            public void writeLock() {
+                try {
+                    getLm().lock(getName(), getPath(), true);
+                } catch (ResourceException e) {
+                    // FIXME: ouch!
+                    throw new LockException(e);
+                }
+                super.writeLock();
+            }
+
+            public OutputStream writeStream(boolean append) throws ResourceException {
+                return super.writeStream(append);
+            }
+
+        }
+    }
+
+    @Override
+    public boolean commitCanFail() {
+        return false;
+    }
+
+    public StreamableResource getResource(String path) throws ResourceException {
+        FileTxContext context = getActiveTx();
+        if (context != null) {
+            return context.getResource(path);
+        } else {
+            return wrapped.getResource(path);
+        }
+
+    }
+
+    public String getRootPath() {
+        return rootPath;
+    }
+
+    public FileResourceUndoManager getUndoManager() {
+        return undoManager;
+    }
+
+    public void setUndoManager(FileResourceUndoManager undoManager) {
+        this.undoManager = undoManager;
     }
 
 }
