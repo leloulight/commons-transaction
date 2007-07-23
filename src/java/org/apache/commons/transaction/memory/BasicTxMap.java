@@ -26,9 +26,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.transaction.AbstractTransactionalResourceManager;
-import org.apache.commons.transaction.TransactionalResourceManager;
 import org.apache.commons.transaction.AbstractTransactionalResourceManager.AbstractTxContext;
-import org.apache.commons.transaction.locking.LockManager;
 
 /**
  * Wrapper that adds transactional control to all kinds of maps that implement

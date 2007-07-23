@@ -25,9 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.commons.transaction.TransactionalResourceManager;
 import org.apache.commons.transaction.locking.LockException;
-import org.apache.commons.transaction.locking.LockManager;
 
 /**
  * Wrapper that adds transactional control to all kinds of maps that implement

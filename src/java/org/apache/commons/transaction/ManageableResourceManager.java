@@ -18,10 +18,11 @@ package org.apache.commons.transaction;
 
 import org.apache.commons.transaction.locking.LockManager;
 
-
 public interface ManageableResourceManager extends TransactionalResourceManager {
     void setRollbackOnly();
+
     boolean commitCanFail();
+
     /**
      * Checks whether this transaction has been marked to allow a rollback as
      * the only valid outcome. This can be set my method
@@ -36,11 +37,8 @@ public interface ManageableResourceManager extends TransactionalResourceManager 
      */
     public boolean isTransactionMarkedForRollback();
 
-
     public boolean isReadOnlyTransaction();
-    
-    public void joinTransaction(LockManager lm);
 
-    
+    public void joinTransaction(LockManager lm);
 
 }

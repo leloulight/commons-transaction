@@ -21,9 +21,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.transaction.TransactionalResourceManager;
-import org.apache.commons.transaction.locking.LockManager;
-
 /**
  * Wrapper that adds transactional control to all kinds of maps that implement
  * the {@link Map} interface. By using pessimistic transaction control (blocking
@@ -147,6 +144,7 @@ public class PessimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K,
         }
 
     }
+    
     @Override
     public boolean commitCanFail() {
         return false;
