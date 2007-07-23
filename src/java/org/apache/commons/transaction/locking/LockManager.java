@@ -53,5 +53,6 @@ public interface LockManager<K, M> {
      *            resource for on which this block of work shall be done
      */
     public void lock(M managedResource, K key, boolean exclusive) throws LockException;
+    public boolean tryLock(M managedResource, K key, boolean exclusive);
 
 }

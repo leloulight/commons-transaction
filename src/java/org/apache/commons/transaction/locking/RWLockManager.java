@@ -31,40 +31,32 @@ public class RWLockManager<K, M> implements LockManager<K, M> {
 
     protected ConcurrentHashMap<KeyEntry<K, M>, ReadWriteLock> locks = new ConcurrentHashMap<KeyEntry<K, M>, ReadWriteLock>();
 
-    protected Map<Thread, Set<ReadWriteLock>> locksForThreads = new ConcurrentHashMap<Thread, Set<ReadWriteLock>>();
+    protected Map<Thread, Set<Lock>> locksForThreads = new ConcurrentHashMap<Thread, Set<Lock>>();
 
     protected Map<ReadWriteLock, Set<Thread>> threadsForLocks = new ConcurrentHashMap<ReadWriteLock, Set<Thread>>();
 
     protected Map<Thread, Long> effectiveGlobalTimeouts = new ConcurrentHashMap<Thread, Long>();
 
     // TODO
-    public static Iterable<ReadWriteLock> orderLocks() {
+    public Iterable<ReadWriteLock> orderLocks() {
+        Set<Lock> locks = locksForThreads.get(Thread.currentThread());
+        if (locks == null) {
+            throw new IllegalStateException("lock() can only be called after startWork()");
+        }
+
         return null;
 
     }
 
-    // TODO
-    public void lockAll(Iterable<ReadWriteLock> locks) {
-    }
-
     @Override
     public void endWork() {
-        Set<ReadWriteLock> locks = locksForThreads.get(Thread.currentThread());
+        Set<Lock> locks = locksForThreads.get(Thread.currentThread());
         // graceful reaction...
         if (locks == null) {
             return;
         }
-        for (ReadWriteLock lock : locks) {
-            try {
-                lock.readLock().unlock();
-            } catch (IllegalMonitorStateException imse) {
-                // we do not care
-            }
-            try {
-                lock.writeLock().unlock();
-            } catch (IllegalMonitorStateException imse) {
-                // we do not care
-            }
+        for (Lock lock : locks) {
+            lock.unlock();
 
             // FIXME: We need to do this atomically
             Set<Thread> threadsForThisLock = threadsForLocks.get(lock);
@@ -85,7 +77,7 @@ public class RWLockManager<K, M> implements LockManager<K, M> {
         if (isWorking()) {
             throw new IllegalStateException("work has already been started");
         }
-        locksForThreads.put(Thread.currentThread(), new HashSet<ReadWriteLock>());
+        locksForThreads.put(Thread.currentThread(), new HashSet<Lock>());
 
         long timeoutMSecs = unit.toMillis(timeout);
         long now = System.currentTimeMillis();
@@ -149,37 +141,53 @@ public class RWLockManager<K, M> implements LockManager<K, M> {
     }
 
     @Override
+    public boolean isWorking() {
+        return locksForThreads.get(Thread.currentThread()) != null;
+    }
+
+    @Override
     public void lock(M managedResource, K key, boolean exclusive) throws LockException {
         long remainingTime = computeRemainingTime();
         if (remainingTime < 0) {
             throw new LockException(LockException.Code.TIMED_OUT);
         }
+        boolean locked = tryLockInternal(managedResource, key, exclusive, remainingTime,
+                TimeUnit.MILLISECONDS);
+        if (!locked) {
+            throw new LockException(Code.TIMED_OUT, key);
+        }
+    }
 
+    @Override
+    public boolean tryLock(M managedResource, K key, boolean exclusive) {
+        return tryLockInternal(managedResource, key, exclusive, 0, TimeUnit.MILLISECONDS);
+    }
+
+    protected boolean tryLockInternal(M managedResource, K key, boolean exclusive, long time,
+            TimeUnit unit) throws LockException {
         KeyEntry<K, M> entry = new KeyEntry<K, M>(key, managedResource);
-
         ReadWriteLock rwlock = putIfAbsent(entry, create());
-        Set<ReadWriteLock> locks = locksForThreads.get(Thread.currentThread());
+        Set<Lock> locks = locksForThreads.get(Thread.currentThread());
         if (locks == null) {
             throw new IllegalStateException("lock() can only be called after startWork()");
         }
-        locks.add(rwlock);
 
         Lock lock = exclusive ? rwlock.writeLock() : rwlock.readLock();
 
         try {
-            boolean locked = lock.tryLock(remainingTime, TimeUnit.MILLISECONDS);
-            if (!locked) {
-                throw new LockException(Code.TIMED_OUT, key);
+            boolean locked;
+            if (time == 0) {
+                locked = lock.tryLock();
+            } else {
+                locked = lock.tryLock(time, unit);
             }
+            if (locked) {
+                locks.add(lock);
+            }
+            return locked;
         } catch (InterruptedException e) {
             throw new LockException(Code.INTERRUPTED, key);
         }
-
-    }
-
-    @Override
-    public boolean isWorking() {
-        return locksForThreads.get(Thread.currentThread()) != null;
     }
 
 }
