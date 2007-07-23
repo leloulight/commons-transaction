@@ -43,7 +43,7 @@ public class LockException extends RuntimeException {
         /**
          * Locking request canceled because of deadlock.
          */
-        DEADLOCK_VICTIM,
+        WOULD_DEADLOCK,
         
         /**
          * A conflict between two optimistic transactions occured.
