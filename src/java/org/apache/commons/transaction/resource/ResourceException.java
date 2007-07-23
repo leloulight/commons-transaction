@@ -16,14 +16,22 @@
  */
 package org.apache.commons.transaction.resource;
 
+public class ResourceException extends Exception {
 
-public interface ResourceManager<R> {
-    R getResource(String path) throws ResourceException;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 7650329971392401844L;
 
-    String getRootPath();
-/*
-    void addInterceptor(ResourceInterceptor interceptor);
+    public ResourceException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-    void removeInterceptor(ResourceInterceptor interceptor);
-    */
+    public ResourceException(Throwable cause) {
+        super(cause);
+    }
+    public ResourceException(String message) {
+        super(message);
+    }
+
 }

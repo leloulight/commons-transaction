@@ -16,46 +16,43 @@
  */
 package org.apache.commons.transaction.resource;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
-
-import org.apache.commons.transaction.locking.LockException;
+import java.util.List;
 
 public interface StreamableResource {
-    String getPath();
+    String getPath() throws ResourceException ;
 
     boolean isDirectory();
 
     boolean isFile();
 
-    Collection<StreamableResource> getChildren() throws IOException, LockException;
+    List<StreamableResource> getChildren() throws ResourceException;
 
-    StreamableResource getParent() throws IOException, LockException;
+    StreamableResource getParent() throws ResourceException;
 
-    InputStream readStream() throws IOException, LockException;
+    InputStream readStream() throws ResourceException;
 
-    OutputStream writeStream(boolean append) throws IOException, LockException;
+    OutputStream writeStream(boolean append) throws ResourceException;
 
-    boolean delete() throws IOException, LockException;
+    void delete() throws ResourceException;
 
-    boolean move(String destinationpath) throws IOException, LockException;
+    void move(String destinationpath) throws ResourceException;
 
-    boolean copy(String destinationpath) throws IOException, LockException;
+    void copy(String destinationpath) throws ResourceException;
 
     boolean exists();
 
-    void createAsDirectory() throws IOException, LockException;
+    void createAsDirectory() throws ResourceException;
 
-    void createAsFile() throws IOException, LockException;
+    void createAsFile() throws ResourceException;
 
     // plus more general properties
     // among them could be length, lastmodfied, etc.
     Object getProperty(String name);
 
-    Object setProperty(String name, Object newValue);
-    Object removeProperty(String name);
+    void setProperty(String name, Object newValue);
+    void removeProperty(String name);
     
     // plus locking methods
     void readLock();
