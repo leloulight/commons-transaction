@@ -46,8 +46,6 @@ public interface LockManager<K, M> {
      */
     public void endWork();
 
-    public boolean isWorking();
-
     /**
      * @param managedResource
      *            resource for on which this block of work shall be done
