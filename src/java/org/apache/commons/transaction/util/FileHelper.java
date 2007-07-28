@@ -30,18 +30,18 @@ import java.nio.channels.FileChannel;
  * @version $Id: FileHelper.java 493628 2007-01-07 01:42:48Z joerg $
  */
 public final class FileHelper {
-    
+
     public static byte[] readInto(File file) throws IOException {
         long length = file.length();
-        
+
         // XXX we can't do more than int
-        byte[] result = new byte[(int)length];
+        byte[] result = new byte[(int) length];
         InputStream is = new BufferedInputStream(new FileInputStream(file));
         is.read(result);
         return result;
     }
-    
-    public static void copyUsingNIO(File sourceFile, File destinationFile) throws IOException {
+
+    public static void copy(File sourceFile, File destinationFile) throws IOException {
         // try again using NIO copy
         FileInputStream fis = null;
         FileOutputStream fos = null;
@@ -62,23 +62,25 @@ public final class FileHelper {
         }
     }
 
-    public static boolean moveUsingNIO(File sourceFile, File destinationFile) throws IOException {
+    public static boolean move(File sourceFile, File destinationFile) throws IOException {
         // try fast file-system-level move/rename first
         boolean success = sourceFile.renameTo(destinationFile);
 
         if (!success) {
-            copyUsingNIO(sourceFile, destinationFile);
+            copy(sourceFile, destinationFile);
             success = sourceFile.delete();
         }
 
         return success;
     }
-    
+
     /**
      * Deletes a file specified by a path.
-     *  
-     * @param path path of file to be deleted
-     * @return <code>true</code> if file has been deleted, <code>false</code> otherwise
+     * 
+     * @param path
+     *            path of file to be deleted
+     * @return <code>true</code> if file has been deleted, <code>false</code>
+     *         otherwise
      */
     public static boolean deleteFile(String path) {
         File file = new File(path);
@@ -87,14 +89,105 @@ public final class FileHelper {
 
     /**
      * Checks if a file specified by a path exits.
-     *  
-     * @param path path of file to be checked
-     * @return <code>true</code> if file exists, <code>false</code> otherwise
+     * 
+     * @param path
+     *            path of file to be checked
+     * @return <code>true</code> if file exists, <code>false</code>
+     *         otherwise
      */
     public static boolean fileExists(String path) {
         File file = new File(path);
         return file.exists();
     }
 
+    public static void copyRecursive(File source, File target) throws IOException {
+        if (source.isDirectory()) {
+            if (!target.exists()) {
+                target.mkdirs();
+            }
+            if (target.isDirectory()) {
 
+                File[] files = source.listFiles();
+                for (int i = 0; i < files.length; i++) {
+                    File file = files[i];
+                    File targetFile = new File(target, file.getName());
+                    if (file.isFile()) {
+                        if (targetFile.exists()) {
+                            targetFile.delete();
+                        }
+                        copy(file, targetFile);
+                    } else {
+                        targetFile.mkdirs();
+                        copyRecursive(file, targetFile);
+                    }
+                }
+            }
+        } else {
+            if (!target.isDirectory()) {
+                if (!target.exists()) {
+                    File dir = target.getParentFile();
+                    if (!dir.exists() && !dir.mkdirs()) {
+                        throw new IOException("Could not create target directory: " + dir);
+                    }
+                    if (!target.createNewFile()) {
+                        throw new IOException("Could not create target file: " + target);
+                    }
+                }
+                copy(source, target);
+            }
+        }
+    }
+
+    public static void moveRecursive(File source, File target) throws IOException {
+        // try fast file-system-level move/rename first
+        if (source.renameTo(target))
+            return;
+
+        if (source.isDirectory()) {
+            if (!target.exists()) {
+                target.mkdirs();
+            }
+            if (target.isDirectory()) {
+
+                File[] files = source.listFiles();
+                for (int i = 0; i < files.length; i++) {
+                    File file = files[i];
+                    File targetFile = new File(target, file.getName());
+                    if (file.isFile()) {
+                        if (targetFile.exists()) {
+                            targetFile.delete();
+                        }
+                        if (!file.renameTo(targetFile)) {
+                            copy(file, targetFile);
+                            file.delete();
+                        }
+                    } else {
+                        if (!targetFile.exists()) {
+                            if (!targetFile.mkdirs()) {
+                                throw new IOException("Could not create target directory: "
+                                        + targetFile);
+                            }
+                        }
+                        moveRecursive(file, targetFile);
+                    }
+                }
+                source.delete();
+            }
+        } else {
+            if (!target.isDirectory()) {
+                copy(source, target);
+                source.delete();
+            }
+        }
+    }
+
+    public static void removeRecursive(File toRemove) {
+        if (toRemove.isDirectory()) {
+            File fileList[] = toRemove.listFiles();
+            for (int a = 0; a < fileList.length; a++) {
+                removeRecursive(fileList[a]);
+            }
+        }
+        toRemove.delete();
+    }
 }
