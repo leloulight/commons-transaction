@@ -220,7 +220,7 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
 
         public OutputStream writeStream(boolean append) throws ResourceException {
             try {
-                FileOutputStream os = new FileOutputStream(file);
+                FileOutputStream os = new FileOutputStream(file, append);
                 return os;
             } catch (IOException e) {
                 throw new ResourceException(e);
