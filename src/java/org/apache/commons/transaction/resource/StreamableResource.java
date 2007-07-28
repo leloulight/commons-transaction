@@ -37,9 +37,9 @@ public interface StreamableResource {
 
     void delete() throws ResourceException;
 
-    void move(String destinationpath) throws ResourceException;
+    void move(StreamableResource destination) throws ResourceException;
 
-    void copy(String destinationpath) throws ResourceException;
+    void copy(StreamableResource destination) throws ResourceException;
 
     boolean exists();
 

@@ -52,7 +52,7 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
 
     protected static class FileResource implements StreamableResource {
 
-        protected File file;
+        private File file;
 
         public FileResource(String path) {
             this.file = new File(path);
@@ -99,11 +99,11 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
         }
 
         public StreamableResource getParent() throws ResourceException {
-            // FIXME: Is reasonable, but would require refernce to enclosing class
+            // FIXME: Is reasonable, but would require reference to enclosing
+            // class
             /*
-            if (getPath().equals(getRootPath()))
-                return null;
-                */
+             * if (getPath().equals(getRootPath())) return null;
+             */
             File parent = file.getParentFile();
             return new FileResource(parent);
         }
@@ -124,19 +124,29 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
             return file.isFile();
         }
 
-        public void move(String destinationpath) throws ResourceException {
-            File destination = new File(destinationpath);
+        public void move(StreamableResource destination) throws ResourceException {
+            if (!(destination instanceof FileResource)) {
+                throw new ResourceException(
+                        "Destination must be of created by FileResourceManager only!");
+
+            }
+            File to = ((FileResource) destination).getFile();
             try {
-                FileHelper.moveUsingNIO(file, destination);
+                FileHelper.moveUsingNIO(file, to);
             } catch (IOException e) {
                 throw new ResourceException(e);
             }
         }
 
-        public void copy(String destinationpath) throws ResourceException {
-            File destination = new File(destinationpath);
+        public void copy(StreamableResource destination) throws ResourceException {
+            if (!(destination instanceof FileResource)) {
+                throw new ResourceException(
+                        "Destination must be of created by FileResourceManager only!");
+
+            }
+            File to = ((FileResource) destination).getFile();
             try {
-                FileHelper.copyUsingNIO(file, destination);
+                FileHelper.copyUsingNIO(file, to);
             } catch (IOException e) {
                 throw new ResourceException(e);
             }
@@ -198,6 +208,10 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
         // XXX no op, only way to lock is using FileChannel#lock() and
         // FileChannel#tryLock()
         public void writeLock() {
+        }
+
+        protected File getFile() {
+            return file;
         }
 
     }
