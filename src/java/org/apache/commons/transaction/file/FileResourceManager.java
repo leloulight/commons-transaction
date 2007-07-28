@@ -54,6 +54,15 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
 
         private File file;
 
+        protected static File getFileForResource(StreamableResource resource) throws ResourceException {
+            if (!(resource instanceof FileResource)) {
+                throw new ResourceException(
+                        "Destination must be of created by FileResourceManager only!");
+
+            }
+            return ((FileResource) resource).getFile();
+        }
+        
         public FileResource(String path) {
             this.file = new File(path);
         }
@@ -64,7 +73,7 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
 
         public void createAsDirectory() throws ResourceException {
             if (!file.mkdirs()) {
-                throw new ResourceException("Could not create directory");
+                throw new ResourceException(ResourceException.Code.COULD_NOT_CREATE, "Could not create directory");
             }
 
         }
@@ -72,7 +81,7 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
         public void createAsFile() throws ResourceException {
             try {
                 if (!file.createNewFile()) {
-                    throw new ResourceException("Could not create file");
+                    throw new ResourceException(ResourceException.Code.COULD_NOT_CREATE, "Could not create file");
                 }
             } catch (IOException e) {
                 throw new ResourceException(e);
@@ -80,9 +89,14 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
         }
 
         public void delete() throws ResourceException {
-            if (!file.delete())
-                throw new ResourceException("Could not create file");
-
+            if (exists()) {
+                if (!isDirectory()) {
+                    if (!getFile().delete())
+                        throw new ResourceException(ResourceException.Code.COULD_NOT_DELETE, "Could not create file");
+                } else {
+                    FileHelper.removeRecursive(getFile());
+                }
+            }
         }
 
         public boolean exists() {
@@ -125,33 +139,58 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
         }
 
         public void move(StreamableResource destination) throws ResourceException {
-            if (!(destination instanceof FileResource)) {
-                throw new ResourceException(
-                        "Destination must be of created by FileResourceManager only!");
-
-            }
-            File to = ((FileResource) destination).getFile();
+            if (!prepareMoveorCopy(destination)) moveorCopySaneCheck(destination);
             try {
-                FileHelper.moveUsingNIO(file, to);
+                if (isFile()) {
+                FileHelper.move(file, getFileForResource(destination));
+                } else {
+                    FileHelper.moveRecursive(file, getFileForResource(destination));
+                }
             } catch (IOException e) {
                 throw new ResourceException(e);
             }
         }
 
         public void copy(StreamableResource destination) throws ResourceException {
-            if (!(destination instanceof FileResource)) {
-                throw new ResourceException(
-                        "Destination must be of created by FileResourceManager only!");
-
-            }
-            File to = ((FileResource) destination).getFile();
+            if (!prepareMoveorCopy(destination)) moveorCopySaneCheck(destination);
             try {
-                FileHelper.copyUsingNIO(file, to);
+                if (isFile()) {
+                    FileHelper.copy(file, getFileForResource(destination));
+                    } else {
+                        FileHelper.copyRecursive(file, getFileForResource(destination));
+                    }
             } catch (IOException e) {
                 throw new ResourceException(e);
             }
         }
 
+        protected boolean prepareMoveorCopy(StreamableResource destination) throws ResourceException  {
+            if (!destination.exists()) {
+                if (isDirectory()) {
+                    destination.createAsDirectory();
+                } else {
+                    destination.createAsFile();
+                }
+                return true;
+            }
+            return false;
+        }
+        
+        protected void moveorCopySaneCheck(StreamableResource destination) throws ResourceException  {
+            File from = getFile();
+            File to = getFileForResource(destination);
+            if (!from.isDirectory()) {
+                if (to.isDirectory()) {
+                    throw new ResourceException(ResourceException.Code.CANT_MOVE_OR_COPY, "Could not move file to directory");
+                }
+                // still need to check, as it can also be a link
+            } else if (from.isDirectory()){
+                if (to.isFile()) {
+                    throw new ResourceException(ResourceException.Code.CANT_MOVE_OR_COPY, "Could not move directory to file");
+                }
+            }
+        }
+        
         public InputStream readStream() throws ResourceException {
             try {
                 FileInputStream is = new FileInputStream(file);
