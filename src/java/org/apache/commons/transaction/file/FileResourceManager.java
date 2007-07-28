@@ -32,7 +32,7 @@ import org.apache.commons.transaction.resource.ResourceManager;
 import org.apache.commons.transaction.resource.StreamableResource;
 import org.apache.commons.transaction.util.FileHelper;
 
-public class FileResourceManager implements ResourceManager<StreamableResource> {
+public class FileResourceManager implements ResourceManager<FileResourceManager.FileResource> {
 
     private Log logger = LogFactory.getLog(getClass());
 
@@ -42,7 +42,7 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
         this.rootPath = rootPath;
     }
 
-    public StreamableResource getResource(String path) throws ResourceException {
+    public FileResourceManager.FileResource getResource(String path) throws ResourceException {
         return new FileResource(path);
     }
 
@@ -52,9 +52,12 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
 
     protected static class FileResource implements StreamableResource {
 
-        private File file;
+        private final File file;
 
-        protected static File getFileForResource(StreamableResource resource) throws ResourceException {
+        private final String canonicalPath;
+
+        protected static File getFileForResource(StreamableResource resource)
+                throws ResourceException {
             if (!(resource instanceof FileResource)) {
                 throw new ResourceException(
                         "Destination must be of created by FileResourceManager only!");
@@ -62,18 +65,29 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
             }
             return ((FileResource) resource).getFile();
         }
-        
-        public FileResource(String path) {
-            this.file = new File(path);
+
+        public FileResource(String path) throws ResourceException {
+            this.file = new File(path.trim());
+            try {
+                this.canonicalPath = file.getCanonicalPath();
+            } catch (IOException e) {
+                throw new ResourceException(e);
+            }
         }
 
-        public FileResource(File file) {
+        public FileResource(File file) throws ResourceException {
             this.file = file;
+            try {
+                this.canonicalPath = file.getCanonicalPath();
+            } catch (IOException e) {
+                throw new ResourceException(e);
+            }
         }
 
         public void createAsDirectory() throws ResourceException {
             if (!file.mkdirs()) {
-                throw new ResourceException(ResourceException.Code.COULD_NOT_CREATE, "Could not create directory");
+                throw new ResourceException(ResourceException.Code.COULD_NOT_CREATE,
+                        "Could not create directory");
             }
 
         }
@@ -81,7 +95,8 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
         public void createAsFile() throws ResourceException {
             try {
                 if (!file.createNewFile()) {
-                    throw new ResourceException(ResourceException.Code.COULD_NOT_CREATE, "Could not create file");
+                    throw new ResourceException(ResourceException.Code.COULD_NOT_CREATE,
+                            "Could not create file");
                 }
             } catch (IOException e) {
                 throw new ResourceException(e);
@@ -92,7 +107,8 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
             if (exists()) {
                 if (!isDirectory()) {
                     if (!getFile().delete())
-                        throw new ResourceException(ResourceException.Code.COULD_NOT_DELETE, "Could not create file");
+                        throw new ResourceException(ResourceException.Code.COULD_NOT_DELETE,
+                                "Could not create file");
                 } else {
                     FileHelper.removeRecursive(getFile());
                 }
@@ -103,8 +119,8 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
             return file.exists();
         }
 
-        public List<StreamableResource> getChildren() throws ResourceException {
-            List<StreamableResource> result = new ArrayList<StreamableResource>();
+        public List<? extends FileResource>  getChildren() throws ResourceException {
+            List<FileResource> result = new ArrayList<FileResource>();
             File[] files = file.listFiles();
             for (File file : files) {
                 result.add(new FileResource(file));
@@ -112,7 +128,7 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
             return result;
         }
 
-        public StreamableResource getParent() throws ResourceException {
+        public FileResource getParent() throws ResourceException {
             // FIXME: Is reasonable, but would require reference to enclosing
             // class
             /*
@@ -122,12 +138,8 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
             return new FileResource(parent);
         }
 
-        public String getPath() throws ResourceException {
-            try {
-                return file.getCanonicalPath();
-            } catch (IOException e) {
-                throw new ResourceException(e);
-            }
+        public String getPath() {
+            return canonicalPath;
         }
 
         public boolean isDirectory() {
@@ -139,10 +151,10 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
         }
 
         public void move(StreamableResource destination) throws ResourceException {
-            if (!prepareMoveorCopy(destination)) moveorCopySaneCheck(destination);
+            moveorCopySaneCheck(destination);
             try {
                 if (isFile()) {
-                FileHelper.move(file, getFileForResource(destination));
+                    FileHelper.move(file, getFileForResource(destination));
                 } else {
                     FileHelper.moveRecursive(file, getFileForResource(destination));
                 }
@@ -152,19 +164,20 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
         }
 
         public void copy(StreamableResource destination) throws ResourceException {
-            if (!prepareMoveorCopy(destination)) moveorCopySaneCheck(destination);
+            moveorCopySaneCheck(destination);
             try {
                 if (isFile()) {
                     FileHelper.copy(file, getFileForResource(destination));
-                    } else {
-                        FileHelper.copyRecursive(file, getFileForResource(destination));
-                    }
+                } else {
+                    FileHelper.copyRecursive(file, getFileForResource(destination));
+                }
             } catch (IOException e) {
                 throw new ResourceException(e);
             }
         }
 
-        protected boolean prepareMoveorCopy(StreamableResource destination) throws ResourceException  {
+        protected boolean prepareMoveorCopy(StreamableResource destination)
+                throws ResourceException {
             if (!destination.exists()) {
                 if (isDirectory()) {
                     destination.createAsDirectory();
@@ -175,22 +188,27 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
             }
             return false;
         }
-        
-        protected void moveorCopySaneCheck(StreamableResource destination) throws ResourceException  {
+
+        protected void moveorCopySaneCheck(StreamableResource destination) throws ResourceException {
+            if (prepareMoveorCopy(destination))
+                return;
+
             File from = getFile();
             File to = getFileForResource(destination);
             if (!from.isDirectory()) {
                 if (to.isDirectory()) {
-                    throw new ResourceException(ResourceException.Code.CANT_MOVE_OR_COPY, "Could not move file to directory");
+                    throw new ResourceException(ResourceException.Code.CANT_MOVE_OR_COPY,
+                            "Could not move file to directory");
                 }
                 // still need to check, as it can also be a link
-            } else if (from.isDirectory()){
+            } else if (from.isDirectory()) {
                 if (to.isFile()) {
-                    throw new ResourceException(ResourceException.Code.CANT_MOVE_OR_COPY, "Could not move directory to file");
+                    throw new ResourceException(ResourceException.Code.CANT_MOVE_OR_COPY,
+                            "Could not move directory to file");
                 }
             }
         }
-        
+
         public InputStream readStream() throws ResourceException {
             try {
                 FileInputStream is = new FileInputStream(file);
@@ -225,18 +243,6 @@ public class FileResourceManager implements ResourceManager<StreamableResource> 
                 return file.length();
             }
             return null;
-        }
-
-        // XXX no op, only way to lock is using FileChannel#lock() and
-        // FileChannel#tryLock()
-        public boolean tryReadLock() {
-            return true;
-        }
-
-        // XXX no op, only way to lock is using FileChannel#lock() and
-        // FileChannel#tryLock()
-        public boolean tryWriteLock() {
-            return true;
         }
 
         // XXX no op, only way to lock is using FileChannel#lock() and
