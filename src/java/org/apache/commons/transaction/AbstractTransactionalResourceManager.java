@@ -54,12 +54,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
     @Override
     public boolean isTransactionMarkedForRollback() {
-        T txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
+        T txContext = getCheckedActiveTx();
 
         return (txContext.isMarkedForRollback());
     }
@@ -78,12 +73,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
     @Override
     public void rollbackTransaction() {
-        T txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
+        T txContext = getCheckedActiveTx();
 
         txContext.dispose();
         setActiveTx(null);
@@ -91,12 +81,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
     @Override
     public boolean commitTransaction() {
-        T txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
+        T txContext = getCheckedActiveTx();
 
         if (txContext.isMarkedForRollback()) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
@@ -113,18 +98,22 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         return activeTx.get();
     }
 
-    protected void setActiveTx(T txContext) {
-        activeTx.set(txContext);
-    }
-
-    public boolean isReadOnlyTransaction() {
+    protected T getCheckedActiveTx() {
         T txContext = getActiveTx();
 
         if (txContext == null) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
                     + " not associated with a transaction!");
         }
+        return txContext;
+    }
+    
+    protected void setActiveTx(T txContext) {
+        activeTx.set(txContext);
+    }
 
+    public boolean isReadOnlyTransaction() {
+        T txContext = getCheckedActiveTx();
         return (txContext.isReadOnly());
     }
 
@@ -183,6 +172,10 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         public void commit() {
 
         }
+        
+        public boolean prepare() {
+            return true;
+        }
     }
 
     public LockManager<Object, String> getLm() {
@@ -215,16 +208,20 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
     }
 
+    @Override
     public void setRollbackOnly() {
-        T txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
+        T txContext = getCheckedActiveTx();
         txContext.markForRollback();
 
     }
+
+    @Override
+    public boolean prepareTransaction() {
+        T txContext = getCheckedActiveTx();
+        return txContext.prepare();
+        
+    }
+
 
 
 }

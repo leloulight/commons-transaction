@@ -24,7 +24,7 @@ public class TransactionException extends RuntimeException {
     private static final long serialVersionUID = 7650329971392401844L;
 
     public enum Code {
-        COMMIT_FAILED, ROLLBACK_ONLY
+        COMMIT_FAILED, ROLLBACK_ONLY, PREPARE_FAILED
     }
 
     protected Code code;
