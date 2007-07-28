@@ -75,6 +75,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
     public void rollbackTransaction() {
         T txContext = getCheckedActiveTx();
 
+        txContext.rollback();
         txContext.dispose();
         setActiveTx(null);
     }
@@ -129,10 +130,6 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
             getLm().startWork(timeout, unit);
         }
 
-        public void dispose() {
-            getLm().endWork();
-        }
-
         public boolean isReadOnly() {
             return readOnly;
         }
@@ -157,10 +154,18 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
             markedForRollback = true;
         }
 
+        public void dispose() {
+            getLm().endWork();
+        }
+
         public void commit() {
 
         }
 
+        public void rollback() {
+
+        }
+        
         public boolean prepare() {
             return true;
         }
