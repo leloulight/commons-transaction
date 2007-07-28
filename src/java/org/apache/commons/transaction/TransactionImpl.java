@@ -60,7 +60,7 @@ public class TransactionImpl implements Transaction {
                 } catch (Exception e) {
                     throw new TransactionException(e, TransactionException.Code.COMMIT_FAILED);
                 } catch (Error e) {
-                    // is this really a good idea?
+                    // XXX is this really a good idea?
                     rollback();
                     throw e;
                 }

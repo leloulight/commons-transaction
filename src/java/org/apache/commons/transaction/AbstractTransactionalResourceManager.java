@@ -32,7 +32,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         implements ManageableResourceManager {
     protected ThreadLocal<T> activeTx = new ThreadLocal<T>();
 
-    private LockManager<Object, String> lm;
+    private LockManager<Object, Object> lm;
 
     private String name;
 
@@ -47,7 +47,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
     // can be used to share a lock manager with other transactinal resource
     // managers
-    public AbstractTransactionalResourceManager(String name, LockManager<Object, String> lm) {
+    public AbstractTransactionalResourceManager(String name, LockManager<Object, Object> lm) {
         this.name = name;
         this.lm = lm;
     }
@@ -107,7 +107,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         }
         return txContext;
     }
-    
+
     protected void setActiveTx(T txContext) {
         activeTx.set(txContext);
     }
@@ -122,19 +122,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
         private boolean markedForRollback = false;
 
-        private LockManager<Object, String> lm;
-        
-        public AbstractTxContext() {
-        }
-        
-        public LockManager<Object, String> getLm() {
-            if (this.lm != null) return this.lm;
-            else return AbstractTransactionalResourceManager.this.lm;
-        }
-
-
-        public void join(LockManager lm) {
-            this.lm = lm;
+        public void join() {
         }
 
         public void start(long timeout, TimeUnit unit) {
@@ -172,17 +160,21 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         public void commit() {
 
         }
-        
+
         public boolean prepare() {
             return true;
         }
+
     }
 
-    public LockManager<Object, String> getLm() {
+    protected LockManager<Object, Object> getLm() {
         return lm;
     }
 
-    public void setLm(LockManager<Object, String> lm) {
+    public void setLm(LockManager<Object, Object> lm) {
+        if (this.lm != null) {
+            throw new IllegalStateException("You can set the lock manager only once!");
+        }
         this.lm = lm;
     }
 
@@ -193,7 +185,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
     public void setName(String name) {
         this.name = name;
     }
-    
+
     public abstract boolean commitCanFail();
 
     @Override
@@ -202,8 +194,9 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
             throw new IllegalStateException("Active thread " + Thread.currentThread()
                     + " already associated with a transaction!");
         }
+        setLm(lm);
         T txContext = createContext();
-        txContext.join(lm);
+        txContext.join();
         setActiveTx(txContext);
 
     }
@@ -219,9 +212,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
     public boolean prepareTransaction() {
         T txContext = getCheckedActiveTx();
         return txContext.prepare();
-        
+
     }
-
-
 
 }

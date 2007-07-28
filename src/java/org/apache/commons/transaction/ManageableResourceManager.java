@@ -41,6 +41,6 @@ public interface ManageableResourceManager extends TransactionalResourceManager 
 
     public boolean isReadOnlyTransaction();
 
-    public void joinTransaction(LockManager lm);
+    public void joinTransaction(LockManager<Object, Object> lm);
 
 }
