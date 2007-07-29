@@ -42,7 +42,7 @@ public class RWLockManager<K, M> implements LockManager<K, M> {
 
     @Override
     public void endWork() {
-        release(Thread.currentThread());
+        release();
     }
 
     @Override
@@ -150,7 +150,8 @@ public class RWLockManager<K, M> implements LockManager<K, M> {
         if (time == 0) {
             locked = lock.tryLock();
         } else {
-            locked = doTrickyYetEfficientLockOnlyIfThisCanNotCauseADeadlock(lock, unit.toMillis(time));
+            locked = doTrickyYetEfficientLockOnlyIfThisCanNotCauseADeadlock(lock, unit
+                    .toMillis(time));
         }
         if (locked) {
             locks.add(lock);
@@ -275,9 +276,12 @@ public class RWLockManager<K, M> implements LockManager<K, M> {
         Set<Thread> threads = effectiveGlobalTimeouts.keySet();
         for (Thread thread : threads) {
             if (hasTimedOut(thread)) {
-                // TODO: We need to record this thread has timed out to produce
+                // TODO #1: We need to record this thread has timed out to produce
                 // a meaningful exception when it tries to continue its work
-                release(thread);
+                // TODO #2: If would be even better if we could actively release
+                // its locks, but only the thread that acquired a lock can
+                // release it. An extended implementation of ReentrantLock would
+                // help.
                 thread.interrupt();
             }
 
@@ -290,8 +294,8 @@ public class RWLockManager<K, M> implements LockManager<K, M> {
 
     }
 
-    protected void release(Thread thread) {
-        Set<Lock> locks = locksForThreads.get(thread);
+    protected void release() {
+        Set<Lock> locks = locksForThreads.get(Thread.currentThread());
         // graceful reaction...
         if (locks == null) {
             return;
@@ -310,7 +314,7 @@ public class RWLockManager<K, M> implements LockManager<K, M> {
             }
         }
 
-        locksForThreads.remove(thread);
+        locksForThreads.remove(Thread.currentThread());
     }
 
 }
