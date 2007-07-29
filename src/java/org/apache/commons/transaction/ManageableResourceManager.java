@@ -22,6 +22,8 @@ public interface ManageableResourceManager extends TransactionalResourceManager 
     void setRollbackOnly();
 
     boolean commitCanFail();
+    
+    boolean prepareTransaction();
 
     /**
      * Checks whether this transaction has been marked to allow a rollback as
@@ -39,6 +41,6 @@ public interface ManageableResourceManager extends TransactionalResourceManager 
 
     public boolean isReadOnlyTransaction();
 
-    public void joinTransaction(LockManager lm);
+    public void joinTransaction(LockManager<Object, Object> lm);
 
 }

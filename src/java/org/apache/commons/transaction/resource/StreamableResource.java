@@ -21,15 +21,17 @@ import java.io.OutputStream;
 import java.util.List;
 
 public interface StreamableResource {
-    String getPath() throws ResourceException ;
+    String getPath();
+    String getName();
 
     boolean isDirectory();
 
     boolean isFile();
 
-    List<StreamableResource> getChildren() throws ResourceException;
+    List<? extends StreamableResource> getChildren() throws ResourceException;
 
     StreamableResource getParent() throws ResourceException;
+    StreamableResource getChild(String name) throws ResourceException;
 
     InputStream readStream() throws ResourceException;
 
@@ -37,9 +39,9 @@ public interface StreamableResource {
 
     void delete() throws ResourceException;
 
-    void move(String destinationpath) throws ResourceException;
+    void move(StreamableResource destination) throws ResourceException;
 
-    void copy(String destinationpath) throws ResourceException;
+    void copy(StreamableResource destination) throws ResourceException;
 
     boolean exists();
 
@@ -47,19 +49,12 @@ public interface StreamableResource {
 
     void createAsFile() throws ResourceException;
 
-    // plus more general properties
-    // among them could be length, lastmodfied, etc.
     Object getProperty(String name);
 
     void setProperty(String name, Object newValue);
     void removeProperty(String name);
     
-    // plus locking methods
     void readLock();
 
     void writeLock();
-
-    boolean tryReadLock();
-
-    boolean tryWriteLock();
 }

@@ -47,6 +47,10 @@ public class TransactionImpl implements Transaction {
         if (isRollbackOnly()) {
             throw new TransactionException(TransactionException.Code.ROLLBACK_ONLY);
         }
+        if (!prepare()) {
+            throw new TransactionException(TransactionException.Code.PREPARE_FAILED);
+        }
+
         for (ManageableResourceManager manager : rms) {
             if (!manager.isReadOnlyTransaction()) {
                 try {
@@ -56,7 +60,7 @@ public class TransactionImpl implements Transaction {
                 } catch (Exception e) {
                     throw new TransactionException(e, TransactionException.Code.COMMIT_FAILED);
                 } catch (Error e) {
-                    // is this really a good idea?
+                    // XXX is this really a good idea?
                     rollback();
                     throw e;
                 }
@@ -97,4 +101,11 @@ public class TransactionImpl implements Transaction {
         lm.startWork(timeout, unit);
     }
 
+    protected boolean prepare() {
+        for (ManageableResourceManager manager : rms) {
+            if (!manager.prepareTransaction())
+                return false;
+        }
+        return true;
+    }
 }

@@ -16,12 +16,20 @@
  */
 package org.apache.commons.transaction.resource;
 
+import java.io.IOException;
+
 public class ResourceException extends Exception {
 
     /**
      * 
      */
     private static final long serialVersionUID = 7650329971392401844L;
+
+    public enum Code {
+        COULD_NOT_CREATE, COULD_NOT_DELETE, CANT_MOVE_OR_COPY
+    }
+
+    protected Code code;
 
     public ResourceException(String message, Throwable cause) {
         super(message, cause);
@@ -30,8 +38,32 @@ public class ResourceException extends Exception {
     public ResourceException(Throwable cause) {
         super(cause);
     }
+
     public ResourceException(String message) {
         super(message);
+    }
+
+    public ResourceException(Code code, String message) {
+        super(message);
+        this.code = code;
+    }
+
+    public ResourceException(Code code) {
+        this.code = code;
+    }
+
+    public ResourceException(Code code, Throwable cause) {
+        super(cause);
+        this.code = code;
+    }
+
+    /**
+     * Returns the formal reason for the exception.
+     * 
+     * @return the reason code
+     */
+    public Code getCode() {
+        return code;
     }
 
 }

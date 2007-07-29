@@ -113,7 +113,6 @@ public class RWLockManager<K, M> implements LockManager<K, M> {
         }
     }
 
-    @Override
     public boolean isWorking() {
         return locksForThreads.get(Thread.currentThread()) != null;
     }

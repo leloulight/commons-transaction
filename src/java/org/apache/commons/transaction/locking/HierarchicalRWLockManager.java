@@ -16,16 +16,69 @@
  */
 package org.apache.commons.transaction.locking;
 
-public class HierarchicalRWLockManager<M> extends RWLockManager<String, M> implements
-        HierarchicalLockManager<M> {
+import java.util.concurrent.TimeUnit;
 
-    public void lockAsFolder(String path, boolean exclusive) throws LockException {
-        // TODO Auto-generated method stub
-        
+public class HierarchicalRWLockManager<M> implements HierarchicalLockManager<Object, M> {
+
+    private final String rootPath;
+
+    private final LockManager<Object, M> lm;
+
+    public HierarchicalRWLockManager(String rootPath, LockManager<Object, M> lm) {
+        this.rootPath = rootPath;
+        this.lm = lm;
     }
 
-    public void lockAsResource(String path, boolean exclusive) throws LockException {
-        // TODO Auto-generated method stub
-        
+    public void lockInHierarchy(M managedResource, String path, boolean exclusive)
+            throws LockException {
+        // strip off root path
+        // TODO misses sane checks
+        String relativePath = path.substring(path.indexOf(rootPath));
+
+        // this is the root path we want to lock
+        if (relativePath.length() == 0) {
+            lock(managedResource, "/", exclusive);
+            return;
+        }
+
+        // always read lock root
+        lock(managedResource, "/", false);
+
+        String[] segments = relativePath.split("/");
+        StringBuffer currentPath = new StringBuffer(relativePath.length());
+        // for root path
+        currentPath.append('/');
+
+        for (int i = 0; i < segments.length; i++) {
+            String segment = segments[i];
+
+            currentPath.append(segment).append('/');
+            String key = currentPath.toString();
+
+            if (i == segments.length - 1) {
+                // this is the resource itself
+                lock(managedResource, key, exclusive);
+            } else {
+                // this is one of the parent path segments
+                lock(managedResource, key, false);
+            }
+        }
+    }
+
+    public void endWork() {
+        lm.endWork();
+    }
+
+    public void lock(M managedResource, Object key, boolean exclusive) throws LockException {
+        lm.lock(managedResource, key, exclusive);
+    }
+
+    public void startWork(long timeout, TimeUnit unit) {
+        lm.startWork(timeout, unit);
+
+    }
+
+    public boolean tryLock(M managedResource, Object key, boolean exclusive) {
+        return lm.tryLock(managedResource, key, exclusive);
     }
 }

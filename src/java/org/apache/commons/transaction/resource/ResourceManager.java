@@ -21,9 +21,4 @@ public interface ResourceManager<R> {
     R getResource(String path) throws ResourceException;
 
     String getRootPath();
-/*
-    void addInterceptor(ResourceInterceptor interceptor);
-
-    void removeInterceptor(ResourceInterceptor interceptor);
-    */
 }

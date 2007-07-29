@@ -32,7 +32,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         implements ManageableResourceManager {
     protected ThreadLocal<T> activeTx = new ThreadLocal<T>();
 
-    private LockManager<Object, String> lm;
+    private LockManager<Object, Object> lm;
 
     private String name;
 
@@ -47,19 +47,14 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
     // can be used to share a lock manager with other transactinal resource
     // managers
-    public AbstractTransactionalResourceManager(String name, LockManager<Object, String> lm) {
+    public AbstractTransactionalResourceManager(String name, LockManager<Object, Object> lm) {
         this.name = name;
         this.lm = lm;
     }
 
     @Override
     public boolean isTransactionMarkedForRollback() {
-        T txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
+        T txContext = getCheckedActiveTx();
 
         return (txContext.isMarkedForRollback());
     }
@@ -78,25 +73,16 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
     @Override
     public void rollbackTransaction() {
-        T txContext = getActiveTx();
+        T txContext = getCheckedActiveTx();
 
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
-
+        txContext.rollback();
         txContext.dispose();
         setActiveTx(null);
     }
 
     @Override
     public boolean commitTransaction() {
-        T txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
+        T txContext = getCheckedActiveTx();
 
         if (txContext.isMarkedForRollback()) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
@@ -113,18 +99,22 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         return activeTx.get();
     }
 
-    protected void setActiveTx(T txContext) {
-        activeTx.set(txContext);
-    }
-
-    public boolean isReadOnlyTransaction() {
+    protected T getCheckedActiveTx() {
         T txContext = getActiveTx();
 
         if (txContext == null) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
                     + " not associated with a transaction!");
         }
+        return txContext;
+    }
 
+    protected void setActiveTx(T txContext) {
+        activeTx.set(txContext);
+    }
+
+    public boolean isReadOnlyTransaction() {
+        T txContext = getCheckedActiveTx();
         return (txContext.isReadOnly());
     }
 
@@ -133,27 +123,11 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
         private boolean markedForRollback = false;
 
-        private LockManager<Object, String> lm;
-        
-        public AbstractTxContext() {
-        }
-        
-        public LockManager<Object, String> getLm() {
-            if (this.lm != null) return this.lm;
-            else return AbstractTransactionalResourceManager.this.lm;
-        }
-
-
-        public void join(LockManager lm) {
-            this.lm = lm;
+        public void join() {
         }
 
         public void start(long timeout, TimeUnit unit) {
             getLm().startWork(timeout, unit);
-        }
-
-        public void dispose() {
-            getLm().endWork();
         }
 
         public boolean isReadOnly() {
@@ -180,16 +154,32 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
             markedForRollback = true;
         }
 
+        public void dispose() {
+            getLm().endWork();
+        }
+
         public void commit() {
 
         }
+
+        public void rollback() {
+
+        }
+        
+        public boolean prepare() {
+            return true;
+        }
+
     }
 
-    public LockManager<Object, String> getLm() {
+    protected LockManager<Object, Object> getLm() {
         return lm;
     }
 
-    public void setLm(LockManager<Object, String> lm) {
+    public void setLm(LockManager<Object, Object> lm) {
+        if (this.lm != null) {
+            throw new IllegalStateException("You can set the lock manager only once!");
+        }
         this.lm = lm;
     }
 
@@ -200,7 +190,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
     public void setName(String name) {
         this.name = name;
     }
-    
+
     public abstract boolean commitCanFail();
 
     @Override
@@ -209,22 +199,25 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
             throw new IllegalStateException("Active thread " + Thread.currentThread()
                     + " already associated with a transaction!");
         }
+        setLm(lm);
         T txContext = createContext();
-        txContext.join(lm);
+        txContext.join();
         setActiveTx(txContext);
 
     }
 
+    @Override
     public void setRollbackOnly() {
-        T txContext = getActiveTx();
-
-        if (txContext == null) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread()
-                    + " not associated with a transaction!");
-        }
+        T txContext = getCheckedActiveTx();
         txContext.markForRollback();
 
     }
 
+    @Override
+    public boolean prepareTransaction() {
+        T txContext = getCheckedActiveTx();
+        return txContext.prepare();
+
+    }
 
 }
