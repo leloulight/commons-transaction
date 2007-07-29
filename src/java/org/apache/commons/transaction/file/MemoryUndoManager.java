@@ -32,17 +32,6 @@ public class MemoryUndoManager implements FileResourceUndoManager {
         storeRecord(record);
     }
 
-    public void recordCopy(File from, File to) {
-        if (to.exists()) {
-            recordChangeContent(to);
-        }
-        UndoRecord record = new UndoRecord();
-        record.code = Code.COPIED;
-        record.file = from;
-        record.to = to;
-        storeRecord(record);
-    }
-
     public void recordCreateAsDirectory(File directory) {
         UndoRecord record = new UndoRecord();
         record.code = Code.CREATED_DIRECTORY;
@@ -66,26 +55,6 @@ public class MemoryUndoManager implements FileResourceUndoManager {
             record.file = file;
             storeRecord(record);
         }
-    }
-
-    public void recordMove(File from, File to) {
-        if (to.exists()) {
-            recordChangeContent(to);
-        }
-        UndoRecord record = new UndoRecord();
-        record.code = Code.MOVED;
-        record.file = from;
-        record.to = to;
-        storeRecord(record);
-    }
-
-    public void recordChangeProperty(File file, String name, Object oldValue) {
-        UndoRecord record = new UndoRecord();
-        record.code = Code.PROPERTY_CHANGED;
-        record.file = file;
-        record.propertyName = name;
-        record.oldValue = oldValue;
-        storeRecord(record);
     }
 
     public void startRecord() {
@@ -115,10 +84,6 @@ public class MemoryUndoManager implements FileResourceUndoManager {
         File file;
 
         File to;
-
-        String propertyName;
-
-        Object oldValue;
 
         InputStream oldConent;
 

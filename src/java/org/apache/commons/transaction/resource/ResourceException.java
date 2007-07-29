@@ -16,6 +16,7 @@
  */
 package org.apache.commons.transaction.resource;
 
+import java.io.IOException;
 
 public class ResourceException extends Exception {
 
@@ -44,6 +45,15 @@ public class ResourceException extends Exception {
 
     public ResourceException(Code code, String message) {
         super(message);
+        this.code = code;
+    }
+
+    public ResourceException(Code code) {
+        this.code = code;
+    }
+
+    public ResourceException(Code code, Throwable cause) {
+        super(cause);
         this.code = code;
     }
 

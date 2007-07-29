@@ -37,6 +37,7 @@ import org.apache.commons.transaction.locking.LockManager;
 import org.apache.commons.transaction.resource.ResourceException;
 import org.apache.commons.transaction.resource.ResourceManager;
 import org.apache.commons.transaction.resource.StreamableResource;
+import org.apache.commons.transaction.util.FileHelper;
 
 public class TxFileResourceManager extends
         AbstractTransactionalResourceManager<TxFileResourceManager.FileTxContext> implements
@@ -149,15 +150,110 @@ public class TxFileResourceManager extends
                 super.createAsFile();
             }
 
-            public void delete() throws ResourceException {
+            protected TxFileResource create(File file) throws ResourceException {
+                return new TxFileResource(file);
+            }
+
+            protected void mkdirs() throws ResourceException {
+                if (exists())
+                    return;
+                TxFileResource parent = getParent();
+                if (parent != null) {
+                    parent.mkdirs();
+                }
+                createAsDirectory();
+            }
+
+            protected void moveOrcopyRecursive(TxFileResource target, boolean move)
+                    throws ResourceException {
+                moveOrCopySaneCheck(target);
+
+                if (isDirectory()) {
+                    target.mkdirs();
+                    for (TxFileResource child : getChildren()) {
+                        TxFileResource targetChild = target.getChild(child.getName());
+                        if (child.isDirectory()) {
+                            targetChild.mkdirs();
+                            child.moveOrcopyRecursive(targetChild, move);
+                            targetChild.createAsDirectory();
+                        } else {
+                            if (targetChild.exists()) {
+                                targetChild.removeNonRecursive();
+                            }
+                            moveOrcopyRecursive(targetChild, move);
+                        }
+                    }
+                } else {
+                    // isFile()!
+                    if (!target.exists()) {
+                        target.getParent().mkdirs();
+                        target.createAsFile();
+                    }
+                    if (!move) {
+                        copyNonRecursive(target);
+                    } else {
+                        moveNonRecursive(target);
+                    }
+                }
+            }
+
+            // recursively delete, depth first
+            protected void removeRecursive() throws ResourceException {
+                if (exists()) {
+                    if (isDirectory()) {
+                        List<? extends TxFileResource> children = getChildren();
+                        for (TxFileResource resource : children) {
+                            resource.delete();
+                        }
+                    }
+                    removeNonRecursive();
+                }
+            }
+
+            protected void copyNonRecursive(TxFileResource target) throws ResourceException {
+                readLock();
+                target.writeLock();
+                getUndoManager().recordCreateAsFile(target.getFile());
+                try {
+                    FileHelper.copy(getFile(), target.getFile());
+                } catch (IOException e) {
+                    throw new ResourceException(ResourceException.Code.CANT_MOVE_OR_COPY, e);
+                }
+            }
+
+            protected void moveNonRecursive(TxFileResource target) throws ResourceException {
+                writeLock();
+                target.writeLock();
+                getUndoManager().recordDelete(getFile());
+                getUndoManager().recordCreateAsFile(target.getFile());
+                try {
+                    FileHelper.move(getFile(), target.getFile());
+                } catch (IOException e) {
+                    throw new ResourceException(ResourceException.Code.CANT_MOVE_OR_COPY, e);
+                }
+            }
+
+            protected void removeNonRecursive() throws ResourceException {
                 writeLock();
                 getUndoManager().recordDelete(getFile());
-                super.delete();
+                if (!getFile().delete()) {
+                    throw new ResourceException(ResourceException.Code.COULD_NOT_DELETE);
+                }
+            }
+
+            public void delete() throws ResourceException {
+                removeRecursive();
             }
 
             public boolean exists() {
                 readLock();
                 return super.exists();
+            }
+
+            public TxFileResource getChild(String name) throws ResourceException {
+                readLock();
+                File child = new File(getFile(), name);
+                return create(child);
             }
 
             public List<? extends TxFileResource> getChildren() throws ResourceException {
@@ -178,6 +274,8 @@ public class TxFileResourceManager extends
             public TxFileResource getParent() throws ResourceException {
                 readLock();
                 FileResource parent = super.getParent();
+                if (parent == null)
+                    return null;
                 TxFileResource txFileParent = new TxFileResource(parent.getFile());
                 // if we acquire the parent, we want to be sure it really exist
                 txFileParent.readLock();
@@ -203,20 +301,12 @@ public class TxFileResourceManager extends
                 return super.isFile();
             }
 
-            public void copy(FileResource destination) throws ResourceException {
-                super.moveorCopySaneCheck(destination);
-                readLock();
-                new TxFileResource(destination.getFile()).writeLock();
-                getUndoManager().recordCopy(getFile(), getFileForResource(destination));
-                super.copy(destination);
+            public void copy(TxFileResource destination) throws ResourceException {
+                moveOrcopyRecursive(destination, false);
             }
 
-            public void move(FileResource destination) throws ResourceException {
-                super.moveorCopySaneCheck(destination);
-                writeLock();
-                new TxFileResource(destination.getFile()).writeLock();
-                getUndoManager().recordMove(getFile(), getFileForResource(destination));
-                super.move(destination);
+            public void move(TxFileResource destination) throws ResourceException {
+                moveOrcopyRecursive(destination, true);
             }
 
             public InputStream readStream() throws ResourceException {

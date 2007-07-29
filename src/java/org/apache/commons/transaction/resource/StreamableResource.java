@@ -22,6 +22,7 @@ import java.util.List;
 
 public interface StreamableResource {
     String getPath();
+    String getName();
 
     boolean isDirectory();
 
@@ -30,6 +31,7 @@ public interface StreamableResource {
     List<? extends StreamableResource> getChildren() throws ResourceException;
 
     StreamableResource getParent() throws ResourceException;
+    StreamableResource getChild(String name) throws ResourceException;
 
     InputStream readStream() throws ResourceException;
 

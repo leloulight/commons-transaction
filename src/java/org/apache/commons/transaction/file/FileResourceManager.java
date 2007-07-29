@@ -55,6 +55,8 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
         private final File file;
 
         private final String canonicalPath;
+        
+        private final String name;
 
         protected static File getFileForResource(StreamableResource resource)
                 throws ResourceException {
@@ -67,12 +69,7 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
         }
 
         public FileResource(String path) throws ResourceException {
-            this.file = new File(path.trim());
-            try {
-                this.canonicalPath = file.getCanonicalPath();
-            } catch (IOException e) {
-                throw new ResourceException(e);
-            }
+            this(new File(path.trim()));
         }
 
         public FileResource(File file) throws ResourceException {
@@ -82,10 +79,11 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
             } catch (IOException e) {
                 throw new ResourceException(e);
             }
+            this.name = file.getName();
         }
 
         public void createAsDirectory() throws ResourceException {
-            if (!file.mkdirs()) {
+            if (!file.exists() && !file.mkdirs()) {
                 throw new ResourceException(ResourceException.Code.COULD_NOT_CREATE,
                         "Could not create directory");
             }
@@ -123,7 +121,7 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
             List<FileResource> result = new ArrayList<FileResource>();
             File[] files = file.listFiles();
             for (File file : files) {
-                result.add(new FileResource(file));
+                result.add(create(file));
             }
             return result;
         }
@@ -135,7 +133,8 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
              * if (getPath().equals(getRootPath())) return null;
              */
             File parent = file.getParentFile();
-            return new FileResource(parent);
+            if (parent == null) return null;
+            return create(parent);
         }
 
         public String getPath() {
@@ -151,7 +150,8 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
         }
 
         public void move(StreamableResource destination) throws ResourceException {
-            moveorCopySaneCheck(destination);
+            if (!prepareMoveorCopy(destination))
+                moveOrCopySaneCheck(destination);
             try {
                 if (isFile()) {
                     FileHelper.move(file, getFileForResource(destination));
@@ -164,7 +164,8 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
         }
 
         public void copy(StreamableResource destination) throws ResourceException {
-            moveorCopySaneCheck(destination);
+            if (!prepareMoveorCopy(destination))
+                moveOrCopySaneCheck(destination);
             try {
                 if (isFile()) {
                     FileHelper.copy(file, getFileForResource(destination));
@@ -189,9 +190,7 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
             return false;
         }
 
-        protected void moveorCopySaneCheck(StreamableResource destination) throws ResourceException {
-            if (prepareMoveorCopy(destination))
-                return;
+        protected void moveOrCopySaneCheck(StreamableResource destination) throws ResourceException {
 
             File from = getFile();
             File to = getFileForResource(destination);
@@ -257,6 +256,19 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
 
         protected File getFile() {
             return file;
+        }
+
+        protected FileResource create(File file) throws ResourceException {
+            return new FileResource(file);
+        }
+        
+        public FileResource getChild(String name) throws ResourceException {
+            File child = new File(file, name);
+            return create(child);
+        }
+
+        public String getName() {
+            return name;
         }
 
     }
