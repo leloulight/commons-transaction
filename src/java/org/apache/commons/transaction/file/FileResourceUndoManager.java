@@ -5,7 +5,7 @@ import java.io.File;
 public interface FileResourceUndoManager {
 
     public enum Code {
-        DELETED_DIRECTORY, CONTENT_CHANGED, CREATED_DIRECTORY, CREATED_FILE
+        DELETED_DIRECTORY, UPDATED_CONTENT, CREATED
     }
     
     public void startRecord();
@@ -14,11 +14,10 @@ public interface FileResourceUndoManager {
 
     public void forgetRecord();
 
-    public void recordCreateAsDirectory(File directory);
-    public void recordCreateAsFile(File file);
+    public void recordCreate(File file);
 
     public void recordDelete(File file);
 
-    public void recordChangeContent(File file);
+    public void recordUpdate(File file);
 
 }

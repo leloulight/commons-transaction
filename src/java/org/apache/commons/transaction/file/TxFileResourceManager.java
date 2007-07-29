@@ -45,8 +45,6 @@ public class TxFileResourceManager extends
 
     private Log logger = LogFactory.getLog(getClass());
 
-    protected String contextFileName = "transaction.log";
-
     protected String rootPath;
 
     protected FileResourceManager wrapped;
@@ -59,10 +57,6 @@ public class TxFileResourceManager extends
         super(name);
         this.rootPath = rootPath;
         wrapped = new FileResourceManager(rootPath);
-    }
-
-    public void setContextFileName(String contextFile) {
-        this.contextFileName = contextFile;
     }
 
     @Override
@@ -140,13 +134,13 @@ public class TxFileResourceManager extends
 
             public void createAsDirectory() throws ResourceException {
                 writeLock();
-                getUndoManager().recordCreateAsDirectory(getFile());
+                getUndoManager().recordCreate(getFile());
                 super.createAsDirectory();
             }
 
             public void createAsFile() throws ResourceException {
                 writeLock();
-                getUndoManager().recordCreateAsFile(getFile());
+                getUndoManager().recordCreate(getFile());
                 super.createAsFile();
             }
 
@@ -213,7 +207,7 @@ public class TxFileResourceManager extends
             protected void copyNonRecursive(TxFileResource target) throws ResourceException {
                 readLock();
                 target.writeLock();
-                getUndoManager().recordCreateAsFile(target.getFile());
+                getUndoManager().recordCreate(target.getFile());
                 try {
                     FileHelper.copy(getFile(), target.getFile());
                 } catch (IOException e) {
@@ -225,7 +219,7 @@ public class TxFileResourceManager extends
                 writeLock();
                 target.writeLock();
                 getUndoManager().recordDelete(getFile());
-                getUndoManager().recordCreateAsFile(target.getFile());
+                getUndoManager().recordCreate(target.getFile());
                 try {
                     FileHelper.move(getFile(), target.getFile());
                 } catch (IOException e) {
@@ -318,7 +312,7 @@ public class TxFileResourceManager extends
 
             public OutputStream writeStream(boolean append) throws ResourceException {
                 writeLock();
-                getUndoManager().recordChangeContent(getFile());
+                getUndoManager().recordUpdate(getFile());
                 OutputStream os = super.writeStream(append);
                 registerStream(os);
                 return os;
@@ -365,7 +359,7 @@ public class TxFileResourceManager extends
         return rootPath;
     }
 
-    public FileResourceUndoManager getUndoManager() {
+    protected FileResourceUndoManager getUndoManager() {
         return undoManager;
     }
 

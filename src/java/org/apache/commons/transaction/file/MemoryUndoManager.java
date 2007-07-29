@@ -1,9 +1,7 @@
 package org.apache.commons.transaction.file;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,45 +14,15 @@ import org.apache.commons.transaction.util.FileHelper;
 public class MemoryUndoManager implements FileResourceUndoManager {
 
     private Log logger = LogFactory.getLog(getClass());
+    
     protected ThreadLocal<List<UndoRecord>> localRecords = new ThreadLocal<List<UndoRecord>>();
 
     
-    public void recordChangeContent(File file) {
-        UndoRecord record = new UndoRecord();
-        record.code = Code.CONTENT_CHANGED;
-        record.file = file;
-        try {
-            record.oldConent = new ByteArrayInputStream(FileHelper.readInto(file));
-        } catch (IOException e) {
-            logger.fatal("Could not store changed content for "+file);
-            // FIXME: This really should cause an error
-        }
-        storeRecord(record);
-    }
+    private final File logDirectory;
 
-    public void recordCreateAsDirectory(File directory) {
-        UndoRecord record = new UndoRecord();
-        record.code = Code.CREATED_DIRECTORY;
-        record.file = directory;
-        storeRecord(record);
-    }
-
-    public void recordCreateAsFile(File file) {
-        UndoRecord record = new UndoRecord();
-        record.code = Code.CREATED_FILE;
-        record.file = file;
-        storeRecord(record);
-    }
-
-    public void recordDelete(File file) {
-        if (file.isFile()) {
-            recordChangeContent(file);
-        } else {
-            UndoRecord record = new UndoRecord();
-            record.code = Code.DELETED_DIRECTORY;
-            record.file = file;
-            storeRecord(record);
-        }
+    public MemoryUndoManager(String logDir) throws IOException {
+        logDirectory = new File(logDir);
+        logDirectory.mkdirs();
     }
 
     public void startRecord() {
@@ -78,23 +46,71 @@ public class MemoryUndoManager implements FileResourceUndoManager {
         records.add(record);
     }
 
-    protected static class UndoRecord {
+    public void recordUpdate(File file) {
+        recordUpdate(file, false);
+    }
+
+    protected void recordUpdate(File file, boolean moveAllowed) {
+        try {
+            new UndoRecord(Code.UPDATED_CONTENT, file, FileHelper.makeBackup(file, logDirectory,
+                    moveAllowed));
+        } catch (IOException e) {
+            // FIXME: This really is fatal: How to signal?
+            logger.fatal("Can not record content update", e);
+        }
+    }
+
+    public void recordCreate(File file) {
+        new UndoRecord(Code.CREATED, file);
+    }
+
+    public void recordDelete(File file) {
+        if (file.isFile()) {
+            recordUpdate(file, true);
+        } else {
+            new UndoRecord(Code.DELETED_DIRECTORY, file);
+        }
+    }
+
+    protected class UndoRecord {
         Code code;
 
         File file;
 
-        File to;
+        File updatedFile;
 
-        InputStream oldConent;
+        public UndoRecord(Code code, File file) {
+            this(code, file, null);
+        }
 
-        // FIXME: Needs implementation (not that hard)
-        // ugly c-style - who cares?
+        public UndoRecord(Code code, File file, File updatedFile) {
+            this.code = code;
+            this.file = file;
+            this.updatedFile = updatedFile;
+            save();
+        }
+
+        protected void save() {
+        }
+
         public void undo() {
-            // TODO
             switch (code) {
-            
+            case DELETED_DIRECTORY:
+                file.mkdirs();
+                break;
+            case CREATED:
+                file.delete();
+                break;
+            case UPDATED_CONTENT:
+                try {
+                        FileHelper.move(updatedFile, file);
+                    } catch (IOException e) {
+                        // FIXME: This really is fatal: How to signal?
+                        logger.fatal("Can not undo content update", e);
+                    }
+                break;
             }
-            
+
         }
     }
 

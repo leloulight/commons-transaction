@@ -32,7 +32,7 @@ import java.nio.channels.FileChannel;
 public final class FileHelper {
 
     public static File makeBackup(File file, File backupDirectory, boolean moveAllowed) throws IOException {
-        File copy = File.createTempFile("ctx2", ".backup", backupDirectory);
+        File copy = File.createTempFile(file.getName(), ".backup", backupDirectory);
         boolean success = false;
         if (moveAllowed) {
             success = file.renameTo(copy);
