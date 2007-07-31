@@ -1,4 +1,4 @@
-Jakarta Commons Transaction Release 1.3
+Apache Commons Transaction Release 1.3
 ---------------------------------------
 
 RELEASE NUMBER: 1.3

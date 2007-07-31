@@ -1,7 +1,7 @@
-Jakarta Commons Transaction
+Apache Commons Transaction
 ===========================
 
-Welcome to the Transaction component of the Jakarta Commons project.
+Welcome to the Transaction component of the Apache Commons project.
 This component contains implementations of utility classes commonly used in
 transactional Java programming. Initially there are implementations for
 multi level locks, transactional collections and transactional file access.
