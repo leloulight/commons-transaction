@@ -18,29 +18,67 @@ package org.apache.commons.transaction;
 
 import org.apache.commons.transaction.locking.LockManager;
 
+/**
+ * Needs to be implemented by all resource managers that want to take part in a
+ * {@link Transaction combined transaction}. This interface is not meant for
+ * user interaction.
+ * 
+ */
 public interface ManageableResourceManager extends TransactionalResourceManager {
-    void setRollbackOnly();
 
-    boolean commitCanFail();
-    
+    /**
+     * Checks whether this resource manager is willing and able to commit its
+     * part of the complex transaction.
+     * 
+     * @return <code>true</code> if this resource manager can commit its part
+     *         of the transaction
+     */
     boolean prepareTransaction();
 
     /**
-     * Checks whether this transaction has been marked to allow a rollback as
-     * the only valid outcome. This can be set my method
-     * {@link #markTransactionForRollback()} or might be set internally be any
-     * fatal error. Once a transaction is marked for rollback there is no way to
-     * undo this. A transaction that is marked for rollback can not be
-     * committed, also rolled back.
+     * Instructs the resource manager to forget about the current transaction.
      * 
-     * @return <code>true</code> if this transaction has been marked for a
-     *         roll back
-     * @see #markTransactionForRollback()
      */
-    public boolean isTransactionMarkedForRollback();
+    void forgetTransaction();
 
-    public boolean isReadOnlyTransaction();
+    /**
+     * Lets this resource manager join a transaction that is protected by a
+     * common lock manager. An implementation is required to perform all locking
+     * operations on the given lock manager as long as it takes part in the
+     * complex transaction.
+     * 
+     * @param lm
+     *            the common lock maanger
+     */
+    void joinTransaction(LockManager<Object, Object> lm);
 
-    public void joinTransaction(LockManager<Object, Object> lm);
+    /**
+     * Checks whether this resource manager allows a rollback as the only valid
+     * outcome. Once a transaction is marked for rollback there is no way to
+     * undo this. A transaction that is marked for rollback can not be
+     * committed.
+     * 
+     * @return <code>true</code> if this resource manager can only roll back
+     */
+    boolean isRollbackOnly();
 
+    /**
+     * Checks if there had been any write operations on this resource manager
+     * since the start of the transaction. If not the transaction is not
+     * required to call either
+     * {@link TransactionalResourceManager#commitTransaction()} or
+     * {@link TransactionalResourceManager#rollbackTransaction()}, but only
+     * {@link #forgetTransaction()}.
+     * 
+     * @return <code>true</code> if there had been read operations only
+     */
+    boolean isReadOnly();
+
+    /**
+     * Checks whether a tried commit could possibly fail because of logical
+     * reasons.
+     * 
+     * @return <code>true</code> if a commit could fail
+     */
+    boolean commitCanFail();
 }

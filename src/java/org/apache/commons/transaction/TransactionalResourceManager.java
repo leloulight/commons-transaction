@@ -20,14 +20,14 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * Interface for something that makes up a transactional resource manager.
+ * Interface for something that makes up a transactional resource manager. Used for user control.
  * Comparable to an XA resource.
  * 
  */
 public interface TransactionalResourceManager {
     /**
      * Starts a new transaction and associates it with the current thread. All
-     * subsequent changes in the same thread made to the map are invisible from
+     * subsequent changes in the same thread made to the resource manager are invisible from
      * other threads until {@link #commitTransaction()} is called. Use
      * {@link #rollbackTransaction()} to discard your changes. After calling
      * either method there will be no transaction associated to the current
@@ -39,7 +39,7 @@ public interface TransactionalResourceManager {
      * @see #commitTransaction()
      * @see #rollbackTransaction()
      */
-    public void startTransaction(long timeout, TimeUnit unit);
+    void startTransaction(long timeout, TimeUnit unit);
 
     /**
      * Discards all changes made in the current transaction and deletes the
@@ -48,7 +48,7 @@ public interface TransactionalResourceManager {
      * @see #startTransaction(long, TimeUnit)
      * @see #commitTransaction()
      */
-    public void rollbackTransaction();
+    void rollbackTransaction();
 
     /**
      * Commits all changes made in the current transaction and deletes the
@@ -57,5 +57,5 @@ public interface TransactionalResourceManager {
      * @see #startTransaction(long, TimeUnit)
      * @see #rollbackTransaction()
      */
-    public boolean commitTransaction();
+    boolean commitTransaction();
 }

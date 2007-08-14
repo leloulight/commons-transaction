@@ -16,6 +16,10 @@
  */
 package org.apache.commons.transaction;
 
+/**
+ * General exception for all kinds of transactional problems.
+ * 
+ */
 public class TransactionException extends RuntimeException {
 
     /**

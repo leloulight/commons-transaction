@@ -22,9 +22,14 @@ import org.apache.commons.transaction.locking.LockException;
 import org.apache.commons.transaction.locking.LockManager;
 
 /**
- * Not thread-safe. FIXME: Should it be?
- * 
- * @author olli
+ * Abstract base class for transactional resource managers.
+ * <p>
+ * This implementation takes care of most administrative tasks a transactional
+ * resource manager has to perform. Sublcass
+ * {@link AbstractTransactionalResourceManager.AbstractTxContext} to hold all
+ * information necessary for each transaction. Additionally, you have to
+ * implement {@link #createContext()} to create an object of that type, and
+ * {@link #commitCanFail()}.
  * 
  * @param <T>
  */
@@ -53,7 +58,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
     }
 
     @Override
-    public boolean isTransactionMarkedForRollback() {
+    public boolean isRollbackOnly() {
         T txContext = getCheckedActiveTx();
 
         return (txContext.isMarkedForRollback());
@@ -76,6 +81,13 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         T txContext = getCheckedActiveTx();
 
         txContext.rollback();
+        forgetTransaction();
+    }
+
+    @Override
+    public void forgetTransaction() {
+        T txContext = getCheckedActiveTx();
+
         txContext.dispose();
         setActiveTx(null);
     }
@@ -90,8 +102,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         }
 
         txContext.commit();
-        txContext.dispose();
-        setActiveTx(null);
+        forgetTransaction();
         return true;
     }
 
@@ -113,7 +124,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         activeTx.set(txContext);
     }
 
-    public boolean isReadOnlyTransaction() {
+    public boolean isReadOnly() {
         T txContext = getCheckedActiveTx();
         return (txContext.isReadOnly());
     }
@@ -165,9 +176,9 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         public void rollback() {
 
         }
-        
+
         public boolean prepare() {
-            return true;
+            return isMarkedForRollback();
         }
 
     }
@@ -194,7 +205,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
     public abstract boolean commitCanFail();
 
     @Override
-    public void joinTransaction(LockManager lm) {
+    public void joinTransaction(LockManager<Object, Object> lm) {
         if (getActiveTx() != null) {
             throw new IllegalStateException("Active thread " + Thread.currentThread()
                     + " already associated with a transaction!");
@@ -203,13 +214,6 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         T txContext = createContext();
         txContext.join();
         setActiveTx(txContext);
-
-    }
-
-    @Override
-    public void setRollbackOnly() {
-        T txContext = getCheckedActiveTx();
-        txContext.markForRollback();
 
     }
 

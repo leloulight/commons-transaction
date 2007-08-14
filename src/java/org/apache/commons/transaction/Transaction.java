@@ -19,22 +19,62 @@ package org.apache.commons.transaction;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A managed transaction meant as interface to the user. Meant to operate on more than one resource manager.
- * This is a light weight replacement for a complex 2PC xa transaction.
+ * A managed transaction meant as interface to the user. 
+ * <p>Should be used to
+ * combine multiple resource managers into a complex transaction. Once a
+ * resource manager has joined such a complex transaction all transactional
+ * control is performed by this transaction. Do not call transactional methods
+ * on the resource managers directly.
  * 
- * @author olli
- *
+ * <p>This is a light weight replacement for a complex 2PC xa transaction.
  * 
+ * @see DefaultTransaction
  */
 public interface Transaction {
-    public void start(long timeout, TimeUnit unit);
+    /**
+     * Starts a new transactions having a specific timeout. You can
+     * {@link #enlistResourceManager(ManageableResourceManager) add resource managers}
+     * before start or afterwards.
+     * 
+     * @param timeout
+     *            the maximum time this transaction can run before it times out
+     * @param unit
+     *            the time unit of the {@code timeout} argument
+     */
+    void start(long timeout, TimeUnit unit);
 
+    /**
+     * Checks whether this transaction allows a rollback as the only valid
+     * outcome. Once a transaction is marked for rollback there is no way to
+     * undo this. A transaction that is marked for rollback can not be
+     * committed.
+     * 
+     * @return <code>true</code> if this transaction can only rolled back
+     */
     boolean isRollbackOnly();
 
-    public void rollback();
+    /**
+     * Rolls back the complex transaction meaning that all changes made to
+     * participating resource managers are undone.
+     */
+    void rollback();
 
-    public void commit();
+    /**
+     * Commits the complex transaction meaning that all changes made to
+     * participating resource managers are made permanent.
+     */
+    void commit();
 
+    /**
+     * Adds a resource manager to this complex transaction. This means the
+     * resource manager will from now on be controlled by this transaction.
+     * Access to transactional methods is not allowed until the complex
+     * transaction has finished. Of course, it is legal to call the other
+     * methods if this manager to perform some real work.
+     * 
+     * @param resourceManager
+     *            the resource manager to add
+     */
     void enlistResourceManager(ManageableResourceManager resourceManager);
 
 }
