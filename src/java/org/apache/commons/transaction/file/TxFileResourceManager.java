@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,8 +46,6 @@ public class TxFileResourceManager extends
 
     private Log logger = LogFactory.getLog(getClass());
 
-    protected String rootPath;
-
     protected FileResourceManager wrapped;
 
     protected FileResourceUndoManager undoManager;
@@ -55,7 +54,6 @@ public class TxFileResourceManager extends
 
     public TxFileResourceManager(String name, String rootPath) {
         super(name);
-        this.rootPath = rootPath;
         wrapped = new FileResourceManager(rootPath);
     }
 
@@ -71,7 +69,7 @@ public class TxFileResourceManager extends
     @Override
     public void setLm(LockManager<Object, Object> lm) {
         super.setLm(lm);
-        hlm = new HierarchicalRWLockManager(rootPath, lm);
+        hlm = new HierarchicalRWLockManager(getRootPath(), lm);
     }
 
     public class FileTxContext extends AbstractTxContext implements
@@ -99,6 +97,12 @@ public class TxFileResourceManager extends
             return new TxFileResource(path);
         }
 
+        @Override
+        public void start(long timeout, TimeUnit unit) {
+            getUndoManager().startRecord();
+            super.start(timeout, unit);
+        }
+        
         @Override
         public String getRootPath() {
             return TxFileResourceManager.this.getRootPath();
@@ -329,12 +333,12 @@ public class TxFileResourceManager extends
             }
 
             public void readLock() {
-                getHLM().lockInHierarchy(getName(), getPath(), false);
+                getHLM().lockInHierarchy(TxFileResourceManager.this.getName(), getPath(), false);
                 super.readLock();
             }
 
             public void writeLock() {
-                getHLM().lockInHierarchy(getName(), getPath(), true);
+                getHLM().lockInHierarchy(TxFileResourceManager.this.getName(), getPath(), true);
                 super.writeLock();
             }
         }
@@ -356,7 +360,7 @@ public class TxFileResourceManager extends
     }
 
     public String getRootPath() {
-        return rootPath;
+        return wrapped.getRootPath();
     }
 
     protected FileResourceUndoManager getUndoManager() {

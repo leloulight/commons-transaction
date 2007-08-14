@@ -26,14 +26,14 @@ import org.apache.commons.transaction.memory.PessimisticTxMap;
 import org.apache.commons.transaction.memory.TxMap;
 import org.junit.Test;
 
-public class TransactionImplTest {
+public class DefaultTransactionTest {
     public static junit.framework.Test suite() {
-        return new JUnit4TestAdapter(TransactionImplTest.class);
+        return new JUnit4TestAdapter(DefaultTransactionTest.class);
     }
 
     @Test
     public void basic() {
-        LockManager lm = new RWLockManager<String, String>();
+        LockManager<Object, Object> lm = new RWLockManager<Object, Object>();
         Transaction t = new DefaultTransaction(lm);
         TxMap<String, Object> txMap1 = new PessimisticTxMap<String, Object>("TxMap1");
         t.enlistResourceManager(txMap1);
@@ -52,6 +52,6 @@ public class TransactionImplTest {
     }
     
     public static void main(String[] args) {
-        new TransactionImplTest().basic();
+        new DefaultTransactionTest().basic();
     }
 }

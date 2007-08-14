@@ -38,6 +38,10 @@ public class TransactionException extends RuntimeException {
         this.code = code;
     }
 
+    public TransactionException(Throwable cause) {
+        super(cause);
+    }
+
     public TransactionException(Code code) {
         this.code = code;
     }

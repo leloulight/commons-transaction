@@ -14,10 +14,9 @@ import org.apache.commons.transaction.util.FileHelper;
 public class MemoryUndoManager implements FileResourceUndoManager {
 
     private Log logger = LogFactory.getLog(getClass());
-    
+
     protected ThreadLocal<List<UndoRecord>> localRecords = new ThreadLocal<List<UndoRecord>>();
 
-    
     private final File logDirectory;
 
     public MemoryUndoManager(String logDir) throws IOException {
@@ -38,6 +37,10 @@ public class MemoryUndoManager implements FileResourceUndoManager {
     }
 
     public void forgetRecord() {
+        List<UndoRecord> records = new ArrayList<UndoRecord>(localRecords.get());
+        for (UndoRecord record : records) {
+            record.cleanUp();
+        }
         localRecords.set(null);
     }
 
@@ -91,6 +94,12 @@ public class MemoryUndoManager implements FileResourceUndoManager {
         }
 
         protected void save() {
+            storeRecord(this);
+        }
+
+        public void cleanUp() {
+            if (updatedFile != null)
+                updatedFile.delete();
         }
 
         public void undo() {
@@ -103,11 +112,11 @@ public class MemoryUndoManager implements FileResourceUndoManager {
                 break;
             case UPDATED_CONTENT:
                 try {
-                        FileHelper.move(updatedFile, file);
-                    } catch (IOException e) {
-                        // FIXME: This really is fatal: How to signal?
-                        logger.fatal("Can not undo content update", e);
-                    }
+                    FileHelper.move(updatedFile, file);
+                } catch (IOException e) {
+                    // FIXME: This really is fatal: How to signal?
+                    logger.fatal("Can not undo content update", e);
+                }
                 break;
             }
 

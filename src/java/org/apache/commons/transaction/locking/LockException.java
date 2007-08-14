@@ -34,23 +34,23 @@ public class LockException extends RuntimeException {
          * Thread has been interrupted while waiting for lock.
          */
         INTERRUPTED,
-        
+
         /**
          * Maximum wait time for a lock has been exceeded.
          */
         TIMED_OUT,
-        
+
         /**
          * Locking request canceled because of deadlock.
          */
         WOULD_DEADLOCK,
-        
+
         /**
-         * A conflict between two optimistic transactions occured.
+         * A conflict between two optimistic transactions occurred.
          * 
          */
         CONFLICT,
-        
+
         /**
          * A commit was tried, but did not succeed.
          * 
@@ -61,6 +61,15 @@ public class LockException extends RuntimeException {
     protected Object resourceId;
 
     protected Code code;
+
+    public LockException(String message, Object resourceId) {
+        super(message);
+        this.resourceId = resourceId;
+    }
+
+    public LockException(String message) {
+        super(message);
+    }
 
     public LockException(String message, Code code, Object resourceId) {
         super(message);

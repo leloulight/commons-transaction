@@ -33,7 +33,11 @@ public class HierarchicalRWLockManager<M> implements HierarchicalLockManager<Obj
             throws LockException {
         // strip off root path
         // TODO misses sane checks
-        String relativePath = path.substring(path.indexOf(rootPath));
+        if (!path.startsWith(rootPath)) {
+            throw new LockException("Could not lock a path (" + path
+                    + ") that is not under the rootPath (" + rootPath + ")");
+        }
+        String relativePath = path.substring(rootPath.length());
 
         // this is the root path we want to lock
         if (relativePath.length() == 0) {
@@ -44,12 +48,13 @@ public class HierarchicalRWLockManager<M> implements HierarchicalLockManager<Obj
         // always read lock root
         lock(managedResource, "/", false);
 
-        String[] segments = relativePath.split("/");
+        String[] segments = relativePath.split("\\\\");
         StringBuffer currentPath = new StringBuffer(relativePath.length());
         // for root path
         currentPath.append('/');
 
-        for (int i = 0; i < segments.length; i++) {
+        // skip first segment which is just empty
+        for (int i = 1; i < segments.length; i++) {
             String segment = segments[i];
 
             currentPath.append(segment).append('/');

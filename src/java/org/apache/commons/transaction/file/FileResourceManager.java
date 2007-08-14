@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.transaction.TransactionException;
 import org.apache.commons.transaction.resource.ResourceException;
 import org.apache.commons.transaction.resource.ResourceManager;
 import org.apache.commons.transaction.resource.StreamableResource;
@@ -39,7 +40,13 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
     protected String rootPath;
 
     public FileResourceManager(String rootPath) {
-        this.rootPath = rootPath;
+        try {
+            File file = new File(rootPath);
+            file.mkdirs();
+            this.rootPath = file.getCanonicalPath();
+        } catch (IOException e) {
+            throw new TransactionException(e);
+        }
     }
 
     public FileResourceManager.FileResource getResource(String path) throws ResourceException {
