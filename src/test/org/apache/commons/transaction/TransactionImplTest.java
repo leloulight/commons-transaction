@@ -34,7 +34,7 @@ public class TransactionImplTest {
     @Test
     public void basic() {
         LockManager lm = new RWLockManager<String, String>();
-        Transaction t = new TransactionImpl(lm);
+        Transaction t = new DefaultTransaction(lm);
         TxMap<String, Object> txMap1 = new PessimisticTxMap<String, Object>("TxMap1");
         t.enlistResourceManager(txMap1);
         TxMap<String, Object> txMap2 = new PessimisticTxMap<String, Object>("TxMap2");

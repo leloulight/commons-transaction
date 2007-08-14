@@ -1,0 +1,31 @@
+<html>
+<body>
+<h1>Apache Commons Transaction</h1>
+<p>Making concurrent programming transactional.
+</p>
+<p>When you <a
+href="../apidocs/org/apache/commons/transaction/file/FileResourceManager.html#startTransaction(java.lang.Object)">start</a>
+a transaction you need to provide an indentifier to later refer to
+this newly started transaction. You can also let an identifier be <a
+href="../apidocs/org/apache/commons/transaction/file/FileResourceManager.html#generatedUniqueTxId()">generated</a>
+for you. Calls to e.g. <a
+href="../apidocs/org/apache/commons/transaction/file/FileResourceManager.html#readResource(java.lang.Object,%20java.lang.Object)">read</a>,
+<a
+href="../apidocs/org/apache/commons/transaction/file/FileResourceManager.html#createResource(java.lang.Object,%20java.lang.Object)">create</a>
+or <a
+href="../apidocs/org/apache/commons/transaction/file/FileResourceManager.html#writeResource(java.lang.Object,%20java.lang.Object)">write
+to</a> will need the identifier to know which transaction they belong to.</p> 
+
+<p>Finally when you want to
+commit the transaction call <a
+href="../apidocs/org/apache/commons/transaction/file/FileResourceManager.html#commitTransaction(java.lang.Object)">commit</a>
+or <a
+href="../apidocs/org/apache/commons/transaction/file/FileResourceManager.html#rollbackTransaction(java.lang.Object)">rollback</a>
+to undo all changes. The transactionality is achieved by first writing to
+temporary files and upon commit moving or copying them to the primary
+location. Locks and a delicate commit mechanism will assure that no
+data corruption occurs.
+</p>
+
+</body>
+</html>

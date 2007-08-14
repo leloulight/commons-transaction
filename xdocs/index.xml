@@ -1,89 +1,217 @@
 <?xml version="1.0"?>
 <!--
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements.  See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License.  You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+	Licensed to the Apache Software Foundation (ASF) under one or more
+	contributor license agreements.  See the NOTICE file distributed with
+	this work for additional information regarding copyright ownership.
+	The ASF licenses this file to You under the Apache License, Version 2.0
+	(the "License"); you may not use this file except in compliance with
+	the License.  You may obtain a copy of the License at
+	
+	http://www.apache.org/licenses/LICENSE-2.0
+	
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
 -->
 <document>
 
- <properties>
-  <title>Overview</title>
-  <author email="commons-dev@jakarta.apache.org">Commons Documentation Team</author>
- </properties>
+	<properties>
+		<title>Overview</title>
+		<author email="dev@commons.apache.org">
+			Commons Documentation Team
+		</author>
+	</properties>
 
- <body>
+	<body>
 
-<section name="The Transaction Component">
-<p>Commons Transaction aims at providing lightweight, standardized,
-well tested and 
-efficient implementations of utility classes commonly used in
-transactional Java programming. Initially there are implementations for
-multi level locks, 
-transactional collections and transactional file access. There may
-be additional implementations when the common need for them becomes
-obvious. However, the complete component shall remain compatible to
-JDK1.2 and should have minimal dependencies.</p>
-<p>The optimal - but maybe impudent - long term goal would be to create the transactional counterpart
-of <a
-href="http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html">Doug
-Lea's fabulous concurrent package</a> which recently made it to Java 5.0.</p> 
+		<section name="Commons Transaction Mantra">
+			<p>
+				<b>Making concurrent programming transactional.</b>
+			</p>
+			<p>
+				Whenever you have concurrent access to resources and
+				want to protect them with locks,
+				<em>Commons Transaction</em>
+				can be right for you.
+			</p>
+		</section>
+		<section name="Commons Transaction 2.x">
+			<p>
+				Currently,
+				<em>Commons Transaction</em>
+				undergoes a radical change towards its 2.0 release. Main
+				objectives are
+				<ul>
+					<li>
+						migration to the
+						<code>java.util.concurrent</code>
+						package
+					</li>
+					<li>full support for Java 5 generics</li>
+					<li>
+						support for a component based approach (by
+						factoring out each interesting aspect into an
+						interface plus default implementation)
+					</li>
+					<li>usage of commons logging</li>
+					<li>
+						full file management features for the
+						transactional file system
+					</li>
+				</ul>
+			</p>
+			<p>
+				<em>Commons Transaction</em>
+				might be useful for you when you
+				<ul>
+					<li>
+						need transactional file access (i.e. ACID
+						transactions on a set of files)
+					</li>
+					<li>
+						have resources that need locking - lock managers
+						can do that for you:
+						<ul>
+							<li>
+								benefit from automatic deadlock recovery
+							</li>
+							<li>
+								be sure you never forget to release a
+								lock again
+							</li>
+							<li>
+								let your code have a timer for a whole
+								block of locks
+							</li>
+							<li>
+								have an out-of-the-box solution for
+								hierarchical locks
+							</li>
+						</ul>
+					</li>
+					<li>need transactional access to maps</li>
+				</ul>
+			</p>
+			<p>
+				These are the initial packages of
+				<em>Commons Transaction</em>
+				2.x:
+				<ul>
+					<li>
+						<b>
+							<a
+								href="apidocs/org/apache/commons/transaction/package-summary.html">
+								transaction
+							</a>
+							package:
+						</b>
+						This base package defines interfaces for
+						transactions and resources that take part in
+						transactions.
+					</li>
+
+					<li>
+						<b>
+							<a
+								href="apidocs/org/apache/commons/transaction/locking/package-summary.html">
+								locking
+							</a>
+							package:
+						</b>
+						Interfaces and implementations for lock
+						managers. Lock managers help you to keep control
+						over your locks. All current implementations
+						also perform deadlock detection.
+					</li>
+
+					<li>
+						<b>
+							<a
+								href="apidocs/org/apache/commons/transaction/resource/package-summary.html">
+								resource
+							</a>
+							and
+							<a
+								href="apidocs/org/apache/commons/transaction/file/package-summary.html">
+								file
+							</a>
+							package:
+						</b>
+						Interfaces for a general access to streamable
+						resources and default implementations for the
+						file system. One implementation features
+						<em>ACID</em>
+						transactions on the file system using a
+						pessimistic locking schema.
+					</li>
 
 
-<p>These are the initial parts in detail:
-<ul>
-<li><b><a href="maps/index.html">memory</a> package:</b>
-Contains a wrapper to make any map implementing interface
-<code>java.util.Map</code> transactional. 
+					<li>
+						<b>
+							<a
+								href="apidocs/org/apache/commons/transaction/memory/package-summary.html">
+								memory
+							</a>
+							package:
+						</b>
+						Contains a number of transactional
+						<code>java.util.Map</code>
+						implementations.
+					</li>
+					<li>
+						<b>
+							<a
+								href="apidocs/org/apache/commons/transaction/util/package-summary.html">
+								util
+							</a>
+							package:
+						</b>
+						Contains a collection of utility classes used by
+						the transaction package itself. Of more general
+						interest could be a rendezvous barrier, and file
+						utilities.
+					</li>
+				</ul>
+			</p>
 
-Depending on the type of the map that is wrapped this can either work as a
-transactional cache or some sort of volatile memory store.
-</li>
+		</section>
 
-<li>
-<b><a href="locks/index.html">locking</a> package:</b>
-Interfaces and implementations for locks that can have more than one
-owner at different compatible levels.
-</li>
+		<section name="Commons Transaction 1.x">
+			<p>
+				Commons Transaction 1.x aimed at providing lightweight,
+				standardized, well tested and efficient implementations
+				of utility classes commonly used in transactional Java
+				programming. Initially there were implementations for
+				multi level locks, transactional collections and
+				transactional file access. The 1.x component is
+				compatible to JDK1.2.
+			</p>
+		</section>
 
-<li>
-<b><a href="file/index.html">file</a> package:</b>
-Implementation of transaction file access. Using a pessimistic
-locking schema this implementation features
-<em>serializable</em> transactions. 
-</li>
+		<section name="Releases">
+			<p>
+				See the
+				<a href="releases.html">releases</a>
+				page for information on obtaining releases.
+			</p>
+		</section>
 
-<li>
-<b><em>util</em> package:</b> 
-Contains a collection of utility classes used by the transaction
-package itself. Of more general interest could be a rendezvous barrier
-and a file utility class.
-</li>
-</ul>
-</p>
-</section>
+		<section name="Documentation">
+			<p>
+				The
+				<a href="apidocs/index.html">
+					JavaDoc API documents of the upcoming
+					<b>2.0 version</b>
+				</a>
+				are available online. If you are interested in the
+				previous 1.x documentation go to the
+				<a href="releases.html">releases</a>
+				page and download them together with the version you are
+				interested in.
+			</p>
+		</section>
 
-<section name="Releases">
-    <p>
-       See the <a href="releases.html">releases</a> page for information on obtaining releases.
-    </p>
-</section>
-
-<section name="Documentation">
-  <p>
-     The <a href="apidocs/index.html">JavaDoc API documents</a> are available online.
-  </p>
-</section>
-
-</body>
+	</body>
 </document>

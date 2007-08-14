@@ -31,13 +31,13 @@ import org.apache.commons.transaction.locking.LockManager;
  * 
  * 
  */
-public class TransactionImpl implements Transaction {
+public class DefaultTransaction implements Transaction {
 
     protected LockManager lm;
 
     protected List<ManageableResourceManager> rms;
 
-    public TransactionImpl(LockManager lm) {
+    public DefaultTransaction(LockManager lm) {
         this.lm = lm;
         this.rms = new LinkedList<ManageableResourceManager>();
     }

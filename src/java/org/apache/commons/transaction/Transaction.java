@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
  *
  * 
  */
-// TODO: We need a manager for such a transaction (or at least an implementation)
 public interface Transaction {
     public void start(long timeout, TimeUnit unit);
 

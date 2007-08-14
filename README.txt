@@ -1,7 +1,7 @@
-Jakarta Commons Transaction
-===========================
+Commons Transaction
+===================
 
-Welcome to the Transaction component of the Jakarta Commons project.
+Welcome to the Transaction component of the Apache Commons project.
 This component contains implementations of utility classes commonly used in
 transactional Java programming. Initially there are implementations for
 multi level locks, transactional collections and transactional file access.
@@ -32,7 +32,7 @@ ant           - Creates jar
 
 Maven
 -----
-The component can also be built using Maven. (Ant is the primary build tool.)
+The component can also be built using Maven 1.x. (Ant is the primary build tool.)
 It can be found here :
 
   http://maven.apache.org/

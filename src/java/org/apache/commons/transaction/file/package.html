@@ -1,0 +1,41 @@
+<html>
+<body>
+<h1>Transactional file access</h1>
+<p>.
+</p>
+ <p>Sometimes it may be desirable to save a single file or even a
+ number of related files to the file system atomically. This means if
+ you write something and an error occurs or for any reason you change
+ your mind and rather want to cancel what you did. Consider your
+ application fails in the middle of overwriting important data which
+ neither gives you the old state nor the new one, but rather a
+ corrupted one. Or only part of your data has been written leaving you
+ with an inconsistent state.</p> 
+
+<p>This package provides you with code that allows you to have atomic
+read and write operations on any file system. The <a
+href="TxFileResourceManager.html">file
+resource manager</a> offers you the possibility to isolate a number of
+operations on a set of files in a transaction. Using the <a
+href="../locking/package-summary.html">locking package</a> it is able to offer you
+full ACID transactions including serializability. Of course to make this
+work all access to the managed files must be done by this
+manager. Direct access to the file system can <em>not</em> be
+monitored by the manager.</p>
+
+<p>A fail safe <a
+href="FileSequence.html">file
+sequence</a> is the second main part of the file package. Just like
+sequences known from Oracle or other relational database systems it
+provides you with a unique ids. Each call to the <a
+href="FileSequence.html#nextSequenceValueBottom(java.lang.String,%20long)">next</a>
+method will return a new unique long number and persists the current
+value of the sequence to disk. This means when you shut down your
+system and restart it you will still get no double
+numbers, but the sequence will continue. Additionally, this sequence implementation is fail safe which
+means when an error occurs while saving the value of the sequence to
+disk you still are guaranteed not to get any double values. The file
+containing the value is guaranteed not to be corrupted as well. 
+</p>
+</body>
+</html>

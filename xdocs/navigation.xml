@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE org.apache.commons.menus SYSTEM 'http://jakarta.apache.org/commons/build/maven-build.dtd'>
+<!DOCTYPE org.apache.commons.menus SYSTEM 'http://commons.apache.org/build/maven-build.dtd'>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -16,32 +16,23 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project name="Commons&#xA0;Transaction">
-    <title>Commons&#xA0;Transaction</title>
+<project name="Commons Transaction">
+    <title>Commons Transaction</title>
     <body>
-        <links>
-          <item name="Jakarta Commons" href="http://jakarta.apache.org/commons/"/>
-        </links>
+	    <links>
+	      <item name="Apache Commons" href="http://commons.apache.org/"/>
+	    </links>
 
-        <menu name="Commons&#xA0;Transaction">
+        <menu name="Commons Transaction">
           <item name="Overview" href="/index.html" />
-          <item name="Download" href="http://jakarta.apache.org/site/downloads/downloads_commons-transaction.cgi"/>
-          <item name="Javadoc" href="/apidocs/index.html"/>
+	      <item name="Mailing lists" href="/mail-lists.html"/>
+	      <item name="Team" href="/team-list.html"/>
+          <item name="Download" href="http://commons.apache.org/downloads/download_transaction.cgi"/>
+          <item name="Javadoc (2.x)" href="/apidocs/index.html"/>
           <item name="Releases" href="releases.html"/>
+	      <item name="SVN repository" href="http://svn.apache.org/viewvc/commons/proper/transaction/trunk/"/>
         </menu>
-        <menu name="Documentation">
-          <item name="Transactional Maps" href="/maps/index.html">
-            <item name="Map Wrapper comparision" href="/maps/wrappers-comparision.html"/>
-          </item>
-          <item name="Locking" href="/locks/index.html">
-            <item name="Introduction" href="/locks/tutorial.html"/>
-            <item name="Preference Locks" href="/locks/preference.html"/>
-            <item name="Transaction Concepts" href="/locks/concepts.html"/>
-            <item name="Deadlocks" href="/locks/deadlock.html"/>
-          </item>
-          <item name="Transactional file access" href="/file/index.html"/>
-        </menu>
-
+        
         &commons;
     </body>
 </project>

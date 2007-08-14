@@ -1,4 +1,4 @@
-Jakarta Commons Transaction Release 2.0
+Commons Transaction Release 2.0
 ---------------------------------------
 
 RELEASE NUMBER: 2.0

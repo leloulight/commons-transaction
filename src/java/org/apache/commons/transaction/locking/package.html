@@ -1,0 +1,118 @@
+<html>
+<body>
+<h1>Locking</h1>
+
+<p>Beginning with version 1.1 the Commons Transaction package features
+extended transaction support mechanisms. They are grouped around the
+new <a
+href="../apidocs/org/apache/commons/transaction/locking/LockManager2.html">lock
+manager</a> and its <a
+href="../apidocs/org/apache/commons/transaction/locking/GenericLockManager.html">implementation</a>
+that should be used as the only interface to access locks
+associated to some sort of transaction. To do so it offers you locking
+methods like <a
+href="../apidocs/org/apache/commons/transaction/locking/LockManager2.html#lock(java.lang.Object,%20java.lang.Object,%20int,%20int,%20boolean,%20long)">lock</a>
+and <a
+href="../apidocs/org/apache/commons/transaction/locking/LockManager2.html#tryLock(java.lang.Object,%20java.lang.Object,%20int,%20boolean)">tryLock</a>.</p>  
+
+<p>It is important for this manager to be central and have
+knowledge of all locking operations to perform tasks like <a href="deadlock.html">deadlock
+detection</a>, incorporate <a
+href="../apidocs/org/apache/commons/transaction/locking/LockManager2.html#startGlobalTimeout(java.lang.Object,%20long)">global
+transaction timeouts</a> and add convenience methods to <a
+href="../apidocs/org/apache/commons/transaction/locking/LockManager2.html#releaseAll(java.lang.Object)">release
+all locks</a> of a transaction.</p>  
+
+<p>Additional to the <a href="preference.html">preference feature</a>
+in the new <a href="../apidocs/org/apache/commons/transaction/locking/MultiLevelLock2.html">lock</a>, its <a
+href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html">implementation</a>
+has some internal means to record all requests that wait for
+(partially) acquiring a lock in the sequence they occur. This is
+used by the deadlock detection in the lock manager. Another possible
+use is in custom implementations of fair scheduling lock
+mechanisms. Even though the specific protected methods 
+<a
+href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html#registerWaiter(org.apache.commons.transaction.locking.GenericLock.LockOwner)">registerWaiter</a>
+and
+<a
+href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html#unregisterWaiter(org.apache.commons.transaction.locking.GenericLock.LockOwner)">unregisterWaiter</a>
+and field 
+<a
+href="../apidocs/org/apache/commons/transaction/locking/GenericLock.html#waitingOwners">waitingOwners</a> are not made available
+through interfaces subclasses can still use them and even make their means public.</p> 
+
+<h2>Deadlocks</h2>
+ <p>A deadlock describes the scenario where two or more threads are
+ mutually blocking each other. Each waits for the other to release its
+ lock which will never happen as no thread can perform any
+ action. Consider the following figure for illustration this. Thread #1 holds locks
+a, b and c and waits for lock d. Thread #2 holds locks d and e and
+waits for lock b. As lock d is owner by Thread #2, Thread #1 can not
+ continue before Thread #2 releases it. Now Thread #2 waits for lock b
+ which is turn is owner by Thread #1.</p>
+
+<center>
+<img src="deadlock1.png"/>
+</center>
+
+<p> Neither thread will ever be able
+ to release any locks as both executions are blocked: the whole scene is dead!
+</p>
+
+<h3>How does deadlock detection work?</h3>
+
+<p>Theoretically, deadlock detection is pretty simple. First you have threads
+that own locks, then you have threads that wait for locks to
+acquire. Now you can think of a directed graph where you have
+threads and locks being nodes and each lock ownership and lock wait is
+a vertex that connects those nodes. When you have a cycle in that
+graph, i.e. when you can traverse the (directed!) graph starting from a certain
+node and you can reach that node again, you have a deadlock. This
+means a thread waits for itself to release a lock to 
+finally acquire a desired lock. Obviously, this will never happen
+without taking additional actions from the outside. Such an action
+could be to release the block for one thread telling it that there was
+a deadlock and the thread shall resolve it now it is able to perform actions.</p>
+<p>This can be illustrated with the above figure. Traversing the graph starting from Thread #1 going
+over lock b, Thread #2, lock d and finally Thread #1 (again) reveals
+the cycle and thus the deadlock. Note that of course you could just as
+well have started with Thread #2 and would have revealed the same cycle.
+</p>
+
+<h3>How does deadlock detection work for Commons Transaction?</h3>
+
+<p>In case of commons transaction things are a bit more complicated
+as a lock can have multiple (compatible) threads or better to say
+owners - lock ownership is not directly tied to the thread accessing
+the lock, but to an Object called owner. It can well be possible
+that an owner can both (partially) own a lock and wait for it as
+well. This may sound confusing, but actually becomes pretty obvious
+when you look at this example. There is a read/write lock and both owner #1
+and #2 hold a read lock which of course is compatible. Now when owner
+#1 ties to acquire a write lock it will have to wait for owner #2 to
+release its read lock. In such a case owner #1 both (partially) holds
+the lock and waits for it as illustrated by the following figure.</p>
+
+<center>
+<img src="deadlock2.png"/>
+</center>
+
+<p>The above algorithm would detect a deadlock. This of course is not there
+as owner #1 is blocked, but owner #2 is not and may finally release the read
+lock. This means the scenario is not dead.</p>
+<p>Obviously, the wait set of the lock is the problem. The graph does not
+tell us why owner #1 is waiting. In fact it does not wait for owner #1, but
+only for owner #2. Lookig at the next figure we see this. Both owners
+only own part of the lock and owner #1 is waiting for that part of
+the lock that owner #2 owns. 
+</p>
+
+<center>
+<img src="deadlock3.png"/>
+</center>
+
+<p>Thus the algorithm has to be modified in such a way that only the
+  real conflicting parts of the locks are taken into consideration. </p>
+
+</body>
+</html>
