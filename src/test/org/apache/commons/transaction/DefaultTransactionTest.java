@@ -20,8 +20,6 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.JUnit4TestAdapter;
 
-import org.apache.commons.transaction.locking.LockManager;
-import org.apache.commons.transaction.locking.RWLockManager;
 import org.apache.commons.transaction.memory.PessimisticTxMap;
 import org.apache.commons.transaction.memory.TxMap;
 import org.junit.Test;
@@ -33,8 +31,7 @@ public class DefaultTransactionTest {
 
     @Test
     public void basic() {
-        LockManager<Object, Object> lm = new RWLockManager<Object, Object>();
-        Transaction t = new DefaultTransaction(lm);
+        Transaction t = new DefaultTransaction();
         TxMap<String, Object> txMap1 = new PessimisticTxMap<String, Object>("TxMap1");
         t.enlistResourceManager(txMap1);
         TxMap<String, Object> txMap2 = new PessimisticTxMap<String, Object>("TxMap2");

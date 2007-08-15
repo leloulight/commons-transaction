@@ -18,50 +18,55 @@
 package org.apache.commons.transaction.memory;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.apache.commons.transaction.locking.DefaultLockManager;
+import org.apache.commons.transaction.locking.LockManager;
 
 /**
- * Wrapper that adds transactional control to all kinds of maps that implement
- * the {@link Map} interface. By using pessimistic transaction control (blocking
- * locks) this wrapper has better isolation than {@link BasicTxMap},
- * but also has less possible concurrency and may even deadlock. A commit,
- * however, will never fail. <br>
- * Start a transaction by calling {@link #startTransaction()}. Then perform the
- * normal actions on the map and finally either call
- * {@link #commitTransaction()} to make your changes permanent or
- * {@link #rollbackTransaction()} to undo them. <br>
- * <em>Caution:</em> Do not modify values retrieved by {@link #get(Object)} as
- * this will circumvent the transactional mechanism. Rather clone the value or
- * copy it in a way you see fit and store it back using
- * {@link #put(Object, Object)}. <br>
- * <em>Note:</em> This wrapper guarantees isolation level
- * <code>SERIALIZABLE</code>.
+ * Map featuring transactional control.
  * 
- * @version $Id: PessimisticMapWrapper.java 493628 2007-01-07 01:42:48Z joerg $
+ * <p>
+ * By using pessimistic transaction control (blocking locks) this wrapper has
+ * better isolation than {@link BasicTxMap}, but also has less possible
+ * concurrency and may even deadlock. A commit, however, will never fail.
+ * 
+ * <p>
+ * <em>Caution:</em>Some operations that would require global locks (e.g.
+ * <code>size()</code> or <code>clear()</code> or not properly isolated as
+ * this implementation does not support global locks.
+ * 
+ * <p>
+ * This implementation wraps a map of type {@link ConcurrentHashMap}.
+ * 
  * @see BasicTxMap
  * @see OptimisticTxMap
+ * @see ConcurrentHashMap
  */
 public class PessimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K, V> {
 
-    protected static final Object GLOBAL_LOCK = "GLOBAL";
+    private ReadWriteLock globalLock = new ReentrantReadWriteLock();
 
     public PessimisticTxMap(String name) {
-        super(name);
+        this(name, new DefaultLockManager<Object, Object>());
+    }
+
+    public PessimisticTxMap(String name, LockManager<Object, Object> lm) {
+        super(name, lm);
     }
 
     public Collection values() {
-        assureGlobalReadLock();
         return super.values();
     }
 
     public Set entrySet() {
-        assureGlobalReadLock();
         return super.entrySet();
     }
 
     public Set keySet() {
-        assureGlobalReadLock();
         return super.keySet();
     }
 
@@ -86,15 +91,6 @@ public class PessimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K,
         if (txContext != null) {
             txContext.writeLock(key);
             // XXX fake intention lock (prohibits global WRITE)
-            txContext.readLock(GLOBAL_LOCK);
-        }
-    }
-
-    protected void assureGlobalReadLock() {
-        LockingTxContext txContext = (LockingTxContext) getActiveTx();
-        if (txContext != null) {
-            // XXX fake intention lock (prohibits global WRITE)
-            txContext.readLock(GLOBAL_LOCK);
         }
     }
 
@@ -106,45 +102,34 @@ public class PessimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K,
     public class LockingTxContext extends MapTxContext {
 
         protected Set keys() {
-            readLock(GLOBAL_LOCK);
             return super.keys();
         }
 
         protected V get(Object key) {
             readLock(key);
-            // XXX fake intention lock (prohibits global WRITE)
-            readLock(GLOBAL_LOCK);
             return super.get(key);
         }
 
         protected void put(K key, V value) {
             writeLock(key);
-            // XXX fake intention lock (prohibits global WRITE)
-            readLock(GLOBAL_LOCK);
             super.put(key, value);
         }
 
         protected void remove(Object key) {
             writeLock(key);
-            // XXX fake intention lock (prohibits global WRITE)
-            readLock(GLOBAL_LOCK);
             super.remove(key);
         }
 
         protected int size() {
-            // XXX this is bad luck, we need a global read lock just for the
-            // size :( :( :(
-            readLock(GLOBAL_LOCK);
             return super.size();
         }
 
         protected void clear() {
-            writeLock(GLOBAL_LOCK);
             super.clear();
         }
 
     }
-    
+
     @Override
     public boolean commitCanFail() {
         return false;

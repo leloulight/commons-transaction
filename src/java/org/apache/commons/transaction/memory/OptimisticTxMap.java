@@ -16,77 +16,89 @@
  */
 package org.apache.commons.transaction.memory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.transaction.locking.DefaultLockManager;
 import org.apache.commons.transaction.locking.LockException;
+import org.apache.commons.transaction.locking.LockManager;
 
 /**
- * Wrapper that adds transactional control to all kinds of maps that implement
- * the {@link Map} interface. By using a naive optimistic transaction control
- * this wrapper has better isolation than {@link BasicTxMap}, but
- * may also fail to commit.
+ * Map featuring transactional control.
  * 
- * <br>
- * Start a transaction by calling {@link #startTransaction()}. Then perform the
- * normal actions on the map and finally either call
- * {@link #commitTransaction()} to make your changes permanent or
- * {@link #rollbackTransaction()} to undo them. <br>
- * <em>Caution:</em> Do not modify values retrieved by {@link #get(Object)} as
- * this will circumvent the transactional mechanism. Rather clone the value or
- * copy it in a way you see fit and store it back using
- * {@link #put(Object, Object)}. <br>
- * <em>Note:</em> This wrapper guarantees isolation level
- * <code>SERIALIZABLE</code>. <br>
- * <em>Caution:</em> This implementation might be slow when large amounts of
+ * <p>By using a naive optimistic transaction control
+ * this implementation has better isolation than {@link BasicTxMap}, but may also fail
+ * to commit.
+ * 
+ * <p><em>Caution:</em> This implementation might be slow when large amounts of
  * data is changed in a transaction as much references will need to be copied
  * around.
  * 
- * @version $Id: OptimisticMapWrapper.java 493628 2007-01-07 01:42:48Z joerg $
+ * <p>This implementation wraps a map of type {@link ConcurrentHashMap}. 
+ * 
  * @see BasicTxMap
  * @see PessimisticTxMap
+ * @see ConcurrentHashMap
  */
 public class OptimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K, V> {
 
-    private Set<CopyingTxContext> activeTransactions = new HashSet<CopyingTxContext>();
+    private Set<CopyingTxContext> activeTransactions = Collections
+            .synchronizedSet(new HashSet<CopyingTxContext>());
+
     private ReadWriteLock commitLock = new ReentrantReadWriteLock();
 
     private long commitTimeout = 1000 * 60; // 1 minute
 
     private long accessTimeout = 1000 * 30; // 30 seconds
+
+    public OptimisticTxMap(String name) {
+        this(name, new DefaultLockManager<Object, Object>());
+    }
+
+    public OptimisticTxMap(String name, LockManager<Object, Object> lm) {
+        super(name, lm);
+    }
+    
+    @Override
+    public void startTransaction(long timeout, TimeUnit unit) {
+        super.startTransaction(timeout, unit);
+        MapTxContext txContext = getActiveTx();
+        activeTransactions.add((CopyingTxContext)txContext);
+    }
+    
+    @Override
     public void rollbackTransaction() {
         MapTxContext txContext = getActiveTx();
         super.rollbackTransaction();
         activeTransactions.remove(txContext);
     }
 
-    public OptimisticTxMap(String name) {
-        super(name);
-    }
-
-
+    @Override
     public boolean commitTransaction() throws LockException {
         return commitTransaction(false);
     }
 
     public boolean commitTransaction(boolean force) throws LockException {
         MapTxContext txContext = getActiveTx();
-        
+
         if (txContext == null) {
-            throw new IllegalStateException(
-                "Active thread " + Thread.currentThread() + " not associated with a transaction!");
+            throw new IllegalStateException("Active thread " + Thread.currentThread()
+                    + " not associated with a transaction!");
         }
 
         if (txContext.isMarkedForRollback()) {
-            throw new IllegalStateException("Active thread " + Thread.currentThread() + " is marked for rollback!");
+            throw new IllegalStateException("Active thread " + Thread.currentThread()
+                    + " is marked for rollback!");
         }
-        
+
         try {
             // in this final commit phase we need to be the only one access the
             // map
@@ -99,7 +111,7 @@ public class OptimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K, 
                     throw new LockException(LockException.Code.CONFLICT, conflictKey);
                 }
             }
-    
+
             activeTransactions.remove(txContext);
             copyChangesToConcurrentTransactions();
             return super.commitTransaction();
@@ -166,7 +178,7 @@ public class OptimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K, 
             }
         }
     }
-    
+
     @Override
     protected CopyingTxContext createContext() {
         return new CopyingTxContext();
@@ -339,7 +351,7 @@ public class OptimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K, 
     public void setCommitTimeout(long commitTimeout) {
         this.commitTimeout = commitTimeout;
     }
-    
+
     @Override
     public boolean commitCanFail() {
         return true;

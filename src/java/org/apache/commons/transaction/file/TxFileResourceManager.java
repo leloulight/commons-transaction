@@ -32,8 +32,9 @@ import org.apache.commons.transaction.AbstractTransactionalResourceManager;
 import org.apache.commons.transaction.ManageableResourceManager;
 import org.apache.commons.transaction.AbstractTransactionalResourceManager.AbstractTxContext;
 import org.apache.commons.transaction.file.FileResourceManager.FileResource;
+import org.apache.commons.transaction.locking.DefaultLockManager;
 import org.apache.commons.transaction.locking.HierarchicalLockManager;
-import org.apache.commons.transaction.locking.HierarchicalRWLockManager;
+import org.apache.commons.transaction.locking.DefaultHierarchicalLockManager;
 import org.apache.commons.transaction.locking.LockManager;
 import org.apache.commons.transaction.resource.ResourceException;
 import org.apache.commons.transaction.resource.ResourceManager;
@@ -55,6 +56,7 @@ public class TxFileResourceManager extends
     public TxFileResourceManager(String name, String rootPath) {
         super(name);
         wrapped = new FileResourceManager(rootPath);
+        setLm(new DefaultLockManager<Object, Object>());
     }
 
     @Override
@@ -69,7 +71,7 @@ public class TxFileResourceManager extends
     @Override
     public void setLm(LockManager<Object, Object> lm) {
         super.setLm(lm);
-        hlm = new HierarchicalRWLockManager(getRootPath(), lm);
+        hlm = new DefaultHierarchicalLockManager(getRootPath(), lm);
     }
 
     public class FileTxContext extends AbstractTxContext implements

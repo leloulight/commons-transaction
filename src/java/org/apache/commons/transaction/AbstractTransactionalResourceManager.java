@@ -50,7 +50,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         this.name = name;
     }
 
-    // can be used to share a lock manager with other transactinal resource
+    // can be used to share a lock manager with other transactional resource
     // managers
     public AbstractTransactionalResourceManager(String name, LockManager<Object, Object> lm) {
         this.name = name;
@@ -188,9 +188,6 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
     }
 
     public void setLm(LockManager<Object, Object> lm) {
-        if (this.lm != null) {
-            throw new IllegalStateException("You can set the lock manager only once!");
-        }
         this.lm = lm;
     }
 

@@ -19,6 +19,31 @@ package org.apache.commons.transaction.memory;
 import java.util.Map;
 
 import org.apache.commons.transaction.ManageableResourceManager;
+import org.apache.commons.transaction.TransactionalResourceManager;
 
+/**
+ * Interface for a map that features transactional support.
+ * 
+ * <p>Start a transaction by calling {@link TransactionalResourceManager#startTransaction(long, java.util.concurrent.TimeUnit)}. Then perform the
+ * normal actions on the map and finally either call
+ * {@link TransactionalResourceManager#commitTransaction()} to make your changes permanent or
+ * {@link TransactionalResourceManager#rollbackTransaction()} to undo them.
+ * 
+ * <p><em>Caution:</em> Do not modify values retrieved by {@link Map#get(Object)} as
+ * this will circumvent the transactional mechanism. Rather clone the value or
+ * copy it in a way you see fit and store it back using
+ * {@link Map#put(Object, Object)}. <br>
+ * 
+ * @see BasicTxMap
+ * @see OptimisticTxMap
+ * @see PessimisticTxMap
+ * 
+ */
 public interface TxMap<K, V> extends Map<K, V>, ManageableResourceManager {
+    /**
+     * Gets the underlying map that is wrapped by this transactional implementation.
+     * 
+     * @return the wrapped map
+     */
+    Map<K, V> getWrappedMap();
 }

@@ -25,12 +25,12 @@ import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.JUnit4TestAdapter;
-import static junit.framework.Assert.fail;
+import static junit.framework.Assert.*;
+import org.junit.Test;
 
 import org.apache.commons.transaction.file.FileResourceManager.FileResource;
+import org.apache.commons.transaction.locking.DefaultLockManager;
 import org.apache.commons.transaction.locking.LockManager;
-import org.apache.commons.transaction.locking.RWLockManager;
-import org.junit.Test;
 
 public class TxFileResourceManagerTest {
     
@@ -168,16 +168,12 @@ public class TxFileResourceManagerTest {
         }
     }
 
-
-    
     @Test
     public void basic() {
         TxFileResourceManager manager = new TxFileResourceManager("TxFileManager", "d:/tmp/content");
-        LockManager lm = new RWLockManager<String, String>();
         FileResourceUndoManager um;
         try {
             um = new MemoryUndoManager("d:/tmp/txlogs");
-            manager.setLm(lm);
             manager.setUndoManager(um);
             manager.startTransaction(60, TimeUnit.SECONDS);
             FileResource file = manager.getResource("d:/tmp/content/aha");
@@ -195,7 +191,7 @@ public class TxFileResourceManagerTest {
 
     }
 
-    public static void main(String[] args) {
-        new TxFileResourceManagerTest().basic();
+    public static void main(java.lang.String[] args) {
+        junit.textui.TestRunner.run(suite());
     }
 }

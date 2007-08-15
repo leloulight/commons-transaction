@@ -18,13 +18,13 @@ package org.apache.commons.transaction.locking;
 
 import java.util.concurrent.TimeUnit;
 
-public class HierarchicalRWLockManager<M> implements HierarchicalLockManager<Object, M> {
+public class DefaultHierarchicalLockManager<M> implements HierarchicalLockManager<Object, M> {
 
     private final String rootPath;
 
     private final LockManager<Object, M> lm;
 
-    public HierarchicalRWLockManager(String rootPath, LockManager<Object, M> lm) {
+    public DefaultHierarchicalLockManager(String rootPath, LockManager<Object, M> lm) {
         this.rootPath = rootPath;
         this.lm = lm;
     }

@@ -20,7 +20,11 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 
- * @author olli
+ * <p>
+ * Implementations are free to decide whether they want to make use of the
+ * <code>exclusive</code> flag passed in
+ * {@link #lock(Object, Object, boolean)} and
+ * {@link #tryLock(Object, Object, boolean)}.
  * 
  * 
  * 
@@ -51,6 +55,7 @@ public interface LockManager<K, M> {
      *            resource for on which this block of work shall be done
      */
     public void lock(M managedResource, K key, boolean exclusive) throws LockException;
+
     public boolean tryLock(M managedResource, K key, boolean exclusive);
 
 }

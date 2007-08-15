@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.transaction.locking.DefaultLockManager;
 import org.apache.commons.transaction.locking.LockManager;
 
 /**
@@ -62,11 +63,20 @@ public class DefaultTransaction implements Transaction {
     /**
      * Creates a new transaction implementation.
      * 
-     * @param lm the lock manager shared by all resource managers
+     * @param lm
+     *            the lock manager shared by all resource managers
      */
     public DefaultTransaction(LockManager<Object, Object> lm) {
         this.lm = lm;
         this.rms = new LinkedList<ManageableResourceManager>();
+    }
+
+    /**
+     * Creates a new transaction implementation using the default lock manager.
+     * 
+     */
+    public DefaultTransaction() {
+        this(new DefaultLockManager<Object, Object>());
     }
 
     public synchronized void commit() throws TransactionException {

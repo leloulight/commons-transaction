@@ -27,34 +27,45 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.transaction.AbstractTransactionalResourceManager;
 import org.apache.commons.transaction.AbstractTransactionalResourceManager.AbstractTxContext;
+import org.apache.commons.transaction.locking.DefaultLockManager;
+import org.apache.commons.transaction.locking.LockManager;
 
 /**
- * Wrapper that adds transactional control to all kinds of maps that implement
- * the {@link Map} interface. This wrapper has rather weak isolation, but is
- * simply, neven blocks and commits will never fail for logical reasons. <br>
- * Start a transaction by calling {@link #startTransaction()}. Then perform the
- * normal actions on the map and finally either call
- * {@link #commitTransaction()} to make your changes permanent or
- * {@link #rollbackTransaction()} to undo them. <br>
- * <em>Caution:</em> Do not modify values retrieved by {@link #get(Object)} as
- * this will circumvent the transactional mechanism. Rather clone the value or
- * copy it in a way you see fit and store it back using
- * {@link #put(Object, Object)}. <br>
+ * Map featuring transactional control.
+ * 
+ * <p>
+ * This implementation has rather weak isolation, but is simple, never blocks
+ * and commits will never fail for logical reasons.
+ * 
+ * <p>
  * <em>Note:</em> This wrapper guarantees isolation level
  * <code>READ COMMITTED</code> only. I.e. as soon a value is committed in one
  * transaction it will be immediately visible in all other concurrent
  * transactions.
  * 
+ * <p>
+ * This implementation wraps a map of type {@link ConcurrentHashMap}. All
+ * internal synchronization is delegated to this class.
+ * 
  * @see OptimisticTxMap
  * @see PessimisticTxMap
+ * @see ConcurrentHashMap
  */
-public class BasicTxMap<K, V> extends AbstractTransactionalResourceManager<BasicTxMap.MapTxContext> implements
-        TxMap<K, V> {
+public class BasicTxMap<K, V> extends AbstractTransactionalResourceManager<BasicTxMap.MapTxContext>
+        implements TxMap<K, V> {
 
-    protected Map<K, V> wrapped = new ConcurrentHashMap<K, V>();
+    protected final Map<K, V> wrapped = new ConcurrentHashMap<K, V>();
+
+    public BasicTxMap(String name, LockManager<Object, Object> lm) {
+        super(name, lm);
+    }
 
     public BasicTxMap(String name) {
-        super(name);
+        this(name, new DefaultLockManager<Object, Object>());
+    }
+
+    public Map<K, V> getWrappedMap() {
+        return wrapped;
     }
 
     //
@@ -120,7 +131,7 @@ public class BasicTxMap<K, V> extends AbstractTransactionalResourceManager<Basic
     /**
      * @see Map#values()
      */
-    public Collection values() {
+    public Collection<V> values() {
 
         MapTxContext txContext = getActiveTx();
 
@@ -128,11 +139,11 @@ public class BasicTxMap<K, V> extends AbstractTransactionalResourceManager<Basic
             return wrapped.values();
         } else {
             // XXX expensive :(
-            Collection values = new ArrayList();
-            for (Iterator it = keySet().iterator(); it.hasNext();) {
-                Object key = it.next();
-                Object value = get(key);
-                // XXX we have no isolation, so get entry might have been
+            Collection<V> values = new ArrayList<V>();
+            Set<K> keys = keySet();
+            for (K key : keys) {
+                V value = get(key);
+                // XXX we have no isolation, so entry might have been
                 // deleted in the meantime
                 if (value != null) {
                     values.add(value);
@@ -145,7 +156,7 @@ public class BasicTxMap<K, V> extends AbstractTransactionalResourceManager<Basic
     /**
      * @see Map#putAll(java.util.Map)
      */
-    public void putAll(Map map) {
+    public void putAll(Map<? extends K, ? extends V> map) {
         MapTxContext txContext = getActiveTx();
 
         if (txContext == null) {
@@ -161,7 +172,7 @@ public class BasicTxMap<K, V> extends AbstractTransactionalResourceManager<Basic
     /**
      * @see Map#entrySet()
      */
-    public Set entrySet() {
+    public Set<Map.Entry<K, V>> entrySet() {
         MapTxContext txContext = getActiveTx();
         if (txContext == null) {
             return wrapped.entrySet();
@@ -184,7 +195,7 @@ public class BasicTxMap<K, V> extends AbstractTransactionalResourceManager<Basic
     /**
      * @see Map#keySet()
      */
-    public Set keySet() {
+    public Set<K> keySet() {
         MapTxContext txContext = getActiveTx();
 
         if (txContext == null) {
@@ -299,7 +310,7 @@ public class BasicTxMap<K, V> extends AbstractTransactionalResourceManager<Basic
     }
 
     public class MapTxContext extends AbstractTxContext {
-        protected Set deletes;
+        protected Set<K> deletes;
 
         protected Map<K, V> changes;
 
@@ -308,14 +319,14 @@ public class BasicTxMap<K, V> extends AbstractTransactionalResourceManager<Basic
         protected boolean cleared;
 
         protected MapTxContext() {
-            deletes = new HashSet();
+            deletes = new HashSet<K>();
             changes = new HashMap<K, V>();
             adds = new HashMap<K, V>();
             cleared = false;
         }
 
-        protected Set keys() {
-            Set keySet = new HashSet();
+        protected Set<K> keys() {
+            Set<K> keySet = new HashSet<K>();
             if (!cleared) {
                 keySet.addAll(wrapped.keySet());
                 keySet.removeAll(deletes);
@@ -372,7 +383,7 @@ public class BasicTxMap<K, V> extends AbstractTransactionalResourceManager<Basic
                 changes.remove(key);
                 adds.remove(key);
                 if (wrapped.containsKey(key) && !cleared) {
-                    deletes.add(key);
+                    deletes.add((K) key);
                 }
             } catch (RuntimeException e) {
                 markForRollback();
