@@ -23,8 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.commons.transaction.locking.DefaultLockManager;
 import org.apache.commons.transaction.locking.LockManager;
+import org.apache.commons.transaction.locking.RWLockManager;
 
 /**
  * Map featuring transactional control.
@@ -42,6 +42,9 @@ import org.apache.commons.transaction.locking.LockManager;
  * <p>
  * This implementation wraps a map of type {@link ConcurrentHashMap}.
  * 
+ * <p>
+ * This implementation is <em>thread-safe</em>.
+ * 
  * @see BasicTxMap
  * @see OptimisticTxMap
  * @see ConcurrentHashMap
@@ -51,7 +54,7 @@ public class PessimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K,
     private ReadWriteLock globalLock = new ReentrantReadWriteLock();
 
     public PessimisticTxMap(String name) {
-        this(name, new DefaultLockManager<Object, Object>());
+        this(name, new RWLockManager<Object, Object>());
     }
 
     public PessimisticTxMap(String name, LockManager<Object, Object> lm) {
@@ -90,7 +93,6 @@ public class PessimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K,
         LockingTxContext txContext = (LockingTxContext) getActiveTx();
         if (txContext != null) {
             txContext.writeLock(key);
-            // XXX fake intention lock (prohibits global WRITE)
         }
     }
 

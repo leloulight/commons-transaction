@@ -10,7 +10,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.transaction.util.FileHelper;
 
-// TODO: memory version to be serialized to XML using JAXB
+/**
+ * Default implementation of {@link FileResourceUndoManager}.
+ * 
+ * <p>Undo information is held in memory only. Changed content streams are stored as temporary files.
+ * 
+ * <p><em>Caution:</em>This implementation does not guarantee ACID properties after a JVM crash.
+ *
+ * <p>
+ * This implementation is <em>thread-safe</em>.
+ */
 public class MemoryUndoManager implements FileResourceUndoManager {
 
     private Log logger = LogFactory.getLog(getClass());

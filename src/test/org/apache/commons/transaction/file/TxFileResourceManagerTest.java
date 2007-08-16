@@ -16,6 +16,8 @@
  */
 package org.apache.commons.transaction.file;
 
+import static junit.framework.Assert.fail;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -25,12 +27,9 @@ import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.JUnit4TestAdapter;
-import static junit.framework.Assert.*;
-import org.junit.Test;
 
 import org.apache.commons.transaction.file.FileResourceManager.FileResource;
-import org.apache.commons.transaction.locking.DefaultLockManager;
-import org.apache.commons.transaction.locking.LockManager;
+import org.junit.Test;
 
 public class TxFileResourceManagerTest {
     
@@ -38,6 +37,10 @@ public class TxFileResourceManagerTest {
 
     public static junit.framework.Test suite() {
         return new JUnit4TestAdapter(TxFileResourceManagerTest.class);
+    }
+
+    public static void main(java.lang.String[] args) {
+        junit.textui.TestRunner.run(suite());
     }
 
     private static final void createFiles(String[] filePaths) {
@@ -190,8 +193,5 @@ public class TxFileResourceManagerTest {
         }
 
     }
-
-    public static void main(java.lang.String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
+    
 }

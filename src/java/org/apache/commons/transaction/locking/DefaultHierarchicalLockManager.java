@@ -18,6 +18,23 @@ package org.apache.commons.transaction.locking;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Default implementation of the {@link HierarchicalLockManager}.
+ * 
+ * <p>
+ * It splits the path into segments and non-exclusively locks each segment
+ * beginning from the root. The final segment - which is supposed to be the
+ * resource to be locked itself - can either be locked exclusively or
+ * non-exclusively. Too choose between the two, provide the flag in
+ * {@link #lockInHierarchy(Object, String, boolean)}.
+ * 
+ * <p>
+ * This implementation needs an ordinary {@link LockManager lock manager} that
+ * it delegates all locking calls to.
+ * 
+ * <p>
+ * This implementation is <em>thread-safe</em>.
+ */
 public class DefaultHierarchicalLockManager<M> implements HierarchicalLockManager<Object, M> {
 
     private final String rootPath;

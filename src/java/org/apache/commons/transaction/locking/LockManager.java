@@ -17,6 +17,7 @@
 package org.apache.commons.transaction.locking;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 /**
  * 
@@ -26,6 +27,9 @@ import java.util.concurrent.TimeUnit;
  * {@link #lock(Object, Object, boolean)} and
  * {@link #tryLock(Object, Object, boolean)}.
  * 
+ * <p>
+ * You can plug in your own lock manager version most easily. However, for
+ * advanced features this will most likely require a custom implementation of {@link Lock} as well.
  * 
  * 
  * @param <K>
@@ -40,7 +44,7 @@ public interface LockManager<K, M> {
      * @param unit
      *            the time unit of the {@code timeout} argument
      */
-    public void startWork(long timeout, TimeUnit unit);
+    void startWork(long timeout, TimeUnit unit);
 
     /**
      * Ends a block of work that has been started in
@@ -48,14 +52,14 @@ public interface LockManager<K, M> {
      * All registered locks will be unregistered from this lock manager.
      * 
      */
-    public void endWork();
+    void endWork();
 
     /**
      * @param managedResource
      *            resource for on which this block of work shall be done
      */
-    public void lock(M managedResource, K key, boolean exclusive) throws LockException;
+    void lock(M managedResource, K key, boolean exclusive) throws LockException;
 
-    public boolean tryLock(M managedResource, K key, boolean exclusive);
+    boolean tryLock(M managedResource, K key, boolean exclusive);
 
 }

@@ -27,8 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.transaction.AbstractTransactionalResourceManager;
 import org.apache.commons.transaction.AbstractTransactionalResourceManager.AbstractTxContext;
-import org.apache.commons.transaction.locking.DefaultLockManager;
 import org.apache.commons.transaction.locking.LockManager;
+import org.apache.commons.transaction.locking.RWLockManager;
 
 /**
  * Map featuring transactional control.
@@ -47,6 +47,9 @@ import org.apache.commons.transaction.locking.LockManager;
  * This implementation wraps a map of type {@link ConcurrentHashMap}. All
  * internal synchronization is delegated to this class.
  * 
+ * <p>
+ * This implementation is <em>thread-safe</em>.
+ * 
  * @see OptimisticTxMap
  * @see PessimisticTxMap
  * @see ConcurrentHashMap
@@ -61,7 +64,7 @@ public class BasicTxMap<K, V> extends AbstractTransactionalResourceManager<Basic
     }
 
     public BasicTxMap(String name) {
-        this(name, new DefaultLockManager<Object, Object>());
+        this(name, new RWLockManager<Object, Object>());
     }
 
     public Map<K, V> getWrappedMap() {

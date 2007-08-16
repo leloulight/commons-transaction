@@ -75,9 +75,6 @@
 						can do that for you:
 						<ul>
 							<li>
-								benefit from automatic deadlock recovery
-							</li>
-							<li>
 								be sure you never forget to release a
 								lock again
 							</li>
@@ -88,6 +85,9 @@
 							<li>
 								have an out-of-the-box solution for
 								hierarchical locks
+							</li>
+							<li>
+								plug in your own custom or advanced solutions
 							</li>
 						</ul>
 					</li>
@@ -122,8 +122,7 @@
 						</b>
 						Interfaces and implementations for lock
 						managers. Lock managers help you to keep control
-						over your locks. All current implementations
-						also perform deadlock detection.
+						over your locks.
 					</li>
 
 					<li>

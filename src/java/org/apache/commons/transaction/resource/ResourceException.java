@@ -16,7 +16,6 @@
  */
 package org.apache.commons.transaction.resource;
 
-import java.io.IOException;
 
 public class ResourceException extends Exception {
 

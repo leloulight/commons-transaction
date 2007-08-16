@@ -38,7 +38,6 @@ import org.apache.commons.transaction.util.FileHelper;
  * versioning values of sequences and throwing away all versions, but the
  * current and the previous one.
  * 
- * @version $Id: FileSequence.java 493628 2007-01-07 01:42:48Z joerg $
  */
 public class FileSequence {
 
@@ -47,7 +46,7 @@ public class FileSequence {
     protected final String storeDir;
 
     /**
-     * Creates a new resouce manager operation on the specified directories.
+     * Creates a new resource manager operation on the specified directories.
      * 
      * @param storeDir
      *            directory where sequence information is stored

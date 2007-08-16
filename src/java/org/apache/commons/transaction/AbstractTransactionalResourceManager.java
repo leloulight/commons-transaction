@@ -31,7 +31,8 @@ import org.apache.commons.transaction.locking.LockManager;
  * implement {@link #createContext()} to create an object of that type, and
  * {@link #commitCanFail()}.
  * 
- * @param <T>
+ * <p>
+ * This implementation is <em>thread-safe</em>.
  */
 public abstract class AbstractTransactionalResourceManager<T extends AbstractTransactionalResourceManager.AbstractTxContext>
         implements ManageableResourceManager {
@@ -42,9 +43,6 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
     private String name;
 
     protected abstract T createContext();
-
-    public AbstractTransactionalResourceManager() {
-    }
 
     public AbstractTransactionalResourceManager(String name) {
         this.name = name;

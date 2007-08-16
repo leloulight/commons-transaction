@@ -16,7 +16,9 @@
  */
 package org.apache.commons.transaction.locking.locks;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
@@ -31,7 +33,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <ul>
  * <li>each thread can hold at most one lock level, i.e. either none, read, or
  * write.
- * <li>ownership is (also partially) transferable from one thread to another (not in this initial implementation)
+ * <li>ownership is (also partially) transferable from one thread to another
+ * (not in this initial implementation)
  * <li>upgrade from read-lock to write-lock is supported
  * <li>information which thread holds which locks is available
  * </ul>
@@ -40,26 +43,64 @@ public class ResourceRWLock implements ReadWriteLock {
 
     private static final long serialVersionUID = -5452408535686743324L;
 
-    private final ResourceRWLock.ReadLock readerLock;
+    private final ResourceRWLock.ReadLock readLock;
 
-    private final ResourceRWLock.WriteLock writerLock;
+    private final ResourceRWLock.WriteLock writeLock;
 
     private final Sync sync = new Sync();
 
+    private final String resourceName;
+
+    private final Collection<Thread> waiterThreads = new ConcurrentSkipListSet<Thread>(
+            threadComparator);
+
     public ResourceRWLock() {
-        readerLock = new ReadLock();
-        writerLock = new WriteLock();
+        this(null);
+    }
+
+    public ResourceRWLock(String resourceName) {
+        this.resourceName = resourceName;
+        this.readLock = new ReadLock();
+        this.writeLock = new WriteLock();
     }
 
     public ResourceRWLock.WriteLock writeLock() {
-        return writerLock;
+        return writeLock;
     }
 
     public ResourceRWLock.ReadLock readLock() {
-        return readerLock;
+        return readLock;
     }
 
-    class ReadLock implements Lock {
+    public Collection<Thread> getQueuedThreads() {
+        ArrayList<Thread> list = new ArrayList<Thread>(sync.getQueuedThreads());
+        list.addAll(waiterThreads);
+        return list;
+    }
+
+    public void registerWaiter() {
+        Thread current = Thread.currentThread();
+        waiterThreads.add(current);
+    }
+
+    public void unregisterWaiter() {
+        Thread current = Thread.currentThread();
+        waiterThreads.remove(current);
+    }
+
+    public class InnerLock {
+        public ResourceRWLock getResourceRWLock() {
+            return ResourceRWLock.this;
+        }
+
+    }
+
+    public String toString() {
+        return readLock().toString();
+    }
+
+    class ReadLock extends InnerLock implements Lock {
+
         public void lock() {
             sync.acquireShared(1);
         }
@@ -84,20 +125,27 @@ public class ResourceRWLock implements ReadWriteLock {
             throw new UnsupportedOperationException();
         }
 
-        public String toString() {
+        String simpleString() {
             StringBuffer buf = new StringBuffer();
-            buf.append(super.toString()).append("[Read locks = ");
-            buf.append("]");
+            buf.append("Read lock on ");
+            buf.append(resourceName == null ? super.toString() : resourceName);
+            buf.append("[");
             Collection<Thread> readerThreads = sync.readerThreads;
             for (Thread thread : readerThreads) {
                 buf.append(thread.getName());
                 buf.append(" ");
             }
+            buf.append("]");
             return buf.toString();
+        }
+
+        public String toString() {
+            return simpleString() + "\n" + getResourceRWLock().writeLock.simpleString();
         }
     }
 
-    class WriteLock implements Lock {
+    class WriteLock extends InnerLock implements Lock {
+
         public void lock() {
             sync.acquire(1);
         }
@@ -122,10 +170,14 @@ public class ResourceRWLock implements ReadWriteLock {
             return sync.newCondition();
         }
 
-        public String toString() {
+        String simpleString() {
             Thread o = sync.getOwner();
-            return super.toString()
+            return "Write lock on " + (resourceName == null ? super.toString() : resourceName)
                     + ((o == null) ? "[Unlocked]" : "[Locked by thread " + o.getName() + "]");
+        }
+
+        public String toString() {
+            return simpleString() + "\n" + getResourceRWLock().readLock.simpleString();
         }
 
     }
@@ -134,7 +186,8 @@ public class ResourceRWLock implements ReadWriteLock {
 
         private static final long serialVersionUID = 8791542812047042797L;
 
-        private final Collection<Thread> readerThreads = new ConcurrentSkipListSet<Thread>();
+        private final Collection<Thread> readerThreads = new ConcurrentSkipListSet<Thread>(
+                threadComparator);
 
         private final int NO_LOCK = 0;
 
@@ -257,5 +310,19 @@ public class ResourceRWLock implements ReadWriteLock {
         }
 
     }
+
+    private static final Comparator<Thread> threadComparator = new Comparator<Thread>() {
+
+        @Override
+        public int compare(Thread o1, Thread o2) {
+            int h1 = o1.getName().hashCode();
+            int h2 = o2.getName().hashCode();
+
+            if (h1 == h2)
+                return 0;
+            return (h1 < h2 ? -1 : 1);
+        }
+
+    };
 
 }

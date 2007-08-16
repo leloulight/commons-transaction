@@ -16,9 +16,24 @@
  */
 package org.apache.commons.transaction.resource;
 
-
+/**
+ * Interface for a manager on resources. All meaningful work is done using the
+ * interface for the resource.
+ */
 public interface ResourceManager<R> {
+    /**
+     * Gets the resource denoted by the path
+     * 
+     * @param path the path of the resource
+     * @return the resource denoted by the path
+     * @throws ResourceException in case anything goes fatally wrong
+     */
     R getResource(String path) throws ResourceException;
 
+    /**
+     * Gets the root path of this manager.
+     * 
+     * @return the root path or <code>null</code> if no applicable
+     */
     String getRootPath();
 }

@@ -94,4 +94,103 @@ public class PessimisticTxMapTest extends BasicTxMapTest {
         }
     }
 
+    @Test
+    public void testConflict() {
+        log.info("Checking concurrent conflict resolvation features");
+
+        final PessimisticTxMap<String, String> txMap1 = new PessimisticTxMap<String, String>(
+                "txMap1");
+        final Map map1 = txMap1.getWrappedMap();
+
+        final RendezvousBarrier restart = new RendezvousBarrier("restart", TIMEOUT);
+
+        int conflictingRuns = 0;
+        int runs = 25;
+
+        for (int i = 0; i < runs; i++) {
+            System.out.print(".");
+
+            final RendezvousBarrier deadlockBarrier1 = new RendezvousBarrier("deadlock" + i,
+                    TIMEOUT);
+
+            Thread thread1 = new Thread(new Runnable() {
+                public void run() {
+                    txMap1.startTransaction(5, TimeUnit.SECONDS);
+                    try {
+                        // first both threads get a lock, this one on key2
+                        txMap1.put("key2", "value2");
+                        synchronized (deadlockBarrier1) {
+                            deadlockBarrier1.meet();
+                            deadlockBarrier1.reset();
+                        }
+                        // if I am first, the other thread will be dead, i.e.
+                        // exactly one
+                        txMap1.put("key1", "value2");
+                        txMap1.commitTransaction();
+                    } catch (LockException le) {
+                        assertEquals(le.getCode(), LockException.Code.WOULD_DEADLOCK);
+                        deadlockCnt++;
+                        txMap1.rollbackTransaction();
+                    } catch (InterruptedException ie) {
+                    } finally {
+                        try {
+                            synchronized (restart) {
+                                restart.meet();
+                                restart.reset();
+                            }
+                        } catch (InterruptedException ie) {
+                        }
+
+                    }
+                }
+            }, "Thread1");
+
+            thread1.start();
+
+            txMap1.startTransaction(5, TimeUnit.SECONDS);
+            try {
+                // first both threads get a lock, this one on key1
+                txMap1.get("key1");
+                synchronized (deadlockBarrier1) {
+                    try {
+                        deadlockBarrier1.meet();
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    deadlockBarrier1.reset();
+                }
+                // if I am first, the other thread will be dead, i.e. exactly
+                // one
+                txMap1.get("key2");
+                txMap1.commitTransaction();
+            } catch (LockException le) {
+                assertEquals(le.getCode(), LockException.Code.WOULD_DEADLOCK);
+                deadlockCnt++;
+                txMap1.rollbackTransaction();
+            } finally {
+                try {
+                    synchronized (restart) {
+                        restart.meet();
+                        restart.reset();
+                    }
+                } catch (InterruptedException ie) {
+                }
+
+            }
+
+            // XXX in special scenarios the current implementation might cause
+            // both owners to be deadlock victims
+            if (deadlockCnt != 1) {
+                // log.warn("More than one thread was deadlock victim!");
+                conflictingRuns++;
+            }
+            assertTrue(deadlockCnt >= 1);
+            deadlockCnt = 0;
+        }
+        System.out.println();
+        System.out.println("Of the " + runs + " there were " + conflictingRuns
+                + " runs that rolled back both transactions!");
+    }
+
 }

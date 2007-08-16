@@ -36,11 +36,38 @@ import org.apache.commons.transaction.locking.DefaultLockManager;
 import org.apache.commons.transaction.locking.HierarchicalLockManager;
 import org.apache.commons.transaction.locking.DefaultHierarchicalLockManager;
 import org.apache.commons.transaction.locking.LockManager;
+import org.apache.commons.transaction.locking.RWLockManager;
 import org.apache.commons.transaction.resource.ResourceException;
 import org.apache.commons.transaction.resource.ResourceManager;
 import org.apache.commons.transaction.resource.StreamableResource;
 import org.apache.commons.transaction.util.FileHelper;
 
+/**
+ * Transactional file system implementation of a
+ * {@link ResourceManager resource manager}.
+ * 
+ * <p>
+ * All meaningful actions that ensure ACID transactions are delegated to special
+ * components. This allows for customization of all kinds:
+ * <ul>
+ * <li>{@link #setLm(LockManager)}: Sets the {@link LockManager lock manager}
+ * that decides how to protect resources from concurrent modifications. Defaults
+ * to {@link DefaultLockManager}.
+ * <li>{@link #setUndoManager(FileResourceUndoManager)}: Sets the
+ * {@link FileResourceUndoManager undo manager} that keeps track of all changes
+ * and allows to undo them upon request.Defaults
+ * to {@link MemoryUndoManager}.
+ * </ul>
+ * 
+ * 
+ * <p>
+ * This implementation is <em>thread-safe</em>.
+ * 
+ * @see FileResourceUndoManager
+ * @see ResourceManager
+ * @see HierarchicalLockManager
+ * @see LockManager
+ */
 public class TxFileResourceManager extends
         AbstractTransactionalResourceManager<TxFileResourceManager.FileTxContext> implements
         ManageableResourceManager, ResourceManager<StreamableResource> {
@@ -56,7 +83,37 @@ public class TxFileResourceManager extends
     public TxFileResourceManager(String name, String rootPath) {
         super(name);
         wrapped = new FileResourceManager(rootPath);
-        setLm(new DefaultLockManager<Object, Object>());
+        setLm(new RWLockManager<Object, Object>());
+    }
+
+    @Override
+    public void setLm(LockManager<Object, Object> lm) {
+        super.setLm(lm);
+        hlm = new DefaultHierarchicalLockManager(getRootPath(), lm);
+    }
+
+    @Override
+    public boolean commitCanFail() {
+        return false;
+    }
+
+    @Override
+    public FileResource getResource(String path) throws ResourceException {
+        FileTxContext context = getActiveTx();
+        if (context != null) {
+            return context.getResource(path);
+        } else {
+            return wrapped.getResource(path);
+        }
+
+    }
+
+    public String getRootPath() {
+        return wrapped.getRootPath();
+    }
+
+    public void setUndoManager(FileResourceUndoManager undoManager) {
+        this.undoManager = undoManager;
     }
 
     @Override
@@ -68,10 +125,8 @@ public class TxFileResourceManager extends
         return hlm;
     }
 
-    @Override
-    public void setLm(LockManager<Object, Object> lm) {
-        super.setLm(lm);
-        hlm = new DefaultHierarchicalLockManager(getRootPath(), lm);
+    protected FileResourceUndoManager getUndoManager() {
+        return undoManager;
     }
 
     public class FileTxContext extends AbstractTxContext implements
@@ -104,7 +159,7 @@ public class TxFileResourceManager extends
             getUndoManager().startRecord();
             super.start(timeout, unit);
         }
-        
+
         @Override
         public String getRootPath() {
             return TxFileResourceManager.this.getRootPath();
@@ -344,33 +399,6 @@ public class TxFileResourceManager extends
                 super.writeLock();
             }
         }
-    }
-
-    @Override
-    public boolean commitCanFail() {
-        return false;
-    }
-
-    public FileResource getResource(String path) throws ResourceException {
-        FileTxContext context = getActiveTx();
-        if (context != null) {
-            return context.getResource(path);
-        } else {
-            return wrapped.getResource(path);
-        }
-
-    }
-
-    public String getRootPath() {
-        return wrapped.getRootPath();
-    }
-
-    protected FileResourceUndoManager getUndoManager() {
-        return undoManager;
-    }
-
-    public void setUndoManager(FileResourceUndoManager undoManager) {
-        this.undoManager = undoManager;
     }
 
 }

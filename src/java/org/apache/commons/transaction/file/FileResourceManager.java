@@ -33,6 +33,14 @@ import org.apache.commons.transaction.resource.ResourceManager;
 import org.apache.commons.transaction.resource.StreamableResource;
 import org.apache.commons.transaction.util.FileHelper;
 
+/**
+ * Default file system implementation of a {@link ResourceManager resource manager}.
+ * 
+ * <p>
+ * This implementation is <b>NOT</b> <em>thread-safe</em>. Use
+ * {@link TxFileResourceManager} if you require a <em>thread-safe</em>
+ * implementation.
+ */
 public class FileResourceManager implements ResourceManager<FileResourceManager.FileResource> {
 
     private Log logger = LogFactory.getLog(getClass());
@@ -62,7 +70,7 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
         private final File file;
 
         private final String canonicalPath;
-        
+
         private final String name;
 
         protected static File getFileForResource(StreamableResource resource)
@@ -124,7 +132,7 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
             return file.exists();
         }
 
-        public List<? extends FileResource>  getChildren() throws ResourceException {
+        public List<? extends FileResource> getChildren() throws ResourceException {
             List<FileResource> result = new ArrayList<FileResource>();
             File[] files = file.listFiles();
             for (File file : files) {
@@ -140,7 +148,8 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
              * if (getPath().equals(getRootPath())) return null;
              */
             File parent = file.getParentFile();
-            if (parent == null) return null;
+            if (parent == null)
+                return null;
             return create(parent);
         }
 
@@ -268,7 +277,7 @@ public class FileResourceManager implements ResourceManager<FileResourceManager.
         protected FileResource create(File file) throws ResourceException {
             return new FileResource(file);
         }
-        
+
         public FileResource getChild(String name) throws ResourceException {
             File child = new File(file, name);
             return create(child);

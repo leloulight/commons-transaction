@@ -16,21 +16,61 @@
  */
 package org.apache.commons.transaction.resource;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
+/**
+ * Interface for a resource that has a stream and properties. The resource is
+ * organized in a hierarchy.
+ * 
+ * <p>
+ * This can be a direct match for {@link File}.
+ * 
+ */
 public interface StreamableResource {
+
+    /**
+     * Gets the full path of this resource
+     * 
+     * @return the full path
+     */
     String getPath();
+
+    /**
+     * Gets the name, i.e. the last segment of the {@link #getPath() path}.
+     * 
+     * @return the name
+     */
     String getName();
 
+    /**
+     * Checks whether this resource is a directory, i.e. whether it can have
+     * children. Note that a resource can be both a directory and a file.
+     * 
+     * @return <code>true</code> if this resource can have children
+     */
     boolean isDirectory();
 
+    /**
+     * Checks whether this resource is a file, i.e. whether it contains a
+     * content stream. Note that a resource can be both a directory and a file.
+     * 
+     * @return <code>true</code> if this resource contains a content stream
+     */
     boolean isFile();
 
+    /**
+     * Gets the children of the resource.
+     * 
+     * @return a list of children (empty if this is a file), never <code>null</code>
+     * @throws ResourceException in case anything goes fatally wrong
+     */
     List<? extends StreamableResource> getChildren() throws ResourceException;
 
     StreamableResource getParent() throws ResourceException;
+
     StreamableResource getChild(String name) throws ResourceException;
 
     InputStream readStream() throws ResourceException;
@@ -52,8 +92,9 @@ public interface StreamableResource {
     Object getProperty(String name);
 
     void setProperty(String name, Object newValue);
+
     void removeProperty(String name);
-    
+
     void readLock();
 
     void writeLock();

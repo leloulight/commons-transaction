@@ -27,9 +27,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.commons.transaction.locking.DefaultLockManager;
 import org.apache.commons.transaction.locking.LockException;
 import org.apache.commons.transaction.locking.LockManager;
+import org.apache.commons.transaction.locking.RWLockManager;
 
 /**
  * Map featuring transactional control.
@@ -43,6 +43,9 @@ import org.apache.commons.transaction.locking.LockManager;
  * around.
  * 
  * <p>This implementation wraps a map of type {@link ConcurrentHashMap}. 
+ * 
+ * <p>
+ * This implementation is <em>thread-safe</em>.
  * 
  * @see BasicTxMap
  * @see PessimisticTxMap
@@ -60,7 +63,7 @@ public class OptimisticTxMap<K, V> extends BasicTxMap<K, V> implements TxMap<K, 
     private long accessTimeout = 1000 * 30; // 30 seconds
 
     public OptimisticTxMap(String name) {
-        this(name, new DefaultLockManager<Object, Object>());
+        this(name, new RWLockManager<Object, Object>());
     }
 
     public OptimisticTxMap(String name, LockManager<Object, Object> lm) {

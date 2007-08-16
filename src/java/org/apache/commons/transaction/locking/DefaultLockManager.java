@@ -16,11 +16,11 @@
  */
 package org.apache.commons.transaction.locking;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
@@ -28,101 +28,25 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.transaction.locking.LockException.Code;
 
 /**
+ * Default implementation of {@link LockManager}.
  * 
- * @author olli
+ * <p>
+ * This is a minimal implementation that only knows a single type of lock.
+ * Read-/Write-locks are not supported. Deadlock detection is not performed.
+ * Transferring locks between threads is not possible. These limitations are due
+ * to the standard {@link Lock} and {@link ReadWriteLock} implementations.
  * 
- * @param <K>
- * @param <M>
+ * <p>
+ * This implementation is <em>thread-safe</em>.
  */
-public class DefaultLockManager<K, M> implements LockManager<K, M> {
+public class DefaultLockManager<K, M> extends AbstractLockManager<K, M> implements
+        LockManager<K, M> {
     private Log logger = LogFactory.getLog(getClass());
 
     protected ConcurrentHashMap<KeyEntry<K, M>, ReentrantLock> locks = new ConcurrentHashMap<KeyEntry<K, M>, ReentrantLock>();
 
-    protected Map<Thread, CopyOnWriteArraySet<ReentrantLock>> locksForThreads = new ConcurrentHashMap<Thread, CopyOnWriteArraySet<ReentrantLock>>();
-
-    protected Map<Thread, Long> effectiveGlobalTimeouts = new ConcurrentHashMap<Thread, Long>();
-
-    @Override
-    public void endWork() {
-        release();
-    }
-
-    @Override
-    public void startWork(long timeout, TimeUnit unit) {
-        if (isWorking()) {
-            throw new IllegalStateException("work has already been started");
-        }
-        locksForThreads.put(Thread.currentThread(), new CopyOnWriteArraySet<ReentrantLock>());
-
-        long timeoutMSecs = unit.toMillis(timeout);
-        long now = System.currentTimeMillis();
-        long effectiveTimeout = now + timeoutMSecs;
-        effectiveGlobalTimeouts.put(Thread.currentThread(), effectiveTimeout);
-    }
-
-    // TODO
-    protected boolean checkForDeadlock() {
-        return false;
-
-    }
-
-    protected long computeRemainingTime(Thread thread) {
-        long timeout = effectiveGlobalTimeouts.get(thread);
-        long now = System.currentTimeMillis();
-        long remaining = timeout - now;
-        return remaining;
-    }
-
     protected ReentrantLock create() {
         return new ReentrantLock();
-    }
-
-    protected static class KeyEntry<K, M> {
-
-        private K k;
-
-        private M m;
-
-        public KeyEntry(K k, M m) {
-            this.k = k;
-            this.m = m;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj instanceof KeyEntry) {
-                KeyEntry otherEntry = (KeyEntry) obj;
-                return (otherEntry.k.equals(k) && otherEntry.m.equals(m));
-            }
-            return false;
-        }
-
-        public int hashCode() {
-            return k.hashCode() + m.hashCode();
-        }
-    }
-
-    public boolean isWorking() {
-        return locksForThreads.get(Thread.currentThread()) != null;
-    }
-
-    @Override
-    public void lock(M managedResource, K key, boolean exclusive) throws LockException {
-        long remainingTime = computeRemainingTime(Thread.currentThread());
-
-        boolean locked = tryLockInternal(managedResource, key, exclusive, remainingTime,
-                TimeUnit.MILLISECONDS);
-        if (!locked) {
-            throw new LockException(Code.TIMED_OUT, key);
-        }
-    }
-
-    @Override
-    public boolean tryLock(M managedResource, K key, boolean exclusive) {
-        return tryLockInternal(managedResource, key, exclusive, 0, TimeUnit.MILLISECONDS);
     }
 
     protected boolean tryLockInternal(M managedResource, K key, boolean exclusive, long time,
@@ -135,7 +59,7 @@ public class DefaultLockManager<K, M> implements LockManager<K, M> {
         ReentrantLock existingLock = locks.putIfAbsent(entry, lock);
         if (existingLock != null)
             lock = existingLock;
-        Set<ReentrantLock> locks = locksForThreads.get(Thread.currentThread());
+        Set<Lock> locks = locksForThreads.get(Thread.currentThread());
         if (locks == null) {
             throw new IllegalStateException("lock() can only be called after startWork()");
         }
@@ -170,23 +94,16 @@ public class DefaultLockManager<K, M> implements LockManager<K, M> {
     }
 
     protected void release() {
-        Set<ReentrantLock> locks = locksForThreads.get(Thread.currentThread());
+        Set<Lock> locks = locksForThreads.get(Thread.currentThread());
         // graceful reaction...
         if (locks == null) {
             return;
         }
-        for (ReentrantLock lock : locks) {
-            int holdCount = lock.getHoldCount();
+        for (Lock lock : locks) {
+            int holdCount = ((ReentrantLock) lock).getHoldCount();
             logger.debug("Locks held by this thread: " + holdCount);
-            while (true) {
-                try {
-                    lock.unlock();
-                } catch (IllegalMonitorStateException imse) {
-                    // We are lacking information on whether we have a read
-                    // lock and if so how many.
-                    // XXX Just free as many as possible.
-                    break;
-                }
+            for (int i = 0; i < holdCount; i++) {
+                lock.unlock();
             }
         }
 
