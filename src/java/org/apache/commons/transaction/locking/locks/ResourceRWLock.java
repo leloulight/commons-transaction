@@ -256,6 +256,7 @@ public class ResourceRWLock implements ReadWriteLock {
                         continue;
                     }
                     setExclusiveOwnerThread(current);
+                    readerThreads.remove(current);
                     return true;
                 } else if (c == WRITE_LOCK) {
                     // if there is a write lock only chance is we already have
