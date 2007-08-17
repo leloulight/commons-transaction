@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.transaction.locking.DefaultLockManager;
+import org.apache.commons.transaction.locking.SimpleLockManager;
 import org.apache.commons.transaction.locking.LockManager;
 
 /**
@@ -76,7 +76,7 @@ public class DefaultTransaction implements Transaction {
      * 
      */
     public DefaultTransaction() {
-        this(new DefaultLockManager<Object, Object>());
+        this(new SimpleLockManager<Object, Object>());
     }
 
     public synchronized void commit() throws TransactionException {

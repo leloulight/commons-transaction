@@ -32,7 +32,7 @@ import org.apache.commons.transaction.AbstractTransactionalResourceManager;
 import org.apache.commons.transaction.ManageableResourceManager;
 import org.apache.commons.transaction.AbstractTransactionalResourceManager.AbstractTxContext;
 import org.apache.commons.transaction.file.FileResourceManager.FileResource;
-import org.apache.commons.transaction.locking.DefaultLockManager;
+import org.apache.commons.transaction.locking.SimpleLockManager;
 import org.apache.commons.transaction.locking.HierarchicalLockManager;
 import org.apache.commons.transaction.locking.DefaultHierarchicalLockManager;
 import org.apache.commons.transaction.locking.LockManager;
@@ -52,7 +52,7 @@ import org.apache.commons.transaction.util.FileHelper;
  * <ul>
  * <li>{@link #setLm(LockManager)}: Sets the {@link LockManager lock manager}
  * that decides how to protect resources from concurrent modifications. Defaults
- * to {@link DefaultLockManager}.
+ * to {@link SimpleLockManager}.
  * <li>{@link #setUndoManager(FileResourceUndoManager)}: Sets the
  * {@link FileResourceUndoManager undo manager} that keeps track of all changes
  * and allows to undo them upon request.Defaults

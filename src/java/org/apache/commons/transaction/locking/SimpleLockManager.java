@@ -39,7 +39,7 @@ import org.apache.commons.transaction.locking.LockException.Code;
  * <p>
  * This implementation is <em>thread-safe</em>.
  */
-public class DefaultLockManager<K, M> extends AbstractLockManager<K, M> implements
+public class SimpleLockManager<K, M> extends AbstractLockManager<K, M> implements
         LockManager<K, M> {
     private Log logger = LogFactory.getLog(getClass());
 
