@@ -201,26 +201,26 @@ public class ResourceRWLock implements ReadWriteLock {
             if (current != getExclusiveOwnerThread())
                 return true;
             setExclusiveOwnerThread(null);
-            setState(readerThreads.size());
+            // if we release an exclusive lock, this can only mean we are the
+            // only who possibly could and the only possible outcome is that
+            // afterwards there are no more locks
+            setState(NO_LOCK);
             return true;
         }
 
         protected boolean tryReleaseShared(int unused) {
             Thread current = Thread.currentThread();
+            // if there had been a read lock before, we simply count the state
+            // down by one
             if (readerThreads.remove(current)) {
                 while (true) {
                     int c = getState();
                     int nextc = c - 1;
-                    if (c == WRITE_LOCK) {
-                        return true;
-                    }
-
                     if (!compareAndSetState(c, nextc)) {
                         // oops, someone was faster than us, so try again
                         continue;
                     }
                     return true;
-
                 }
             }
             return true;
