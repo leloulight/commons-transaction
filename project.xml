@@ -23,7 +23,7 @@
   <inceptionYear>2004</inceptionYear>
   <name>Transaction</name>
   <shortDescription>Making concurrent programming transactional.</shortDescription>
-  <description>Classes that aid concurrent programming in transactional style.</description>
+  <description>Classes that aid concurrent programming in a transactional style.</description>
   <logo>/images/logo.png</logo>
    
   <url>http://commons.apache.org/transaction/</url>
@@ -169,6 +169,9 @@
     <contributor>
       <name>Holger Hoffstätte</name>
       <email>holger dot hoffstaette at googlemail dot com</email>
+    </contributor>
+    <contributor>
+      <name>Peter Veentjer</name>
     </contributor>
   </contributors>
 

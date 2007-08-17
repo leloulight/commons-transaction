@@ -31,7 +31,7 @@
   <name>Transaction</name>
 
   <inceptionYear>2004</inceptionYear>
-  <description>Classes that aid concurrent programming in transactional style.</description>
+  <description>Classes that aid concurrent programming in a transactional style.</description>
 
   <url>http://commons.apache.org/transaction/</url>
 
@@ -123,6 +123,9 @@
     <contributor>
       <name>Holger Hoffstätte</name>
       <email>holger dot hoffstaette at googlemail dot com</email>
+    </contributor>
+    <contributor>
+      <name>Peter Veentjer</name>
     </contributor>
   </contributors>
 
