@@ -67,6 +67,11 @@ public class LockException extends RuntimeException {
         this.resourceId = resourceId;
     }
 
+    public LockException(String message, Code code) {
+        super(message);
+        this.code = code;
+    }
+
     public LockException(String message) {
         super(message);
     }

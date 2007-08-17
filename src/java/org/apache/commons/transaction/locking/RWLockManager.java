@@ -29,6 +29,9 @@ import org.apache.commons.transaction.locking.locks.ResourceRWLock;
 public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements LockManager<K, M> {
 
     protected ConcurrentHashMap<KeyEntry<K, M>, ResourceRWLock> locks = new ConcurrentHashMap<KeyEntry<K, M>, ResourceRWLock>();
+    
+    private long absolutePrewaitTime = -1;
+    private long prewaitTimeDivisor = 10;
 
     protected ResourceRWLock create(String name) {
         return new ResourceRWLock(name);
@@ -57,6 +60,9 @@ public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements Lo
         if (time == 0) {
             locked = lock.tryLock();
         } else {
+            // we need to have this lock request registered as an additional
+            // waiter as it will not be among the queued threads at the time we
+            // do the deadlock check
             rwlock.registerWaiter();
             try {
                 locked = doTrickyYetEfficientLockOnlyIfThisCanNotCauseADeadlock(lock, unit
@@ -102,17 +108,14 @@ public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements Lo
 
             long startTime = System.currentTimeMillis();
 
-            // TODO this heuristic divisor really should be configurable
-            long preWaitTime = timeMsecs / 10;
+            long preWaitTime = getPrewaitTime(timeMsecs);
             locked = lock.tryLock(preWaitTime, TimeUnit.MILLISECONDS);
             if (locked)
                 return true;
 
             // (II) deadlock detect
             cancelAllTimedOut();
-            if (wouldDeadlock(Thread.currentThread(), new HashSet<Thread>())) {
-                throw new LockException(LockException.Code.WOULD_DEADLOCK);
-            }
+            detectDeadlock(Thread.currentThread(), new HashSet<Thread>());
 
             // (III) real wait
             long now = System.currentTimeMillis();
@@ -128,7 +131,12 @@ public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements Lo
 
     }
 
-    protected boolean wouldDeadlock(Thread thread, Set<Thread> path) {
+    long getPrewaitTime(long timeMsecs) {
+        if (absolutePrewaitTime != -1) return absolutePrewaitTime;
+        return timeMsecs / prewaitTimeDivisor;
+    }
+
+    protected void detectDeadlock(Thread thread, Set<Thread> path) {
         path.add(thread);
         // these are our locks
         // Note: No need to make a copy as we can be sure to iterate on our
@@ -146,16 +154,23 @@ public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements Lo
                 for (Thread conflictThread : conflicts) {
                     // this means, we have found a cycle in the wait graph
                     if (path.contains(conflictThread)) {
-                        return true;
-                    } else if (wouldDeadlock(conflictThread, path)) {
-                        return true;
+                        String message = "Cycle found involving " + formatPath(path);
+                        throw new LockException(message, LockException.Code.WOULD_DEADLOCK);
+                    } else {
+                        detectDeadlock(conflictThread, path);
                     }
                 }
             }
         }
-
         path.remove(thread);
-        return false;
+    }
+
+    private String formatPath(Set<Thread> path) {
+        StringBuffer buf = new StringBuffer();
+        for (Thread thread : path) {
+            buf.append(thread.getName()).append("->");
+        }
+        return buf.toString();
     }
 
     protected void cancelAllTimedOut() {
@@ -173,6 +188,22 @@ public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements Lo
             }
 
         }
+    }
+
+    public long getAbsolutePrewaitTime() {
+        return absolutePrewaitTime;
+    }
+
+    public void setAbsolutePrewaitTime(long absolutePrewaitTime) {
+        this.absolutePrewaitTime = absolutePrewaitTime;
+    }
+
+    public long getPrewaitTimeDivisor() {
+        return prewaitTimeDivisor;
+    }
+
+    public void setPrewaitTimeDivisor(long prewaitTimeDivisor) {
+        this.prewaitTimeDivisor = prewaitTimeDivisor;
     }
 
 }

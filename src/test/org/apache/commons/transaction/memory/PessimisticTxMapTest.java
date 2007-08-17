@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.apache.commons.transaction.locking.LockException;
+import org.apache.commons.transaction.locking.RWLockManager;
 import org.apache.commons.transaction.util.RendezvousBarrier;
 
 /**
@@ -98,8 +99,11 @@ public class PessimisticTxMapTest extends BasicTxMapTest {
     public void testConflict() {
         log.info("Checking concurrent conflict resolvation features");
 
+        final RWLockManager<Object, Object> lm = new RWLockManager<Object, Object>();
+        // adds more concurrency and makes test run faster
+        lm.setAbsolutePrewaitTime(0);
         final PessimisticTxMap<String, String> txMap1 = new PessimisticTxMap<String, String>(
-                "txMap1");
+                "txMap1", lm);
         final Map map1 = txMap1.getWrappedMap();
 
         final RendezvousBarrier restart = new RendezvousBarrier("restart", TIMEOUT);
@@ -108,14 +112,14 @@ public class PessimisticTxMapTest extends BasicTxMapTest {
         int runs = 25;
 
         for (int i = 0; i < runs; i++) {
-            System.out.print(".");
+            System.out.println(i);
 
             final RendezvousBarrier deadlockBarrier1 = new RendezvousBarrier("deadlock" + i,
                     TIMEOUT);
 
             Thread thread1 = new Thread(new Runnable() {
                 public void run() {
-                    txMap1.startTransaction(5, TimeUnit.SECONDS);
+                    txMap1.startTransaction(5, TimeUnit.MINUTES);
                     try {
                         // first both threads get a lock, this one on key2
                         txMap1.put("key2", "value2");
@@ -147,7 +151,7 @@ public class PessimisticTxMapTest extends BasicTxMapTest {
 
             thread1.start();
 
-            txMap1.startTransaction(5, TimeUnit.SECONDS);
+            txMap1.startTransaction(5, TimeUnit.MINUTES);
             try {
                 // first both threads get a lock, this one on key1
                 txMap1.get("key1");
@@ -187,6 +191,14 @@ public class PessimisticTxMapTest extends BasicTxMapTest {
             }
             assertTrue(deadlockCnt >= 1);
             deadlockCnt = 0;
+
+            try {
+                thread1.join();
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
         }
         System.out.println();
         System.out.println("Of the " + runs + " there were " + conflictingRuns
