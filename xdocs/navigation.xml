@@ -30,7 +30,7 @@
           <item name="Download" href="http://commons.apache.org/downloads/download_transaction.cgi"/>
           <item name="Javadoc (2.x)" href="/apidocs/index.html"/>
           <item name="Releases" href="releases.html"/>
-	      <item name="SVN repository" href="http://svn.apache.org/viewvc/commons/proper/transaction/trunk/"/>
+	      <item name="SVN repository (2.x)" href="http://svn.apache.org/viewvc/commons/proper/transaction/branches/TRANSACTION_2/"/>
         </menu>
         
         &commons;
