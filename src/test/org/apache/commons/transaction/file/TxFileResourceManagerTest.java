@@ -34,6 +34,7 @@ import static junit.framework.Assert.*;
 import org.junit.Test;
 
 import org.apache.commons.transaction.file.FileResourceManager.FileResource;
+import org.apache.commons.transaction.resource.ResourceException;
 import org.apache.commons.transaction.util.FileHelper;
 import org.apache.commons.transaction.util.RendezvousBarrier;
 
@@ -214,6 +215,7 @@ public class TxFileResourceManagerTest {
 
     @Test
     public void basic() {
+        reset();
         TxFileResourceManager manager = new TxFileResourceManager("TxFileManager", rootPath);
         FileResourceUndoManager um;
         try {
@@ -236,6 +238,33 @@ public class TxFileResourceManagerTest {
     }
 
     @Test
+    public void rollback() {
+        reset();
+        TxFileResourceManager manager = new TxFileResourceManager("TxFileManager", rootPath);
+        FileResourceUndoManager um;
+        try {
+            um = new MemoryUndoManager(tmpDir);
+            manager.setUndoManager(um);
+            manager.startTransaction(60, TimeUnit.SECONDS);
+            FileResource file = manager.getResource(rootPath + "/aha");
+            if (!file.exists()) {
+                file.createAsFile();
+            }
+            OutputStream os = file.writeStream(true);
+            PrintStream ps = new PrintStream(os);
+            ps.print("Huhu");
+            os.close();
+        } catch (Throwable throwable) {
+            System.err.println(throwable);
+        } finally {
+            checkExactlyContains(rootPath, new String[] { "aha" }, new String[] { "Huhu" });
+            manager.rollbackTransaction();
+            checkIsEmpty(rootPath);
+        }
+
+    }
+
+    @Test
     public void global() throws Throwable {
         reset();
         createInitialFiles();
@@ -245,32 +274,25 @@ public class TxFileResourceManagerTest {
         um = new MemoryUndoManager(tmpDir);
         rm.setUndoManager(um);
 
-        final RendezvousBarrier shutdownBarrier = new RendezvousBarrier("Shutdown", 3,
-                BARRIER_TIMEOUT);
-        final RendezvousBarrier start2Barrier = new RendezvousBarrier("Start2", BARRIER_TIMEOUT);
-        final RendezvousBarrier commit1Barrier = new RendezvousBarrier("Commit1", BARRIER_TIMEOUT);
+        final RendezvousBarrier startBarrier = new RendezvousBarrier("Start2", BARRIER_TIMEOUT);
 
         Thread create = new Thread(new Runnable() {
             public void run() {
                 try {
-                    rm.startTransaction(60, TimeUnit.SECONDS);
-
-                    shutdownBarrier.call();
-                    start2Barrier.call();
+                    rm.startTransaction(60, TimeUnit.MINUTES);
 
                     rm.getResource(rootPath + "/olli/Hubert4").createAsFile();
+                    startBarrier.call();
                     rm.getResource(rootPath + "/olli/Hubert5").createAsFile();
                     msg = "Greetings from " + Thread.currentThread().getName() + "\n";
                     OutputStream out = rm.getResource(rootPath + "/olli/Hubert6")
                             .writeStream(false);
                     out.write(msg.getBytes(ENCODING));
 
-                    commit1Barrier.meet();
-
-                    rm.commitTransaction();
-
                     checkExactlyContains(rootPath + "/olli", new String[] { "Hubert", "Hubert4",
                             "Hubert5", "Hubert6" }, new String[] { "", "", "", msg });
+
+                    rm.commitTransaction();
 
                 } catch (Throwable e) {
                     System.err.println("Error: " + e);
@@ -281,58 +303,38 @@ public class TxFileResourceManagerTest {
 
         Thread modify = new Thread(new Runnable() {
             public void run() {
-                Object txId = null;
                 try {
 
-                    {
-                        InputStream in = rm.getResource(rootPath + "/olli/Hubert6").readStream();
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(in,
-                                ENCODING));
-                        String line = reader.readLine();
-                        assertEquals(line, null);
-                        in.close();
-                    }
+                    rm.startTransaction(60, TimeUnit.MINUTES);
 
-                    txId = "Modify";
-                    rm.startTransaction(60, TimeUnit.SECONDS);
+                    startBarrier.meet();
 
-                    {
-                        InputStream in = rm.getResource(rootPath + "/olli/Hubert6").readStream();
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(in,
-                                ENCODING));
-                        String line = reader.readLine();
-                        assertEquals(line, null);
-                        in.close();
-                    }
-
-                    shutdownBarrier.call();
+                    rm.getResource(rootPath + "/olli/Hubert4").exists();
 
                     rm.getResource(rootPath + "/olli/Hubert1").createAsFile();
                     rm.getResource(rootPath + "/olli/Hubert2").createAsFile();
                     rm.getResource(rootPath + "/olli/Hubert3").createAsFile();
 
-                    // wait until tx commits, so there already are Hubert4 and
-                    // Hubert5 and
-                    // Hubert6 changes
-                    commit1Barrier.meet();
+                    checkExactlyContains(rootPath + "/olli", new String[] { "Hubert", "Hubert1",
+                            "Hubert2", "Hubert3", "Hubert4", "Hubert5", "Hubert6" });
 
-                    rm.getResource(rootPath + "/olli/Hubert4").createAsFile();
-                    rm.getResource(rootPath + "/olli/Hubert5").createAsFile();
-                    rm.getResource(rootPath + "/olli/Hubert6").createAsFile();
-                    InputStream in = rm.getResource(rootPath + "/olli/Hubert6").readStream();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(in, ENCODING));
-                    String line = reader.readLine();
-                    // allow for update while in tx as this is READ_COMMITED
-                    report(msg, line);
-                    in.close();
-
-                    
                     rm.getResource(rootPath + "/olli/Hubert").delete();
+                    boolean failed = false;
+                    try {
+                        rm.getResource(rootPath + "/olli/Hubert1").createAsFile();
+                    } catch (ResourceException e) {
+                        // we must not create a resource that already exists
+                        failed = true;
+                    }
+                    assertTrue(failed);
+                    rm.getResource(rootPath + "/olli/Hubert1").delete();
                     rm.getResource(rootPath + "/olli/Hubert2").delete();
                     rm.getResource(rootPath + "/olli/Hubert3").delete();
                     rm.getResource(rootPath + "/olli/Hubert4").delete();
                     rm.getResource(rootPath + "/olli/Hubert5").delete();
-                    
+
+                    checkExactlyContains(rootPath + "/olli", new String[] { "Hubert6" });
+
                     rm.commitTransaction();
                 } catch (Throwable e) {
                     System.err.println("Error: " + e);
@@ -342,15 +344,13 @@ public class TxFileResourceManagerTest {
         }, "Modify Thread");
 
         create.start();
-        // be sure first thread is started before trying next
-        start2Barrier.meet();
         modify.start();
 
-        // let both transaction start before trying to shut down
-        shutdownBarrier.meet();
+        modify.join();
+        create.join();
 
-        checkExactlyContains(rootPath + "/olli", new String[] { "Hubert1", "Hubert6" },
-                new String[] { "", msg });
+        checkExactlyContains(rootPath + "/olli", new String[] { "Hubert6" },
+                new String[] { msg });
     }
 
 }

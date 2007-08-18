@@ -42,6 +42,7 @@ public abstract class AbstractLockManager<K, M> implements LockManager<K, M> {
 
     @Override
     public void endWork() {
+        checkIsStarted();
         release();
     }
 
@@ -60,6 +61,12 @@ public abstract class AbstractLockManager<K, M> implements LockManager<K, M> {
         effectiveGlobalTimeouts.put(Thread.currentThread(), effectiveTimeout);
     }
 
+    protected void checkIsStarted() {
+        if (locksForThreads.get(Thread.currentThread()) == null) {
+            throw new IllegalStateException("You need to start work before you can acquire a lock");
+        }
+    }
+    
     protected long computeRemainingTime(Thread thread) {
         long timeout = effectiveGlobalTimeouts.get(thread);
         long now = System.currentTimeMillis();
@@ -73,6 +80,7 @@ public abstract class AbstractLockManager<K, M> implements LockManager<K, M> {
 
     @Override
     public void lock(M managedResource, K key, boolean exclusive) throws LockException {
+        checkIsStarted();
         long remainingTime = computeRemainingTime(Thread.currentThread());
 
         boolean locked = tryLockInternal(managedResource, key, exclusive, remainingTime,
@@ -84,6 +92,7 @@ public abstract class AbstractLockManager<K, M> implements LockManager<K, M> {
 
     @Override
     public boolean tryLock(M managedResource, K key, boolean exclusive) {
+        checkIsStarted();
         return tryLockInternal(managedResource, key, exclusive, 0, TimeUnit.MILLISECONDS);
     }
 

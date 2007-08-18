@@ -31,7 +31,8 @@ import java.nio.channels.FileChannel;
  */
 public final class FileHelper {
 
-    public static File makeBackup(File file, File backupDirectory, boolean moveAllowed) throws IOException {
+    public static File makeBackup(File file, File backupDirectory, boolean moveAllowed)
+            throws IOException {
         File copy = File.createTempFile(file.getName(), ".backup", backupDirectory);
         boolean success = false;
         if (moveAllowed) {
@@ -42,7 +43,7 @@ public final class FileHelper {
         }
         return copy;
     }
-    
+
     public static byte[] readInto(File file) throws IOException {
         long length = file.length();
 
@@ -194,6 +195,8 @@ public final class FileHelper {
     }
 
     public static void removeRecursive(File toRemove) {
+        if (!toRemove.exists())
+            return;
         if (toRemove.isDirectory()) {
             File fileList[] = toRemove.listFiles();
             for (int a = 0; a < fileList.length; a++) {

@@ -18,7 +18,6 @@ package org.apache.commons.transaction.locking;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +26,6 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.transaction.locking.AbstractLockManager.KeyEntry;
 import org.apache.commons.transaction.locking.LockException.Code;
 import org.apache.commons.transaction.locking.locks.ResourceRWLock;
 

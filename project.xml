@@ -194,15 +194,19 @@
   <build>
     <nagEmailAddress>dev@commons.apache.org</nagEmailAddress>
     <sourceDirectory>src/java</sourceDirectory>
-    <!-- unitTestSourceDirectory>src/test</unitTestSourceDirectory-->
+    <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
     <integrationUnitTestSourceDirectory/>
     <aspectSourceDirectory/>
-    <!--  FIXME -->
-    <!--  unitTest>
+    <unitTest>
       <includes>
-        <include>org/apache/commons/collections/TestAllPackages.java</include>
+        <include>org/apache/commons/transaction/DefaultTransactionTest.java</include>
+        <include>org/apache/commons/transaction/file/TxFileResourceManagerTest.java</include>
+        <include>org/apache/commons/transaction/locking/LockTest.java</include>
+        <include>org/apache/commons/transaction/memory/BasicTxMapTest.java</include>
+        <include>org/apache/commons/transaction/memory/OptimisticTxMapTest.java</include>
+        <include>org/apache/commons/transaction/memory/PessimisticTxMapTest.java</include>
       </includes>
-   	</unitTest-->
+    </unitTest>
     <resources>
       <resource>
         <directory>.</directory>
