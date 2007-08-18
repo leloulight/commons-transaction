@@ -42,6 +42,8 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
     private String name;
 
+    private boolean partofComplexTransaction = false;
+
     protected abstract T createContext();
 
     public AbstractTransactionalResourceManager(String name) {
@@ -88,6 +90,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
 
         txContext.dispose();
         setActiveTx(null);
+        partofComplexTransaction = false;
     }
 
     @Override
@@ -164,7 +167,8 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         }
 
         public void dispose() {
-            getLm().endWork();
+            if (!isPartofComplexTransaction())
+                getLm().endWork();
         }
 
         public void commit() {
@@ -176,7 +180,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         }
 
         public boolean prepare() {
-            return isMarkedForRollback();
+            return !isMarkedForRollback();
         }
 
     }
@@ -209,7 +213,7 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         T txContext = createContext();
         txContext.join();
         setActiveTx(txContext);
-
+        partofComplexTransaction = true;
     }
 
     @Override
@@ -217,6 +221,10 @@ public abstract class AbstractTransactionalResourceManager<T extends AbstractTra
         T txContext = getCheckedActiveTx();
         return txContext.prepare();
 
+    }
+
+    public boolean isPartofComplexTransaction() {
+        return partofComplexTransaction;
     }
 
 }

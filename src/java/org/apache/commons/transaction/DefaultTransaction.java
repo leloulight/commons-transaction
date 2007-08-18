@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.transaction.locking.SimpleLockManager;
+import org.apache.commons.transaction.locking.RWLockManager;
 import org.apache.commons.transaction.locking.LockManager;
 
 /**
@@ -76,37 +76,34 @@ public class DefaultTransaction implements Transaction {
      * 
      */
     public DefaultTransaction() {
-        this(new SimpleLockManager<Object, Object>());
+        this(new RWLockManager<Object, Object>());
     }
 
     public synchronized void commit() throws TransactionException {
-        try {
-            lm.endWork();
-            if (isRollbackOnly()) {
-                throw new TransactionException(TransactionException.Code.ROLLBACK_ONLY);
-            }
-            if (!prepare()) {
-                throw new TransactionException(TransactionException.Code.PREPARE_FAILED);
-            }
+        if (isRollbackOnly()) {
+            throw new TransactionException(TransactionException.Code.ROLLBACK_ONLY);
+        }
+        if (!prepare()) {
+            throw new TransactionException(TransactionException.Code.PREPARE_FAILED);
+        }
 
-            for (ManageableResourceManager manager : rms) {
-                if (!manager.isReadOnly()) {
-                    try {
-                        if (!manager.commitTransaction()) {
-                            throw new TransactionException(TransactionException.Code.COMMIT_FAILED);
-                        }
-                    } catch (Exception e) {
-                        throw new TransactionException(e, TransactionException.Code.COMMIT_FAILED);
-                    } catch (Error e) {
-                        // XXX is this really a good idea?
-                        rollback();
-                        throw e;
+        for (ManageableResourceManager manager : rms) {
+            if (!manager.isReadOnly()) {
+                try {
+                    if (!manager.commitTransaction()) {
+                        throw new TransactionException(TransactionException.Code.COMMIT_FAILED);
                     }
+                } catch (Exception e) {
+                    throw new TransactionException(e, TransactionException.Code.COMMIT_FAILED);
+                } catch (Error e) {
+                    // XXX is this really a good idea?
+                    rollback();
+                    throw e;
                 }
             }
-        } finally {
-            started = false;
         }
+        lm.endWork();
+        started = false;
     }
 
     public synchronized void enlistResourceManager(ManageableResourceManager resourceManager) {
@@ -130,16 +127,13 @@ public class DefaultTransaction implements Transaction {
     }
 
     public synchronized void rollback() {
-        try {
-            lm.endWork();
-            for (ManageableResourceManager manager : rms) {
-                if (!manager.isReadOnly()) {
-                    manager.rollbackTransaction();
-                }
+        for (ManageableResourceManager manager : rms) {
+            if (!manager.isReadOnly()) {
+                manager.rollbackTransaction();
             }
-        } finally {
-            started = false;
         }
+        lm.endWork();
+        started = false;
     }
 
     public synchronized void start(long timeout, TimeUnit unit) {

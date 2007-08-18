@@ -16,6 +16,8 @@
  */
 package org.apache.commons.transaction;
 
+import static junit.framework.Assert.fail;
+
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.JUnit4TestAdapter;
@@ -44,10 +46,11 @@ public class DefaultTransactionTest {
             t.commit();
         } catch (Throwable throwable) {
             t.rollback();
+            fail("Unexpected roll back: " + throwable);
         }
 
     }
-    
+
     public static void main(String[] args) {
         new DefaultTransactionTest().basic();
     }

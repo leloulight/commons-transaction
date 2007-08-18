@@ -1,7 +1,7 @@
-Commons Transaction Release 2.0
----------------------------------------
+Commons Transaction Release 2.0 beta1
+-------------------------------------
 
-RELEASE NUMBER: 2.0
+RELEASE NUMBER: 2.0b1
 RELEASE TAG / BRANCH: none yet / TRANSACTION_2
 
 DESCRIPTION
@@ -22,7 +22,7 @@ GENERAL RELEASE NOTES
 JDK COMPATIBILITIES
 -------------------
 
-Commons Transaction 2 requires JDK 1.5 or up
+Commons Transaction 2 requires JDK 1.6 or up
 
 KNOWN ISSUES
 ------------
