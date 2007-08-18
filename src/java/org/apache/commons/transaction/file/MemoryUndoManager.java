@@ -22,7 +22,7 @@ import org.apache.commons.transaction.util.FileHelper;
  */
 public class MemoryUndoManager implements FileResourceUndoManager {
 
-    private Log logger = LogFactory.getLog(getClass());
+    private Log log = LogFactory.getLog(getClass());
 
     protected ThreadLocal<List<UndoRecord>> localRecords = new ThreadLocal<List<UndoRecord>>();
 
@@ -68,7 +68,7 @@ public class MemoryUndoManager implements FileResourceUndoManager {
                     moveAllowed));
         } catch (IOException e) {
             // FIXME: This really is fatal: How to signal?
-            logger.fatal("Can not record content update", e);
+            log.fatal("Can not record content update", e);
         }
     }
 
@@ -124,7 +124,7 @@ public class MemoryUndoManager implements FileResourceUndoManager {
                     FileHelper.move(updatedFile, file);
                 } catch (IOException e) {
                     // FIXME: This really is fatal: How to signal?
-                    logger.fatal("Can not undo content update", e);
+                    log.fatal("Can not undo content update", e);
                 }
                 break;
             }
