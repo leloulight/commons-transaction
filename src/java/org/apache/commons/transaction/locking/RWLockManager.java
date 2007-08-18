@@ -18,20 +18,63 @@ package org.apache.commons.transaction.locking;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.transaction.locking.AbstractLockManager.KeyEntry;
 import org.apache.commons.transaction.locking.LockException.Code;
 import org.apache.commons.transaction.locking.locks.ResourceRWLock;
 
 public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements LockManager<K, M> {
 
-    protected ConcurrentHashMap<KeyEntry<K, M>, ResourceRWLock> locks = new ConcurrentHashMap<KeyEntry<K, M>, ResourceRWLock>();
-    
+    private Log log = LogFactory.getLog(getClass());
+
+    protected ConcurrentHashMap<KeyEntry<K, M>, ResourceRWLock> allLocks = new ConcurrentHashMap<KeyEntry<K, M>, ResourceRWLock>();
+
     private long absolutePrewaitTime = -1;
+
     private long prewaitTimeDivisor = 10;
+
+    protected void release() {
+        Set<Lock> locks = locksForThreads.get(Thread.currentThread());
+        // graceful reaction...
+        if (locks == null) {
+            return;
+        }
+
+        // first release all locks
+        for (Lock lock : locks) {
+            lock.unlock();
+        }
+
+        // then remove all locks that are no longer needed to avoid out of
+        // memory
+        removeUnsuedLocks();
+
+        locksForThreads.remove(Thread.currentThread());
+    }
+
+    protected void removeUnsuedLocks() {
+        Set<Entry<KeyEntry<K, M>, ResourceRWLock>> locksToCheck = allLocks.entrySet();
+        for (Entry<KeyEntry<K, M>, ResourceRWLock> entry : locksToCheck) {
+            KeyEntry<K, M> keyEntry = entry.getKey();
+            ResourceRWLock lock = entry.getValue();
+
+            // remove lock if no other thread holds a it
+            if (lock.isUnacquired()) {
+                // only remove if no one else has modified it in the meantime
+                if (allLocks.remove(keyEntry, lock)) {
+                    log.debug("Completely removing unused lock" + lock);
+                }
+            }
+        }
+    }
 
     protected ResourceRWLock create(String name) {
         return new ResourceRWLock(name);
@@ -46,7 +89,7 @@ public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements Lo
         String resourceName = entry.toString();
 
         ResourceRWLock rwlock = create(resourceName);
-        ResourceRWLock existingLock = locks.putIfAbsent(entry, rwlock);
+        ResourceRWLock existingLock = allLocks.putIfAbsent(entry, rwlock);
         if (existingLock != null)
             rwlock = existingLock;
         Set<Lock> locksForThisThread = locksForThreads.get(Thread.currentThread());
@@ -132,7 +175,8 @@ public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements Lo
     }
 
     long getPrewaitTime(long timeMsecs) {
-        if (absolutePrewaitTime != -1) return absolutePrewaitTime;
+        if (absolutePrewaitTime != -1)
+            return absolutePrewaitTime;
         return timeMsecs / prewaitTimeDivisor;
     }
 

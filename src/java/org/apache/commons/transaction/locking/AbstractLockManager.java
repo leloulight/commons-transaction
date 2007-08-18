@@ -45,6 +45,8 @@ public abstract class AbstractLockManager<K, M> implements LockManager<K, M> {
         release();
     }
 
+    abstract protected void release();
+
     @Override
     public void startWork(long timeout, TimeUnit unit) {
         if (isWorking()) {
@@ -98,19 +100,6 @@ public abstract class AbstractLockManager<K, M> implements LockManager<K, M> {
         long remainingTime = computeRemainingTime(thread);
         return (remainingTime < 0);
 
-    }
-
-    protected void release() {
-        Set<Lock> locks = locksForThreads.get(Thread.currentThread());
-        // graceful reaction...
-        if (locks == null) {
-            return;
-        }
-        for (Lock lock : locks) {
-            lock.unlock();
-        }
-
-        locksForThreads.remove(Thread.currentThread());
     }
 
     protected static class KeyEntry<K, M> {

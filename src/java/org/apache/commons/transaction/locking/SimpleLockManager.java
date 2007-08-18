@@ -43,7 +43,7 @@ public class SimpleLockManager<K, M> extends AbstractLockManager<K, M> implement
         LockManager<K, M> {
     private Log logger = LogFactory.getLog(getClass());
 
-    protected ConcurrentHashMap<KeyEntry<K, M>, ReentrantLock> locks = new ConcurrentHashMap<KeyEntry<K, M>, ReentrantLock>();
+    protected ConcurrentHashMap<KeyEntry<K, M>, ReentrantLock> allLocks = new ConcurrentHashMap<KeyEntry<K, M>, ReentrantLock>();
 
     protected ReentrantLock create() {
         return new ReentrantLock();
@@ -56,7 +56,7 @@ public class SimpleLockManager<K, M> extends AbstractLockManager<K, M> implement
         KeyEntry<K, M> entry = new KeyEntry<K, M>(key, managedResource);
 
         ReentrantLock lock = create();
-        ReentrantLock existingLock = locks.putIfAbsent(entry, lock);
+        ReentrantLock existingLock = allLocks.putIfAbsent(entry, lock);
         if (existingLock != null)
             lock = existingLock;
         Set<Lock> locks = locksForThreads.get(Thread.currentThread());

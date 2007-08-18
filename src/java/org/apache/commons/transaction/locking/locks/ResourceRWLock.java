@@ -88,6 +88,10 @@ public class ResourceRWLock implements ReadWriteLock {
         waiterThreads.remove(current);
     }
 
+    public boolean isUnacquired() {
+        return sync.isUnacquired();
+    }
+
     public class InnerLock {
         public ResourceRWLock getResourceRWLock() {
             return ResourceRWLock.this;
@@ -195,6 +199,20 @@ public class ResourceRWLock implements ReadWriteLock {
 
         private final int WRITE_LOCK = -1;
 
+        public boolean isUnacquired() {
+            return getState() == NO_LOCK;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Sync) {
+                Sync otherSync = (Sync) obj;
+                return (getState() == otherSync.getState() && readerThreads
+                        .equals(otherSync.readerThreads));
+            }
+            return false;
+        }
+
         protected boolean tryRelease(int unsused) {
             Thread current = Thread.currentThread();
             // gracefully return in case we do not even have the lock
@@ -202,7 +220,8 @@ public class ResourceRWLock implements ReadWriteLock {
                 return true;
             setExclusiveOwnerThread(null);
             // if we release an exclusive lock, this can only mean we are the
-            // only who possibly could and the only possible outcome is that
+            // only one who possibly could do this and the only possible outcome
+            // is that
             // afterwards there are no more locks
             setState(NO_LOCK);
             return true;
@@ -325,5 +344,14 @@ public class ResourceRWLock implements ReadWriteLock {
         }
 
     };
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ResourceRWLock) {
+            return sync.equals(((ResourceRWLock) obj).sync);
+        }
+        return false;
+
+    }
 
 }
