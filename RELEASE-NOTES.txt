@@ -7,11 +7,19 @@ RELEASE TAG / BRANCH: none yet / TRANSACTION_2
 DESCRIPTION
 -----------
 
-Commons Transaction 2 aims at providing a general infrastructure for transcational systems.
-A transactional file system servers as the initial default implementation.
+Commons Transaction 2 aims at providing classes that aid concurrent programming in a transactional style.
+
+This beta is the first 2.0 release that tries to overcome the most
+annoying issues with 1.x in a more radical way:
+- migration to the java.util.concurrent  package
+- full support for Java 5 generics
+- support for a component based approach (by factoring out each interesting aspect into an interface plus default implementation)
+- usage of commons logging
+- full file management features for the transactional file system
+
 
 There are implementations for:
-- multi level (e.g. read/write) locks, 
+- locks managers, 
 - transactional maps, and
 - transactional file access, plus
 - some helper classes 
@@ -26,4 +34,3 @@ Commons Transaction 2 requires JDK 1.6 or up
 
 KNOWN ISSUES
 ------------
-
