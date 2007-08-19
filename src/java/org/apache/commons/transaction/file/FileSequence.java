@@ -50,8 +50,6 @@ public class FileSequence {
      * 
      * @param storeDir
      *            directory where sequence information is stored
-     * @param logger
-     *            logger used for warnings only
      */
     public FileSequence(String storeDir) {
         this.storeDir = storeDir;

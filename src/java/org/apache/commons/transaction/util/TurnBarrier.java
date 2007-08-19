@@ -47,8 +47,6 @@ public class TurnBarrier {
      * 
      * @param name
      *            the name of the barrier
-     * @param logger
-     *            logger for debug output
      */
     public TurnBarrier(String name) {
         this(name, DEFAULT_TIMEOUT);
@@ -61,8 +59,6 @@ public class TurnBarrier {
      *            the name of the barrier
      * @param timeout
      *            timeout for threads to wait for their turn
-     * @param logger
-     *            logger for debug output
      */
     public TurnBarrier(String name, long timeout) {
         this(name, timeout, 0);
@@ -75,8 +71,6 @@ public class TurnBarrier {
      *            the name of the barrier
      * @param timeout
      *            timeout for threads to wait for their turn
-     * @param logger
-     *            logger for debug output
      * @param startTurn
      *            the turn to start with
      */
