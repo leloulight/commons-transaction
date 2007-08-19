@@ -29,6 +29,16 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.transaction.locking.LockException.Code;
 import org.apache.commons.transaction.locking.locks.ResourceRWLock;
 
+/**
+ * Advanced read/write lock implementation of a {@link LockManager} based on
+ * {@link ResourceRWLock}.
+ * 
+ * <p>
+ * <em>Note</em>: This implementation performs deadlock detection.
+ * 
+ * <p>
+ * This implementation is <em>thread-safe</em>.
+ */
 public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements LockManager<K, M> {
 
     private Log log = LogFactory.getLog(getClass());
@@ -78,11 +88,11 @@ public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements Lo
         return new ResourceRWLock(name);
     }
 
-    protected boolean tryLockInternal(M managedResource, K key, boolean exclusive, long time,
+    protected boolean tryLockInternal(M resourceManager, K key, boolean exclusive, long time,
             TimeUnit unit) throws LockException {
         reportTimeout(Thread.currentThread());
 
-        KeyEntry<K, M> entry = new KeyEntry<K, M>(key, managedResource);
+        KeyEntry<K, M> entry = new KeyEntry<K, M>(key, resourceManager);
 
         String resourceName = entry.toString();
 

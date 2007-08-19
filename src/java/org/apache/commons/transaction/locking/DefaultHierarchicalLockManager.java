@@ -46,7 +46,7 @@ public class DefaultHierarchicalLockManager<M> implements HierarchicalLockManage
         this.lm = lm;
     }
 
-    public void lockInHierarchy(M managedResource, String path, boolean exclusive)
+    public void lockInHierarchy(M resourceManager, String path, boolean exclusive)
             throws LockException {
         // strip off root path
         // TODO misses sane checks
@@ -58,12 +58,12 @@ public class DefaultHierarchicalLockManager<M> implements HierarchicalLockManage
 
         // this is the root path we want to lock
         if (relativePath.length() == 0) {
-            lock(managedResource, "/", exclusive);
+            lock(resourceManager, "/", exclusive);
             return;
         }
 
         // always read lock root
-        lock(managedResource, "/", false);
+        lock(resourceManager, "/", false);
 
         String[] segments = relativePath.split("\\\\");
         StringBuffer currentPath = new StringBuffer(relativePath.length());
@@ -79,10 +79,10 @@ public class DefaultHierarchicalLockManager<M> implements HierarchicalLockManage
 
             if (i == segments.length - 1) {
                 // this is the resource itself
-                lock(managedResource, key, exclusive);
+                lock(resourceManager, key, exclusive);
             } else {
                 // this is one of the parent path segments
-                lock(managedResource, key, false);
+                lock(resourceManager, key, false);
             }
         }
     }

@@ -1,6 +1,21 @@
 <html>
 <body>
-<h1>Locking</h1>
-<p>
+<h1>Locking:</h1>
+
+<p>Central package for locking related stuff. It contains interfaces and implementations to handle your locks in a transactional way. That means you divide your work in blocks and free all locks accumulated in that block at its very end. A common, shared timeout protects all locking requests.
+
+<p>The central interface is the one of the 
+<a href="LockManager.html">lock manager</a>. 
+It's recommended implementation is the 
+<a href="RWLockManager.java">read/write lock manager</a> that 
+features read/write locks and efficient deadlock detection.
+
+<p>If you have hierarchical resources to lock you can use the
+<a href="HierarchicalLockManager.html">hierarchical lock manager interface </a>
+with its <a href="DefaultHierarchicalLockManager.html">default implementation</a>.
+
+<p>If you need a custom implementation of a lock mamanger it is recommended 
+to base your work on the <a href="AbstractLockManager.html">on an abstract base</a>.
+
 </body>
 </html>

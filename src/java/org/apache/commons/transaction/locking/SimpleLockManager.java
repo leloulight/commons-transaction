@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.transaction.locking.LockException.Code;
 
 /**
- * Default implementation of {@link LockManager}.
+ * Default implementation of {@link LockManager} based on {@link ReentrantLock}.
  * 
  * <p>
  * This is a minimal implementation that only knows a single type of lock.
@@ -49,11 +49,11 @@ public class SimpleLockManager<K, M> extends AbstractLockManager<K, M> implement
         return new ReentrantLock();
     }
 
-    protected boolean tryLockInternal(M managedResource, K key, boolean exclusive, long time,
+    protected boolean tryLockInternal(M resourceManager, K key, boolean exclusive, long time,
             TimeUnit unit) throws LockException {
         reportTimeout(Thread.currentThread());
 
-        KeyEntry<K, M> entry = new KeyEntry<K, M>(key, managedResource);
+        KeyEntry<K, M> entry = new KeyEntry<K, M>(key, resourceManager);
 
         ReentrantLock lock = create();
         ReentrantLock existingLock = allLocks.putIfAbsent(entry, lock);

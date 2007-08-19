@@ -34,7 +34,14 @@ import org.apache.commons.transaction.resource.StreamableResource;
 import org.apache.commons.transaction.util.FileHelper;
 
 /**
- * Default file system implementation of a {@link ResourceManager resource manager}.
+ * Default file system implementation of a
+ * {@link ResourceManager resource manager}.
+ * 
+ * <p>
+ * Only two {@link StreamableResource#getProperty(String) properties} are
+ * supported for reading: "lastModified" and "length" . None are supported for
+ * {@link StreamableResource#setProperty(String, Object) setting} or
+ * {@link StreamableResource#readLock() removing}.
  * 
  * <p>
  * This implementation is <b>NOT</b> <em>thread-safe</em>. Use

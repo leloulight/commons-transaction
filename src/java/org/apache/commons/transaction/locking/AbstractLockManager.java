@@ -28,7 +28,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.transaction.locking.LockException.Code;
 
 /**
- * Abstract implementation of {@link LockManager}.
+ * Abstract implementation of {@link LockManager}. You can use this
+ * implementation as a base for your custom implementations.
  * 
  * <p>
  * This implementation is <em>thread-safe</em>.
@@ -66,7 +67,7 @@ public abstract class AbstractLockManager<K, M> implements LockManager<K, M> {
             throw new IllegalStateException("You need to start work before you can acquire a lock");
         }
     }
-    
+
     protected long computeRemainingTime(Thread thread) {
         long timeout = effectiveGlobalTimeouts.get(thread);
         long now = System.currentTimeMillis();
@@ -79,11 +80,11 @@ public abstract class AbstractLockManager<K, M> implements LockManager<K, M> {
     }
 
     @Override
-    public void lock(M managedResource, K key, boolean exclusive) throws LockException {
+    public void lock(M resourceManager, K key, boolean exclusive) throws LockException {
         checkIsStarted();
         long remainingTime = computeRemainingTime(Thread.currentThread());
 
-        boolean locked = tryLockInternal(managedResource, key, exclusive, remainingTime,
+        boolean locked = tryLockInternal(resourceManager, key, exclusive, remainingTime,
                 TimeUnit.MILLISECONDS);
         if (!locked) {
             throw new LockException(Code.TIMED_OUT, key);
@@ -91,12 +92,12 @@ public abstract class AbstractLockManager<K, M> implements LockManager<K, M> {
     }
 
     @Override
-    public boolean tryLock(M managedResource, K key, boolean exclusive) {
+    public boolean tryLock(M resourceManager, K key, boolean exclusive) {
         checkIsStarted();
-        return tryLockInternal(managedResource, key, exclusive, 0, TimeUnit.MILLISECONDS);
+        return tryLockInternal(resourceManager, key, exclusive, 0, TimeUnit.MILLISECONDS);
     }
 
-    abstract protected boolean tryLockInternal(M managedResource, K key, boolean exclusive,
+    abstract protected boolean tryLockInternal(M resourceManager, K key, boolean exclusive,
             long time, TimeUnit unit) throws LockException;
 
     protected void reportTimeout(Thread thread) throws LockException {
@@ -136,7 +137,7 @@ public abstract class AbstractLockManager<K, M> implements LockManager<K, M> {
         public int hashCode() {
             return k.hashCode() + m.hashCode();
         }
-        
+
         public String toString() {
             return m.toString() + ":" + k.toString();
         }
