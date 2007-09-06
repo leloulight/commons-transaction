@@ -145,7 +145,8 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
      *  
      */
 
-    protected static void applyDeletes(File removeDir, File targetDir, File rootDir) throws IOException {
+    protected static void applyDeletes(File removeDir, File targetDir, File rootDir)
+            throws IOException {
         if (removeDir.isDirectory() && targetDir.isDirectory()) {
             File[] files = removeDir.listFiles();
             for (int i = 0; i < files.length; i++) {
@@ -163,10 +164,10 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
                 } else {
                     applyDeletes(removeFile, targetFile, rootDir);
                 }
-                // delete empty target directories, except root dir
-                if (!targetDir.equals(rootDir) && targetDir.list().length == 0) {
-                    targetDir.delete();
-                }
+            }
+            // delete empty target directories, except root dir
+            if (!targetDir.equals(rootDir) && targetDir.list().length == 0) {
+                targetDir.delete();
             }
         }
     }
