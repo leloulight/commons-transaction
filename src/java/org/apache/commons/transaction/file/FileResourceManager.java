@@ -145,35 +145,33 @@ public class FileResourceManager implements ResourceManager, ResourceManagerErro
      *  
      */
 
-    protected static void applyDeletes(File removeDir, File targetDir, File rootDir) throws IOException {
+    protected static void applyDeletes(File removeDir, File targetDir, File rootDir)
+            throws IOException {
         if (removeDir.isDirectory() && targetDir.isDirectory()) {
             File[] files = removeDir.listFiles();
             for (int i = 0; i < files.length; i++) {
                 File removeFile = files[i];
                 File targetFile = new File(targetDir, removeFile.getName());
-                if (!removeFile.isDirectory()) {
+                if (removeFile.isFile()) {
                     if (targetFile.exists()) {
                         if (!targetFile.delete()) {
                             throw new IOException("Could not delete file " + removeFile.getName()
                                     + " in directory targetDir");
                         }
-                    } else if (!targetFile.isFile()) {
-                        // this is likely a dangling link
-                        targetFile.delete();
-                    } 
+                    }
                     // indicate, this has been done
                     removeFile.delete();
                 } else {
                     applyDeletes(removeFile, targetFile, rootDir);
                 }
-                // delete empty target directories, except root dir
-                if (!targetDir.equals(rootDir) && targetDir.list().length == 0) {
-                    targetDir.delete();
-                }
+            }
+            // delete empty target directories, except root dir
+            if (!targetDir.equals(rootDir) && targetDir.list().length == 0) {
+                targetDir.delete();
             }
         }
     }
-
+    
     /*
      * --- object members ---
      * 
