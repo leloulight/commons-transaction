@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.commons</groupId>
     <artifactId>commons-parent</artifactId>
-    <version>3</version>
+    <version>5</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>commons-transaction</groupId>
@@ -138,10 +138,15 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>junit-4.3.1</version>
+      <version>4.3.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <properties>
+      <maven.compile.source>1.6</maven.compile.source>
+      <maven.compile.target>1.6</maven.compile.target>
+  </properties> 
 
   <build>
     <sourceDirectory>src/java</sourceDirectory>
@@ -150,12 +155,24 @@
       <resource>
         <directory>.</directory>
         <targetPath>META-INF</targetPath>
-          <includes>
-            <include>NOTICE.txt</include>
-            <include>LICENSE.txt</include>
-          </includes>
-        </resource>
-      </resources>
-    </build>
+        <includes>
+          <include>NOTICE.txt</include>
+          <include>LICENSE.txt</include>
+        </includes>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assembly/bin.xml</descriptor>
+            <descriptor>src/assembly/src.xml</descriptor>
+          </descriptors>
+          <tarLongFileMode>gnu</tarLongFileMode>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>
