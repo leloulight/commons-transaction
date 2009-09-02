@@ -66,6 +66,7 @@ public class RWLockManager<K, M> extends AbstractLockManager<K, M> implements Lo
         removeUnsuedLocks();
 
         locksForThreads.remove(Thread.currentThread());
+        effectiveGlobalTimeouts.remove(Thread.currentThread());
     }
 
     protected void removeUnsuedLocks() {

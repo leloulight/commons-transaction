@@ -108,6 +108,7 @@ public class SimpleLockManager<K, M> extends AbstractLockManager<K, M> implement
         }
 
         locksForThreads.remove(Thread.currentThread());
+        effectiveGlobalTimeouts.remove(Thread.currentThread());
     }
 
 }
