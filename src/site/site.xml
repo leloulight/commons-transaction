@@ -25,7 +25,7 @@
     <body>
         <menu name="Transaction">
             <item name="Overview"              href="/index.html"/>
-            <item name="Download"              href="http://commons.apache.org/downloads/download_transaction.cgi"/>
+            <item name="Download"              href="http://commons.apache.org/transaction/download_transaction.cgi"/>
             <item name="Releases"              href="/releases.html"/>
             <item name="Mailing Lists"         href="/mail-lists.html"/>
             <item name="Issue Tracking"        href="/issue-tracking.html"/>
