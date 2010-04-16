@@ -24,6 +24,17 @@
 
  <body>
 
+<section name="Status">
+<p>We have decided to move the project to dormant as we are convinced that the main
+advertised feature <em>transactional file access</em> can not be implemented reliably.
+We are convinced that no such implementation can be possible on top of an ordinary file system.
+Although there are other useful parts (as multi
+level locking including deadlock detection) the transactional file
+system is the main reason people use this library for. As it simply
+can not be made fully transactional, it does not work as advertised.
+</p>
+</section>
+
 <section name="The Transaction Component">
 <p>Commons Transaction aims at providing lightweight, standardized,
 well tested and 
